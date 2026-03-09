@@ -101,7 +101,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from 'vue-facing-decorator';
+import { Component, Vue, toNative } from 'vue-facing-decorator';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Dialog from 'primevue/dialog';
@@ -113,7 +113,7 @@ import type { Client, ClientInput, ClientListResponse } from '../types/client';
 import ErrorCard from '../components/ErrorCard.vue';
 
 @Component({ components: { DataTable, Column, Dialog, InputText, ErrorCard } })
-export default class ClientsView extends Vue {
+class ClientsView extends Vue {
   authStore = useAuthStore();
   confirm = useConfirm();
   clients: Client[] = [];
@@ -280,6 +280,7 @@ export default class ClientsView extends Vue {
     return '';
   }
 }
+export default toNative(ClientsView);
 </script>
 
 <style>

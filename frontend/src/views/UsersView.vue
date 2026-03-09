@@ -147,7 +147,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from 'vue-facing-decorator';
+import { Component, Vue, toNative } from 'vue-facing-decorator';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Dialog from 'primevue/dialog';
@@ -161,7 +161,7 @@ import { applyPreferences } from '../services/preferences';
 import ErrorCard from '../components/ErrorCard.vue';
 
 @Component({ components: { DataTable, Column, Dialog, InputText, ErrorCard } })
-export default class UsersView extends Vue {
+class UsersView extends Vue {
   authStore = useAuthStore();
   confirm = useConfirm();
   loading = false;
@@ -326,6 +326,7 @@ export default class UsersView extends Vue {
     return '';
   }
 }
+export default toNative(UsersView);
 </script>
 
 <style scoped>

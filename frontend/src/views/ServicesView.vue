@@ -67,7 +67,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from 'vue-facing-decorator';
+import { Component, Vue, toNative } from 'vue-facing-decorator';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Dialog from 'primevue/dialog';
@@ -77,7 +77,7 @@ import type { Service, ServiceInput } from '../types/service';
 import ErrorCard from '../components/ErrorCard.vue';
 
 @Component({ components: { DataTable, Column, Dialog, ErrorCard } })
-export default class ServicesView extends Vue {
+class ServicesView extends Vue {
   authStore = useAuthStore();
   services: Service[] = [];
   error = '';
@@ -155,6 +155,7 @@ export default class ServicesView extends Vue {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
   }
 }
+export default toNative(ServicesView);
 </script>
 
 <style scoped>

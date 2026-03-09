@@ -235,7 +235,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from 'vue-facing-decorator';
+import { Component, Vue, toNative } from 'vue-facing-decorator';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Dialog from 'primevue/dialog';
@@ -250,7 +250,7 @@ import type { User } from '../types/user';
 import ErrorCard from '../components/ErrorCard.vue';
 
 @Component({ components: { DataTable, Column, Dialog, ErrorCard } })
-export default class AppointmentsView extends Vue {
+class AppointmentsView extends Vue {
   authStore = useAuthStore();
   confirm = useConfirm();
   appointments: Appointment[] = [];
@@ -480,7 +480,7 @@ export default class AppointmentsView extends Vue {
     );
     for (const [appointmentId, latestResponse] of entries) {
       boolMap[appointmentId] = Boolean(latestResponse);
-      responseMap[appointmentId] = latestResponse;
+      responseMap[appointmentId] = latestResponse ?? null;
     }
     this.questionnaireByAppointment = boolMap;
     this.responseByAppointment = responseMap;
@@ -552,11 +552,11 @@ export default class AppointmentsView extends Vue {
 
   escapeHtml(value: string) {
     return value
-      .replaceAll('&', '&amp;')
-      .replaceAll('<', '&lt;')
-      .replaceAll('>', '&gt;')
-      .replaceAll('"', '&quot;')
-      .replaceAll("'", '&#39;');
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 
   signatureModeLabel(mode: 'DRAW' | 'TYPE' | 'UPLOAD') {
@@ -655,6 +655,7 @@ export default class AppointmentsView extends Vue {
     return '';
   }
 }
+export default toNative(AppointmentsView);
 </script>
 
 <style scoped>

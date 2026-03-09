@@ -20,10 +20,10 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-facing-decorator';
+import { Component, Prop, Vue, toNative } from 'vue-facing-decorator';
 
 @Component({})
-export default class SignaturePad extends Vue {
+class SignaturePad extends Vue {
   @Prop({ default: '' }) readonly modelValue!: string;
   @Prop({ default: 'Limpar assinatura' }) readonly clearLabel!: string;
 
@@ -50,7 +50,7 @@ export default class SignaturePad extends Vue {
   getPoint(event: MouseEvent | TouchEvent, canvas: HTMLCanvasElement) {
     const rect = canvas.getBoundingClientRect();
     if ('touches' in event && event.touches.length > 0) {
-      const touch = event.touches[0];
+      const touch = event.touches[0]!;
       return { x: touch.clientX - rect.left, y: touch.clientY - rect.top };
     }
     const mouse = event as MouseEvent;
@@ -101,6 +101,7 @@ export default class SignaturePad extends Vue {
     image.src = dataUrl;
   }
 }
+export default toNative(SignaturePad);
 </script>
 
 <style scoped>

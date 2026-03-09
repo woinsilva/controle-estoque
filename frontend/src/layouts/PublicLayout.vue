@@ -27,20 +27,21 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from 'vue-facing-decorator';
+import { Component, Vue, toNative } from 'vue-facing-decorator';
 import { i18n } from '../i18n';
 
 @Component({})
-export default class PublicLayout extends Vue {
+class PublicLayout extends Vue {
   get localeValue() {
     return i18n.global.locale.value;
   }
 
-  set localeValue(value: string) {
+  set localeValue(value: 'pt' | 'en' | 'es') {
     i18n.global.locale.value = value;
     localStorage.setItem('locale', value);
   }
 }
+export default toNative(PublicLayout);
 </script>
 
 <style scoped>

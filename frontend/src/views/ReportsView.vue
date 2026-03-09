@@ -270,7 +270,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from 'vue-facing-decorator';
+import { Component, Vue, toNative } from 'vue-facing-decorator';
 import { apiGet } from '../services/api';
 import { useAuthStore } from '../stores/auth';
 import type { ReportsSummary } from '../types/reports';
@@ -285,7 +285,7 @@ const EMPTY_SUMMARY: ReportsSummary = {
 };
 
 @Component({})
-export default class ReportsView extends Vue {
+class ReportsView extends Vue {
   authStore = useAuthStore();
   loading = false;
   error = '';
@@ -419,13 +419,17 @@ export default class ReportsView extends Vue {
       en: { locale: 'en-US', currency: 'USD' },
       es: { locale: 'es-ES', currency: 'EUR' }
     };
-    const settings = currencyMap[locale] || currencyMap.pt;
+    const settings = (currencyMap[locale as keyof typeof currencyMap] ?? currencyMap.pt) as {
+      locale: string;
+      currency: string;
+    };
     return new Intl.NumberFormat(settings.locale, {
       style: 'currency',
       currency: settings.currency
     }).format(value);
   }
 }
+export default toNative(ReportsView);
 </script>
 
 <style scoped>

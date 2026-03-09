@@ -323,7 +323,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from 'vue-facing-decorator';
+import { Component, Vue, toNative } from 'vue-facing-decorator';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Dialog from 'primevue/dialog';
@@ -346,7 +346,7 @@ type DynamicField = {
 };
 
 @Component({ components: { DataTable, Column, Dialog, ErrorCard, SignaturePad } })
-export default class QuestionnairesView extends Vue {
+class QuestionnairesView extends Vue {
   authStore = useAuthStore();
   templates: QuestionnaireTemplate[] = [];
   responses: QuestionnaireResponse[] = [];
@@ -571,6 +571,7 @@ export default class QuestionnairesView extends Vue {
     if (index <= 0) return;
     const list = [...this.templateFields];
     const [field] = list.splice(index, 1);
+    if (!field) return;
     list.splice(index - 1, 0, field);
     this.templateFields = list;
     if (this.editingFieldIndex === index) {
@@ -584,6 +585,7 @@ export default class QuestionnairesView extends Vue {
     if (index >= this.templateFields.length - 1) return;
     const list = [...this.templateFields];
     const [field] = list.splice(index, 1);
+    if (!field) return;
     list.splice(index + 1, 0, field);
     this.templateFields = list;
     if (this.editingFieldIndex === index) {
@@ -907,6 +909,7 @@ export default class QuestionnairesView extends Vue {
     return '';
   }
 }
+export default toNative(QuestionnairesView);
 </script>
 
 <style scoped>

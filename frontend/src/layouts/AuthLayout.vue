@@ -51,12 +51,12 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from 'vue-facing-decorator';
+import { Component, Vue, toNative } from 'vue-facing-decorator';
 import { useAuthStore } from '../stores/auth';
 import { i18n } from '../i18n';
 
 @Component({})
-export default class AuthLayout extends Vue {
+class AuthLayout extends Vue {
   authStore = useAuthStore();
 
   get canSeeDashboard() {
@@ -103,11 +103,12 @@ export default class AuthLayout extends Vue {
     return i18n.global.locale.value;
   }
 
-  set localeValue(value: string) {
+  set localeValue(value: 'pt' | 'en' | 'es') {
     i18n.global.locale.value = value;
     localStorage.setItem('locale', value);
   }
 }
+export default toNative(AuthLayout);
 </script>
 
 <style scoped>

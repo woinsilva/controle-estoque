@@ -73,14 +73,14 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from 'vue-facing-decorator';
+import { Component, Vue, toNative } from 'vue-facing-decorator';
 import { useAuthStore } from '../stores/auth';
 import { i18n } from '../i18n';
 import { apiGet } from '../services/api';
 import type { DashboardLowStockItem, DashboardRecentSale, DashboardSummary } from '../types/dashboard';
 
 @Component({})
-export default class DashboardView extends Vue {
+class DashboardView extends Vue {
   authStore = useAuthStore();
   lowStock = 0;
   salesToday = 0;
@@ -136,13 +136,17 @@ export default class DashboardView extends Vue {
       en: { locale: 'en-US', currency: 'USD' },
       es: { locale: 'es-ES', currency: 'EUR' }
     };
-    const settings = currencyMap[locale] || currencyMap.pt;
+    const settings = (currencyMap[locale as keyof typeof currencyMap] ?? currencyMap.pt) as {
+      locale: string;
+      currency: string;
+    };
     return new Intl.NumberFormat(settings.locale, {
       style: 'currency',
       currency: settings.currency
     }).format(value);
   }
 }
+export default toNative(DashboardView);
 </script>
 
 <style scoped>

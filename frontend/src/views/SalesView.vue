@@ -113,7 +113,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from 'vue-facing-decorator';
+import { Component, Vue, toNative } from 'vue-facing-decorator';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Dialog from 'primevue/dialog';
@@ -136,7 +136,7 @@ type SaleItemView = {
 };
 
 @Component({ components: { DataTable, Column, Dialog, InputText, ErrorCard } })
-export default class SalesView extends Vue {
+class SalesView extends Vue {
   authStore = useAuthStore();
   products: Product[] = [];
   clients: ClientListResponse['items'] = [];
@@ -263,7 +263,10 @@ export default class SalesView extends Vue {
       en: { locale: 'en-US', currency: 'USD' },
       es: { locale: 'es-ES', currency: 'EUR' }
     };
-    const settings = currencyMap[locale] || currencyMap.pt;
+    const settings = (currencyMap[locale as keyof typeof currencyMap] ?? currencyMap.pt) as {
+      locale: string;
+      currency: string;
+    };
     return new Intl.NumberFormat(settings.locale, {
       style: 'currency',
       currency: settings.currency
@@ -280,6 +283,7 @@ export default class SalesView extends Vue {
     return client?.fullName || clientId;
   }
 }
+export default toNative(SalesView);
 </script>
 
 <style scoped>

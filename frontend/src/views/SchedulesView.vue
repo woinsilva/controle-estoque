@@ -36,7 +36,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from 'vue-facing-decorator';
+import { Component, Vue, toNative } from 'vue-facing-decorator';
 import { apiGet, apiPut } from '../services/api';
 import { useAuthStore } from '../stores/auth';
 import type { User } from '../types/user';
@@ -44,7 +44,7 @@ import type { WeeklyAvailabilitySlot, WorkSchedule } from '../types/schedule';
 import ErrorCard from '../components/ErrorCard.vue';
 
 @Component({ components: { ErrorCard } })
-export default class SchedulesView extends Vue {
+class SchedulesView extends Vue {
   authStore = useAuthStore();
   professionals: Pick<User, 'id' | 'name'>[] = [];
   selectedProfessionalId = '';
@@ -121,6 +121,7 @@ export default class SchedulesView extends Vue {
     }
   }
 }
+export default toNative(SchedulesView);
 </script>
 
 <style scoped>

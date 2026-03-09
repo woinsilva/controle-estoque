@@ -28,7 +28,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from 'vue-facing-decorator';
+import { Component, Vue, toNative } from 'vue-facing-decorator';
 import { apiPost } from '../services/api';
 import { applyPreferences } from '../services/preferences';
 import { useAuthStore } from '../stores/auth';
@@ -49,7 +49,7 @@ type LoginResponse = {
 };
 
 @Component({})
-export default class LoginView extends Vue {
+class LoginView extends Vue {
   email = '';
   password = '';
   rememberMe = true;
@@ -86,6 +86,7 @@ export default class LoginView extends Vue {
     }
   }
 }
+export default toNative(LoginView);
 </script>
 
 <style scoped>
