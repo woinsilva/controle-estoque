@@ -24,13 +24,13 @@
           <span>{{ day.label }}</span>
         </label>
         <div v-if="isDayEnabled(day.value)" class="day-slots">
-          <div v-for="(slot, index) in daySlots(day.value)" :key="`${day.value}-${index}`" class="slot-row">
-            <input :value="slot.startTime" type="time" @input="updateDayTime(day.value, index, 'startTime', $event)" />
-            <input :value="slot.endTime" type="time" @input="updateDayTime(day.value, index, 'endTime', $event)" />
+          <div v-for="slot in daySlots(day.value)" :key="slot.localId" class="slot-row">
+            <input :value="slot.startTime" type="time" @input="updateDayTime(day.value, slot.localId, 'startTime', $event)" />
+            <input :value="slot.endTime" type="time" @input="updateDayTime(day.value, slot.localId, 'endTime', $event)" />
             <button
               type="button"
               class="icon-button danger"
-              @click="removeDaySlot(day.value, index)"
+              @click="removeDaySlot(slot.localId)"
               :disabled="daySlots(day.value).length === 1"
             >
               <i class="pi pi-trash" aria-hidden="true"></i>
@@ -54,13 +54,18 @@ import type { User } from '../types/user';
 import type { WeeklyAvailabilitySlot, WorkSchedule } from '../types/schedule';
 import ErrorCard from '../components/ErrorCard.vue';
 
+type EditableWeeklyAvailabilitySlot = WeeklyAvailabilitySlot & {
+  localId: string;
+};
+
 @Component({ components: { ErrorCard } })
 class SchedulesView extends Vue {
   authStore = useAuthStore();
   professionals: Pick<User, 'id' | 'name'>[] = [];
   selectedProfessionalId = '';
-  slots: WeeklyAvailabilitySlot[] = [];
+  slots: EditableWeeklyAvailabilitySlot[] = [];
   error = '';
+  slotSequence = 0;
   weekdays = [
     { value: 0, label: 'Domingo' },
     { value: 1, label: 'Segunda' },
@@ -73,6 +78,14 @@ class SchedulesView extends Vue {
 
   mounted() {
     void this.loadProfessionals();
+  }
+
+  createSlot(input: WeeklyAvailabilitySlot): EditableWeeklyAvailabilitySlot {
+    this.slotSequence += 1;
+    return {
+      ...input,
+      localId: `slot-${this.slotSequence}`
+    };
   }
 
   timeToMinutes(value: string) {
@@ -98,7 +111,7 @@ class SchedulesView extends Vue {
     this.error = '';
     try {
       const schedule = await apiGet<WorkSchedule>(`/schedules/${this.selectedProfessionalId}`, this.authStore.token);
-      this.slots = schedule.slots || [];
+      this.slots = (schedule.slots || []).map((slot) => this.createSlot(slot));
     } catch {
       this.slots = [];
     }
@@ -121,15 +134,8 @@ class SchedulesView extends Vue {
     });
   }
 
-  getSlotIndex(weekday: number, index: number) {
-    let currentIndex = -1;
-    return this.slots.findIndex((slot) => {
-      if (slot.weekday !== weekday) {
-        return false;
-      }
-      currentIndex += 1;
-      return currentIndex === index;
-    });
+  getSlotIndex(localId: string) {
+    return this.slots.findIndex((slot) => slot.localId === localId);
   }
 
   validateDaySlots(weekday: number, slots: WeeklyAvailabilitySlot[]) {
@@ -165,7 +171,7 @@ class SchedulesView extends Vue {
   toggleDay(weekday: number, event: Event) {
     const target = event.target as HTMLInputElement;
     if (target.checked) {
-      this.slots = [...this.slots, { weekday, startTime: '09:00', endTime: '18:00' }];
+      this.slots = [...this.slots, this.createSlot({ weekday, startTime: '09:00', endTime: '18:00' })];
       this.sortSlots();
       return;
     }
@@ -173,30 +179,17 @@ class SchedulesView extends Vue {
   }
 
   addDaySlot(weekday: number) {
-    this.slots = [...this.slots, { weekday, startTime: '09:00', endTime: '18:00' }];
+    this.slots = [...this.slots, this.createSlot({ weekday, startTime: '09:00', endTime: '18:00' })];
     this.sortSlots();
   }
 
-  removeDaySlot(weekday: number, index: number) {
-    const daySlots = this.daySlots(weekday);
-    const slotToRemove = daySlots[index];
-    if (!slotToRemove) {
-      return;
-    }
-    const removeIndex = this.slots.findIndex(
-      (slot) =>
-        slot.weekday === slotToRemove.weekday &&
-        slot.startTime === slotToRemove.startTime &&
-        slot.endTime === slotToRemove.endTime
-    );
-    if (removeIndex >= 0) {
-      this.slots = this.slots.filter((_, slotIndex) => slotIndex !== removeIndex);
-    }
+  removeDaySlot(localId: string) {
+    this.slots = this.slots.filter((slot) => slot.localId !== localId);
   }
 
-  updateDayTime(weekday: number, index: number, field: 'startTime' | 'endTime', event: Event) {
+  updateDayTime(weekday: number, localId: string, field: 'startTime' | 'endTime', event: Event) {
     const target = event.target as HTMLInputElement;
-    const slotIndex = this.getSlotIndex(weekday, index);
+    const slotIndex = this.getSlotIndex(localId);
     if (slotIndex < 0) {
       return;
     }
@@ -241,7 +234,13 @@ class SchedulesView extends Vue {
       return;
     }
     try {
-      await apiPut(`/schedules/${this.selectedProfessionalId}`, { slots: this.slots }, this.authStore.token);
+      await apiPut(
+        `/schedules/${this.selectedProfessionalId}`,
+        {
+          slots: this.slots.map(({ localId: _localId, ...slot }) => slot)
+        },
+        this.authStore.token
+      );
     } catch (error) {
       this.error = error instanceof Error ? error.message : 'Nao foi possivel salvar a agenda.';
     }
