@@ -12,6 +12,8 @@ export type UserDocument = {
   isProfessional: boolean;
   emailConfirmed: boolean;
   passwordResetRequired: boolean;
+  activationTokenHash?: string;
+  activationTokenExpiresAt?: Date;
   locale?: string;
   theme?: 'light' | 'dark';
   createdAt: Date;
@@ -29,6 +31,8 @@ const userSchema = new Schema<UserDocument>(
     isProfessional: { type: Boolean, default: false, index: true },
     emailConfirmed: { type: Boolean, default: false },
     passwordResetRequired: { type: Boolean, default: false },
+    activationTokenHash: { type: String },
+    activationTokenExpiresAt: { type: Date },
     locale: { type: String, default: 'pt' },
     theme: { type: String, enum: ['light', 'dark'], default: 'light' }
   },

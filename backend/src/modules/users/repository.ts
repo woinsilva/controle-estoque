@@ -32,6 +32,8 @@ export async function createUser(data: {
   isProfessional?: boolean;
   emailConfirmed?: boolean;
   passwordResetRequired?: boolean;
+  activationTokenHash?: string;
+  activationTokenExpiresAt?: Date;
   locale?: string;
   theme?: 'light' | 'dark';
 }) {
@@ -50,11 +52,20 @@ export async function updateUser(
     isProfessional: boolean;
     emailConfirmed: boolean;
     passwordResetRequired: boolean;
+    activationTokenHash?: string;
+    activationTokenExpiresAt?: Date;
     locale: string;
     theme: 'light' | 'dark';
   }>
 ) {
   return User.findByIdAndUpdate(id, data, { new: true }).exec();
+}
+
+export async function findUserByActivationTokenHash(tokenHash: string) {
+  return User.findOne({
+    activationTokenHash: tokenHash,
+    activationTokenExpiresAt: { $gt: new Date() }
+  }).exec();
 }
 
 export async function deleteUser(id: string) {

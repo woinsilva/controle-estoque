@@ -1,6 +1,8 @@
 import { QuestionnaireResponse } from '../questionnaires/model.js';
-import { createUserService, deleteUserService, updateUserService } from '../users/service.js';
+import { deleteUserService, updateUserService } from '../users/service.js';
 import { findUserByClientId } from '../users/repository.js';
+import { createUserService } from '../users/service.js';
+import { issueClientActivation } from '../auth/service.js';
 import {
   createClient,
   deleteClient,
@@ -100,6 +102,8 @@ export async function createClientService(input: ClientInput) {
     emailConfirmed: false,
     passwordResetRequired: true
   });
+
+  await issueClientActivation(user.id);
 
   return updateClient(client.id, { userId: user.id });
 }
