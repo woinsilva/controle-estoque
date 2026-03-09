@@ -259,7 +259,7 @@ const messages = {
         updateField: 'Atualizar campo',
         cancelEdit: 'Cancelar edicao',
         emptyTemplate: 'Adicione ao menos um campo no template.',
-        fieldRequired: 'Preencha key, label e tipo do campo.',
+        fieldRequired: 'Preencha o nome e o tipo do campo.',
         keyDuplicated: 'A key deste campo ja existe.',
         optionsRequired: 'Informe as opcoes para campo do tipo select.'
       },
@@ -565,7 +565,7 @@ const messages = {
         updateField: 'Update field',
         cancelEdit: 'Cancel edit',
         emptyTemplate: 'Add at least one field to the template.',
-        fieldRequired: 'Fill field key, label and type.',
+        fieldRequired: 'Fill field label and type.',
         keyDuplicated: 'This field key already exists.',
         optionsRequired: 'Provide options for select field.'
       },
@@ -871,7 +871,7 @@ const messages = {
         updateField: 'Actualizar campo',
         cancelEdit: 'Cancelar edicion',
         emptyTemplate: 'Agrega al menos un campo al template.',
-        fieldRequired: 'Completa key, label y tipo del campo.',
+        fieldRequired: 'Completa el nombre y el tipo del campo.',
         keyDuplicated: 'La key de este campo ya existe.',
         optionsRequired: 'Informa opciones para el campo select.'
       },

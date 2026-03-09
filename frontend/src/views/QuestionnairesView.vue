@@ -103,10 +103,6 @@
           <h4>{{ $t('questionnaires.builder.title') }}</h4>
           <div class="builder-grid">
             <label class="field">
-              <span>{{ $t('questionnaires.builder.key') }}</span>
-              <input v-model="builderField.key" type="text" />
-            </label>
-            <label class="field">
               <span>{{ $t('questionnaires.builder.label') }}</span>
               <input v-model="builderField.label" type="text" />
             </label>
@@ -158,7 +154,7 @@
               <div class="builder-item-content">
                 <strong>{{ field.label }}</strong>
                 <span>
-                  {{ field.key }} | {{ $t(`questionnaires.builder.types.${field.type}`) }} |
+                  {{ $t(`questionnaires.builder.types.${field.type}`) }} |
                   {{ field.required ? $t('questionnaires.builder.requiredState') : $t('questionnaires.builder.optionalState') }}
                 </span>
               </div>
@@ -487,13 +483,14 @@ export default class QuestionnairesView extends Vue {
   }
 
   addFieldToTemplate() {
-    const key = this.builderField.key.trim();
     const label = this.builderField.label.trim();
-    if (!key || !label || !this.builderField.type) {
+    if (!label || !this.builderField.type) {
       this.error = this.$t('questionnaires.builder.fieldRequired');
       return;
     }
 
+    const baseKey = this.builderField.key.trim() || this.createFieldKey(label);
+    const key = this.ensureUniqueFieldKey(baseKey, this.editingFieldIndex);
     const duplicatedKey = this.templateFields.some(
       (item, index) => index !== this.editingFieldIndex && item.key.toLowerCase() === key.toLowerCase()
     );
@@ -524,6 +521,31 @@ export default class QuestionnairesView extends Vue {
     }
     this.cancelFieldEdit();
     this.error = '';
+  }
+
+  createFieldKey(label: string) {
+    const normalized = label
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '');
+
+    return normalized || 'campo';
+  }
+
+  ensureUniqueFieldKey(baseKey: string, ignoreIndex = -1) {
+    let key = baseKey;
+    let suffix = 2;
+    while (
+      this.templateFields.some(
+        (item, index) => index !== ignoreIndex && item.key.toLowerCase() === key.toLowerCase()
+      )
+    ) {
+      key = `${baseKey}_${suffix}`;
+      suffix += 1;
+    }
+    return key;
   }
 
   startEditField(index: number) {
@@ -759,7 +781,6 @@ export default class QuestionnairesView extends Vue {
     this.error = '';
     try {
       const hasBuilderInput =
-        this.builderField.key.trim().length > 0 ||
         this.builderField.label.trim().length > 0 ||
         this.builderField.optionsText.trim().length > 0;
       if (hasBuilderInput) {
