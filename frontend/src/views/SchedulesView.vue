@@ -168,10 +168,55 @@ class SchedulesView extends Vue {
     return '';
   }
 
+  validateSlotField(weekday: number, localId: string, slots: EditableWeeklyAvailabilitySlot[]) {
+    const day = this.weekdays.find((item) => item.value === weekday);
+    const dayLabel = day?.label || 'este dia';
+    const currentSlot = slots.find((slot) => slot.localId === localId);
+    if (!currentSlot) {
+      return '';
+    }
+
+    const otherSlots = slots.filter(
+      (slot) =>
+        slot.localId !== localId &&
+        slot.weekday === weekday &&
+        Boolean(slot.startTime) &&
+        Boolean(slot.endTime)
+    );
+
+    if (currentSlot.startTime) {
+      const startMinutes = this.timeToMinutes(currentSlot.startTime);
+      const startConflict = otherSlots.some((slot) => {
+        const otherStart = this.timeToMinutes(slot.startTime);
+        const otherEnd = this.timeToMinutes(slot.endTime);
+        return startMinutes >= otherStart && startMinutes < otherEnd;
+      });
+
+      if (startConflict) {
+        return `Existem horarios conflitantes em ${dayLabel}.`;
+      }
+    }
+
+    if (currentSlot.endTime) {
+      const endMinutes = this.timeToMinutes(currentSlot.endTime);
+      const endConflict = otherSlots.some((slot) => {
+        const otherStart = this.timeToMinutes(slot.startTime);
+        const otherEnd = this.timeToMinutes(slot.endTime);
+        return endMinutes > otherStart && endMinutes <= otherEnd;
+      });
+
+      if (endConflict) {
+        return `Existem horarios conflitantes em ${dayLabel}.`;
+      }
+    }
+
+    return '';
+  }
+
   toggleDay(weekday: number, event: Event) {
     const target = event.target as HTMLInputElement;
     if (target.checked) {
-      this.slots = [...this.slots, this.createSlot({ weekday, startTime: '09:00', endTime: '18:00' })];
+      this.slots = [...this.slots, this.createSlot({ weekday, startTime: '', endTime: '' })];
       this.sortSlots();
       return;
     }
@@ -179,7 +224,7 @@ class SchedulesView extends Vue {
   }
 
   addDaySlot(weekday: number) {
-    this.slots = [...this.slots, this.createSlot({ weekday, startTime: '09:00', endTime: '18:00' })];
+    this.slots = [...this.slots, this.createSlot({ weekday, startTime: '', endTime: '' })];
     this.sortSlots();
   }
 
@@ -200,7 +245,19 @@ class SchedulesView extends Vue {
       return;
     }
     nextSlots[slotIndex] = { ...currentSlot, [field]: target.value };
-    const validationError = this.validateDaySlots(weekday, nextSlots);
+    const fieldValidationError = this.validateSlotField(weekday, localId, nextSlots);
+
+    if (fieldValidationError) {
+      nextSlots[slotIndex] = { ...currentSlot, [field]: '' };
+      this.slots = nextSlots;
+      this.sortSlots();
+      this.error = fieldValidationError;
+      return;
+    }
+
+    const nextSlot = nextSlots[slotIndex];
+    const validationError =
+      nextSlot && nextSlot.startTime && nextSlot.endTime ? this.validateDaySlots(weekday, nextSlots) : '';
 
     if (validationError) {
       nextSlots[slotIndex] = { ...currentSlot, [field]: '' };
