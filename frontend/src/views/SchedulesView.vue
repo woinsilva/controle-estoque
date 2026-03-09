@@ -515,12 +515,31 @@ class SchedulesView extends Vue {
     return (hours || 0) * 60 + (minutes || 0);
   }
 
-  validateRangeSlots(slots: { startTime: string; endTime: string }[], dayLabel: string) {
+  isCompleteTime(value: string) {
+    return /^\d{2}:\d{2}$/.test(value);
+  }
+
+  validateRangeSlots(
+    slots: { startTime: string; endTime: string }[],
+    dayLabel: string,
+    options: { requireComplete: boolean } = { requireComplete: true }
+  ) {
     const filledSlots = slots.filter((slot) => slot.startTime || slot.endTime).sort((a, b) => a.startTime.localeCompare(b.startTime));
     for (const slot of filledSlots) {
       if (!slot.startTime || !slot.endTime) {
+        if (!options.requireComplete) {
+          continue;
+        }
         return `Preencha todos os horarios em ${dayLabel}.`;
       }
+
+      if (!this.isCompleteTime(slot.startTime) || !this.isCompleteTime(slot.endTime)) {
+        if (!options.requireComplete) {
+          continue;
+        }
+        return `Preencha todos os horarios em ${dayLabel}.`;
+      }
+
       if (this.timeToMinutes(slot.endTime) <= this.timeToMinutes(slot.startTime)) {
         return `O horario final deve ser maior que o inicial em ${dayLabel}.`;
       }
@@ -545,7 +564,9 @@ class SchedulesView extends Vue {
 
     const nextSlots = [...this.dateSlots];
     nextSlots[slotIndex] = { ...current, [field]: target.value };
-    const validationError = this.validateRangeSlots(nextSlots, this.selectedDateLabel.toLowerCase());
+    const validationError = this.validateRangeSlots(nextSlots, this.selectedDateLabel.toLowerCase(), {
+      requireComplete: false
+    });
     if (validationError) {
       nextSlots[slotIndex] = { ...current, [field]: '' };
       this.dateSlots = nextSlots;
@@ -626,7 +647,8 @@ class SchedulesView extends Vue {
     const dayLabel = this.weekdays.find((day) => day.value === weekday)?.label.toLowerCase() || 'este dia';
     const validationError = this.validateRangeSlots(
       nextSlots.filter((slot) => slot.weekday === weekday),
-      dayLabel
+      dayLabel,
+      { requireComplete: false }
     );
 
     if (validationError) {
