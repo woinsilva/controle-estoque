@@ -68,11 +68,11 @@ class SchedulesView extends Vue {
   slotSequence = 0;
   weekdays = [
     { value: 0, label: 'Domingo' },
-    { value: 1, label: 'Segunda' },
-    { value: 2, label: 'Terca' },
-    { value: 3, label: 'Quarta' },
-    { value: 4, label: 'Quinta' },
-    { value: 5, label: 'Sexta' },
+    { value: 1, label: 'Segunda-feira' },
+    { value: 2, label: 'Terca-feira' },
+    { value: 3, label: 'Quarta-feira' },
+    { value: 4, label: 'Quinta-feira' },
+    { value: 5, label: 'Sexta-feira' },
     { value: 6, label: 'Sabado' }
   ];
 
@@ -151,16 +151,17 @@ class SchedulesView extends Vue {
   validateDaySlots(weekday: number, slots: WeeklyAvailabilitySlot[]) {
     const day = this.weekdays.find((item) => item.value === weekday);
     const dayLabel = day?.label || 'este dia';
+    const dayReference = weekday === 0 || weekday === 6 ? `no ${dayLabel.toLowerCase()}` : `na ${dayLabel.toLowerCase()}`;
     const daySlots = slots
       .filter((slot) => slot.weekday === weekday)
       .sort((a, b) => a.startTime.localeCompare(b.startTime));
 
     for (const slot of daySlots) {
       if (!slot.startTime || !slot.endTime) {
-        return `Preencha todos os horarios em ${dayLabel}.`;
+        return `Preencha todos os horarios ${dayReference}.`;
       }
       if (this.timeToMinutes(slot.endTime) <= this.timeToMinutes(slot.startTime)) {
-        return `O horario final deve ser maior que o inicial em ${dayLabel}.`;
+        return `O horario final deve ser maior que o inicial ${dayReference}.`;
       }
     }
 
@@ -171,7 +172,7 @@ class SchedulesView extends Vue {
         continue;
       }
       if (this.timeToMinutes(previous.endTime) > this.timeToMinutes(current.startTime)) {
-        return `Existem horarios conflitantes em ${dayLabel}.`;
+        return `Existem horarios conflitantes ${dayReference}.`;
       }
     }
 
@@ -181,6 +182,7 @@ class SchedulesView extends Vue {
   validateSlotField(weekday: number, localId: string, slots: EditableWeeklyAvailabilitySlot[]) {
     const day = this.weekdays.find((item) => item.value === weekday);
     const dayLabel = day?.label || 'este dia';
+    const dayReference = weekday === 0 || weekday === 6 ? `no ${dayLabel.toLowerCase()}` : `na ${dayLabel.toLowerCase()}`;
     const currentSlot = slots.find((slot) => slot.localId === localId);
     if (!currentSlot) {
       return '';
@@ -203,7 +205,7 @@ class SchedulesView extends Vue {
       });
 
       if (startConflict) {
-        return `Existem horarios conflitantes em ${dayLabel}.`;
+        return `Existem horarios conflitantes ${dayReference}.`;
       }
     }
 
@@ -216,7 +218,7 @@ class SchedulesView extends Vue {
       });
 
       if (endConflict) {
-        return `Existem horarios conflitantes em ${dayLabel}.`;
+        return `Existem horarios conflitantes ${dayReference}.`;
       }
     }
 
