@@ -30,3 +30,11 @@ export type AppointmentListResponse = {
   limit: number;
   totalPages: number;
 };
+
+export type AppointmentAvailabilityResponse = {
+  month: string;
+  days: {
+    date: string;
+    slots: string[];
+  }[];
+};

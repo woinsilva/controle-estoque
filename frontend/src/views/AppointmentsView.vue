@@ -136,7 +136,7 @@
         </label>
         <label class="field">
           <span>Profissional</span>
-          <select v-model="form.professionalId" required>
+          <select v-model="form.professionalId" required @change="onAvailabilityInputsChange">
             <option value="">Selecione</option>
             <option v-for="professional in professionals" :key="professional.id" :value="professional.id">
               {{ professional.name }}
@@ -145,17 +145,58 @@
         </label>
         <label class="field">
           <span>Servico</span>
-          <select v-model="form.serviceId" required>
+          <select v-model="form.serviceId" required @change="onAvailabilityInputsChange">
             <option value="">Selecione</option>
             <option v-for="service in services" :key="service.id" :value="service.id">
               {{ service.name }} ({{ service.durationMinutes }} min)
             </option>
           </select>
         </label>
-        <label class="field">
-          <span>{{ $t('appointments.fields.scheduledAt') }}</span>
-          <input v-model="form.scheduledAt" type="datetime-local" required />
-        </label>
+        <section class="field full availability-field">
+          <div class="availability-header">
+            <span>{{ $t('appointments.fields.scheduledAt') }}</span>
+            <div class="availability-nav">
+              <button type="button" class="ghost small" @click="changeAvailabilityMonth(-1)">Anterior</button>
+              <strong>{{ availabilityMonthLabel }}</strong>
+              <button type="button" class="ghost small" @click="changeAvailabilityMonth(1)">Proximo</button>
+            </div>
+          </div>
+
+          <div v-if="form.professionalId && form.serviceId" class="availability-picker">
+            <div class="availability-calendar">
+              <div v-for="weekday in availabilityWeekdays" :key="weekday" class="weekday-label">
+                {{ weekday }}
+              </div>
+              <button
+                v-for="day in availabilityCalendarDays"
+                :key="day.date"
+                type="button"
+                class="calendar-day"
+                :class="{
+                  outside: !day.inCurrentMonth,
+                  available: day.available,
+                  selected: selectedAvailabilityDate === day.date
+                }"
+                :disabled="!day.available"
+                @click="selectAvailabilityDate(day.date)"
+              >
+                <span>{{ day.dayNumber }}</span>
+                <small v-if="day.available">{{ availabilityCount(day.date) }} horarios</small>
+              </button>
+            </div>
+
+            <label class="field">
+              <span>Horario disponivel</span>
+              <select v-model="selectedAvailabilityTime" required @change="syncScheduledAtFromAvailability">
+                <option value="">Selecione um horario</option>
+                <option v-for="slot in selectedAvailabilitySlots" :key="slot" :value="slot">
+                  {{ slot }}
+                </option>
+              </select>
+            </label>
+          </div>
+          <p v-else class="availability-hint">Selecione profissional e servico para consultar as datas disponiveis.</p>
+        </section>
         <label class="field">
           <span>{{ $t('appointments.fields.status') }}</span>
           <select v-model="form.status" required>
@@ -242,7 +283,13 @@ import Dialog from 'primevue/dialog';
 import { useConfirm } from 'primevue/useconfirm';
 import { apiDelete, apiGet, apiPost, apiPut } from '../services/api';
 import { useAuthStore } from '../stores/auth';
-import type { Appointment, AppointmentInput, AppointmentListResponse, AppointmentStatus } from '../types/appointment';
+import type {
+  Appointment,
+  AppointmentAvailabilityResponse,
+  AppointmentInput,
+  AppointmentListResponse,
+  AppointmentStatus
+} from '../types/appointment';
 import type { ClientListResponse } from '../types/client';
 import type { QuestionnaireResponse } from '../types/questionnaire';
 import type { Service } from '../types/service';
@@ -281,6 +328,11 @@ class AppointmentsView extends Vue {
   responseDialogOpen = false;
   selectedResponse: QuestionnaireResponse | null = null;
   selectedAppointment: Appointment | null = null;
+  availabilityMonth = this.toMonthKey(new Date());
+  availability: AppointmentAvailabilityResponse | null = null;
+  selectedAvailabilityDate = '';
+  selectedAvailabilityTime = '';
+  availabilityWeekdays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
 
   mounted() {
     this.loadInitialData();
@@ -296,6 +348,50 @@ class AppointmentsView extends Vue {
 
   get dialogTitle() {
     return this.editingId ? this.$t('appointments.edit') : this.$t('appointments.new');
+  }
+
+  get availabilityMonthLabel() {
+    const [year, month] = this.availabilityMonth.split('-').map(Number);
+    return new Date(year || 0, (month || 1) - 1, 1).toLocaleDateString('pt-BR', {
+      month: 'long',
+      year: 'numeric'
+    });
+  }
+
+  get selectedAvailabilitySlots() {
+    if (!this.selectedAvailabilityDate) return [];
+    const slots = this.availability?.days.find((day) => day.date === this.selectedAvailabilityDate)?.slots || [];
+    if (this.editingId && this.form.scheduledAt) {
+      const currentDate = this.toDateKey(new Date(this.form.scheduledAt));
+      const currentTime = this.toTimeKey(new Date(this.form.scheduledAt));
+      if (currentDate === this.selectedAvailabilityDate && currentTime && !slots.includes(currentTime)) {
+        return [currentTime, ...slots].sort();
+      }
+    }
+    return slots;
+  }
+
+  get availabilityCalendarDays() {
+    const [year, month] = this.availabilityMonth.split('-').map(Number);
+    const monthStart = new Date(year || 0, (month || 1) - 1, 1);
+    const gridStart = new Date(monthStart);
+    gridStart.setDate(gridStart.getDate() - gridStart.getDay());
+    const monthEnd = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0);
+    const gridEnd = new Date(monthEnd);
+    gridEnd.setDate(gridEnd.getDate() + (6 - gridEnd.getDay()));
+    const days: { date: string; dayNumber: number; inCurrentMonth: boolean; available: boolean }[] = [];
+
+    for (let cursor = new Date(gridStart); cursor <= gridEnd; cursor.setDate(cursor.getDate() + 1)) {
+      const date = this.toDateKey(cursor);
+      days.push({
+        date,
+        dayNumber: cursor.getDate(),
+        inCurrentMonth: cursor.getMonth() === monthStart.getMonth(),
+        available: this.availabilityCount(date) > 0
+      });
+    }
+
+    return days;
   }
 
   async loadInitialData() {
@@ -373,43 +469,110 @@ class AppointmentsView extends Vue {
 
   openNew() {
     this.editingId = null;
-    const now = new Date();
     this.form = {
       clientId: this.authStore.clientId || '',
       professionalId: '',
       serviceId: '',
-      scheduledAt: this.toDateTimeLocal(now.toISOString()),
+      scheduledAt: '',
       status: 'SCHEDULED',
       notes: ''
     };
+    this.availabilityMonth = this.toMonthKey(new Date());
+    this.availability = null;
+    this.selectedAvailabilityDate = '';
+    this.selectedAvailabilityTime = '';
     this.dialogOpen = true;
   }
 
-  openEdit(appointment: Appointment) {
+  async openEdit(appointment: Appointment) {
     this.editingId = appointment.id;
     this.form = {
       clientId: appointment.clientId,
       professionalId: appointment.professionalId,
       serviceId: appointment.serviceId,
-      scheduledAt: this.toDateTimeLocal(appointment.scheduledAt),
+      scheduledAt: appointment.scheduledAt,
       status: appointment.status,
       notes: appointment.notes || ''
     };
+    const currentDate = new Date(appointment.scheduledAt);
+    this.availabilityMonth = this.toMonthKey(currentDate);
+    this.selectedAvailabilityDate = this.toDateKey(currentDate);
+    this.selectedAvailabilityTime = this.toTimeKey(currentDate);
     this.dialogOpen = true;
+    await this.loadAvailability();
   }
 
   closeDialog() {
     this.dialogOpen = false;
   }
 
+  async onAvailabilityInputsChange() {
+    this.selectedAvailabilityDate = '';
+    this.selectedAvailabilityTime = '';
+    this.form.scheduledAt = '';
+    await this.loadAvailability();
+  }
+
+  async changeAvailabilityMonth(direction: -1 | 1) {
+    const [year, month] = this.availabilityMonth.split('-').map(Number);
+    const next = new Date(year || 0, ((month || 1) - 1) + direction, 1);
+    this.availabilityMonth = this.toMonthKey(next);
+    this.selectedAvailabilityDate = '';
+    this.selectedAvailabilityTime = '';
+    this.form.scheduledAt = '';
+    await this.loadAvailability();
+  }
+
+  async loadAvailability() {
+    if (!this.form.professionalId || !this.form.serviceId) {
+      this.availability = null;
+      return;
+    }
+    try {
+      this.availability = await apiGet<AppointmentAvailabilityResponse>(
+        `/appointments/availability?professionalId=${this.form.professionalId}&serviceId=${this.form.serviceId}&month=${this.availabilityMonth}`,
+        this.authStore.token
+      );
+    } catch (err) {
+      this.error = this.extractErrorMessage(err) || this.$t('appointments.error');
+      this.availability = null;
+    }
+  }
+
+  availabilityCount(date: string) {
+    return this.availability?.days.find((day) => day.date === date)?.slots.length || 0;
+  }
+
+  selectAvailabilityDate(date: string) {
+    if (this.availabilityCount(date) === 0) return;
+    this.selectedAvailabilityDate = date;
+    const currentSlots = this.selectedAvailabilitySlots;
+    this.selectedAvailabilityTime = currentSlots[0] || '';
+    this.syncScheduledAtFromAvailability();
+  }
+
+  syncScheduledAtFromAvailability() {
+    if (!this.selectedAvailabilityDate || !this.selectedAvailabilityTime) {
+      this.form.scheduledAt = '';
+      return;
+    }
+    this.form.scheduledAt = new Date(`${this.selectedAvailabilityDate}T${this.selectedAvailabilityTime}:00`).toISOString();
+  }
+
   async submitAppointment() {
     this.loading = true;
     this.error = '';
+    this.syncScheduledAtFromAvailability();
+    if (!this.form.scheduledAt) {
+      this.error = 'Selecione uma data e horario disponiveis.';
+      this.loading = false;
+      return;
+    }
     const payload = {
       clientId: this.form.clientId,
       professionalId: this.form.professionalId,
       serviceId: this.form.serviceId,
-      scheduledAt: new Date(this.form.scheduledAt).toISOString(),
+      scheduledAt: this.form.scheduledAt,
       status: this.form.status,
       notes: this.form.notes?.trim() || undefined
     };
@@ -640,12 +803,16 @@ class AppointmentsView extends Vue {
     return new Date(value).toLocaleString();
   }
 
-  toDateTimeLocal(value: string) {
-    const date = new Date(value);
-    const pad = (n: number) => String(n).padStart(2, '0');
-    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(
-      date.getHours()
-    )}:${pad(date.getMinutes())}`;
+  toMonthKey(value: Date) {
+    return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}`;
+  }
+
+  toDateKey(value: Date) {
+    return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}-${String(value.getDate()).padStart(2, '0')}`;
+  }
+
+  toTimeKey(value: Date) {
+    return `${String(value.getHours()).padStart(2, '0')}:${String(value.getMinutes()).padStart(2, '0')}`;
   }
 
   extractErrorMessage(error: unknown) {
