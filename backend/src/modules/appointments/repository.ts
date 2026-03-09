@@ -116,3 +116,16 @@ export async function findConflictingAppointments(input: {
 
   return Appointment.find(query).sort({ scheduledAt: 1 }).exec();
 }
+
+export async function listAppointmentsByProfessionalAndRange(input: {
+  professionalId: string;
+  start: Date;
+  end: Date;
+}) {
+  return Appointment.find({
+    professionalId: input.professionalId,
+    scheduledAt: { $gte: input.start, $lte: input.end }
+  })
+    .sort({ scheduledAt: 1 })
+    .exec();
+}

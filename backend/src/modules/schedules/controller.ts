@@ -1,7 +1,9 @@
 import type { Request, Response } from 'express';
 import {
+  getScheduleCalendarService,
   getScheduleByProfessionalIdService,
   listSchedulesService,
+  upsertDateOverrideService,
   upsertScheduleService
 } from './service.js';
 
@@ -10,6 +12,7 @@ function mapSchedule(schedule: {
   _id?: { toString: () => string };
   professionalId: string;
   slots: { weekday: number; startTime: string; endTime: string }[];
+  dateOverrides?: { date: string; slots: { startTime: string; endTime: string }[] }[];
   createdAt: Date;
   updatedAt: Date;
 }) {
@@ -17,6 +20,7 @@ function mapSchedule(schedule: {
     id: schedule.id || schedule._id?.toString() || '',
     professionalId: schedule.professionalId,
     slots: schedule.slots,
+    dateOverrides: schedule.dateOverrides || [],
     createdAt: schedule.createdAt,
     updatedAt: schedule.updatedAt
   };
@@ -44,6 +48,34 @@ export async function upsertScheduleController(req: Request, res: Response) {
     return res.status(200).json(mapSchedule(schedule));
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Could not save schedule.';
+    return res.status(400).json({ error: message });
+  }
+}
+
+export async function upsertDateOverrideController(req: Request, res: Response) {
+  try {
+    const schedule = await upsertDateOverrideService({
+      professionalId: req.params.professionalId,
+      date: req.params.date,
+      slots: req.body.slots
+    });
+    return res.status(200).json(mapSchedule(schedule));
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Could not save schedule override.';
+    return res.status(400).json({ error: message });
+  }
+}
+
+export async function getScheduleCalendarController(req: Request, res: Response) {
+  try {
+    const calendar = await getScheduleCalendarService({
+      professionalId: req.params.professionalId,
+      date: String(req.query.date),
+      view: (req.query.view as 'day' | 'week' | 'month') || 'week'
+    });
+    return res.status(200).json(calendar);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Could not load schedule calendar.';
     return res.status(400).json({ error: message });
   }
 }

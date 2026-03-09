@@ -62,6 +62,13 @@ function getDateMinutes(date: Date) {
   return date.getHours() * 60 + date.getMinutes();
 }
 
+function toDateKey(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 async function validateAppointmentAvailability(input: {
   professionalId: string;
   serviceId: string;
@@ -87,9 +94,13 @@ async function validateAppointmentAvailability(input: {
   const endsAt = new Date(input.scheduledAt.getTime() + service.durationMinutes * 60_000);
   const endMinutes = getDateMinutes(endsAt);
   const weekday = input.scheduledAt.getDay();
-  const slotMatches = schedule.slots.some(
+  const dateKey = toDateKey(input.scheduledAt);
+  const override = schedule.dateOverrides?.find((item) => item.date === dateKey);
+  const availableSlots = override
+    ? override.slots
+    : schedule.slots.filter((slot) => slot.weekday === weekday);
+  const slotMatches = availableSlots.some(
     (slot) =>
-      slot.weekday === weekday &&
       startMinutes >= timeToMinutes(slot.startTime) &&
       endMinutes <= timeToMinutes(slot.endTime)
   );

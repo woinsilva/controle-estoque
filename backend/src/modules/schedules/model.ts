@@ -6,9 +6,20 @@ export type WeeklyAvailabilitySlot = {
   endTime: string;
 };
 
+export type DailyAvailabilitySlot = {
+  startTime: string;
+  endTime: string;
+};
+
+export type DateAvailabilityOverride = {
+  date: string;
+  slots: DailyAvailabilitySlot[];
+};
+
 export type WorkScheduleDocument = {
   professionalId: string;
   slots: WeeklyAvailabilitySlot[];
+  dateOverrides: DateAvailabilityOverride[];
   createdAt: Date;
   updatedAt: Date;
 };
@@ -22,10 +33,27 @@ const slotSchema = new Schema<WeeklyAvailabilitySlot>(
   { _id: false }
 );
 
+const dailySlotSchema = new Schema<DailyAvailabilitySlot>(
+  {
+    startTime: { type: String, required: true },
+    endTime: { type: String, required: true }
+  },
+  { _id: false }
+);
+
+const overrideSchema = new Schema<DateAvailabilityOverride>(
+  {
+    date: { type: String, required: true },
+    slots: { type: [dailySlotSchema], default: [] }
+  },
+  { _id: false }
+);
+
 const workScheduleSchema = new Schema<WorkScheduleDocument>(
   {
     professionalId: { type: String, required: true, unique: true, index: true },
-    slots: { type: [slotSchema], default: [] }
+    slots: { type: [slotSchema], default: [] },
+    dateOverrides: { type: [overrideSchema], default: [] }
   },
   { timestamps: true }
 );
