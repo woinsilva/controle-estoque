@@ -331,7 +331,7 @@ class SchedulesView extends Vue {
     try {
       const [professionals, clients, services] = await Promise.all([
         apiGet<Pick<User, 'id' | 'name'>[]>('/users/professionals', this.authStore.token),
-        apiGet<ClientListResponse>('/clients?page=1&limit=500&sortBy=createdAt&sortOrder=desc', this.authStore.token),
+        apiGet<ClientListResponse>('/clients?page=1&limit=100&sortBy=createdAt&sortOrder=desc', this.authStore.token),
         apiGet<Service[]>('/services?active=true', this.authStore.token)
       ]);
 
