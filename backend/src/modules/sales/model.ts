@@ -13,6 +13,7 @@ export type SaleItemDocument = {
 };
 
 export type SaleDocument = {
+  clientId?: string;
   items: SaleItemDocument[];
   total: number;
   status: SaleStatus;
@@ -36,6 +37,7 @@ const saleItemSchema = new Schema<SaleItemDocument>(
 
 const saleSchema = new Schema<SaleDocument>(
   {
+    clientId: { type: String, index: true },
     items: { type: [saleItemSchema], required: true },
     total: { type: Number, required: true, min: 0 },
     status: {

@@ -11,6 +11,12 @@ import { authMiddleware } from './middlewares/auth.js';
 import { requireRole } from './middlewares/role.js';
 import productRoutes from './modules/products/routes.js';
 import salesRoutes from './modules/sales/routes.js';
+import usersRoutes from './modules/users/routes.js';
+import clientsRoutes from './modules/clients/routes.js';
+import questionnairesRoutes from './modules/questionnaires/routes.js';
+import appointmentsRoutes from './modules/appointments/routes.js';
+import dashboardRoutes from './modules/dashboard/routes.js';
+import reportsRoutes from './modules/reports/routes.js';
 import { logger } from './config/logger.js';
 
 export const app = express();
@@ -44,6 +50,12 @@ app.get('/health', (_req, res) => {
 app.use('/auth', authLimiter, authRoutes);
 app.use('/products', productRoutes);
 app.use('/sales', salesRoutes);
+app.use('/users', usersRoutes);
+app.use('/clients', clientsRoutes);
+app.use('/questionnaires', questionnairesRoutes);
+app.use('/appointments', appointmentsRoutes);
+app.use('/dashboard', dashboardRoutes);
+app.use('/reports', reportsRoutes);
 
 app.get('/me', authMiddleware, (req, res) => {
   res.status(200).json({ user: req.user });

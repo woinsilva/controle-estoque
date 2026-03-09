@@ -9,6 +9,7 @@ export async function getSaleById(id: string) {
 }
 
 export async function createSale(data: {
+  clientId?: string;
   items: {
     productId: string;
     name: string;

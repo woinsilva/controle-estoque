@@ -31,7 +31,9 @@ export async function login({ email, password }: LoginInput) {
       id: user.id,
       name: user.name,
       email: user.email,
-      role: user.role
+      role: user.role,
+      locale: user.locale || 'pt',
+      theme: user.theme || 'light'
     }
   };
 }

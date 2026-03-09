@@ -1,6 +1,8 @@
 import { z } from 'zod';
+const objectIdRegex = /^[a-f\d]{24}$/i;
 
 export const saleSchema = z.object({
+  clientId: z.string().regex(objectIdRegex, 'Invalid client id.'),
   items: z
     .array(
       z.object({

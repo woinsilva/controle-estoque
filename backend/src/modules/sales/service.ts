@@ -1,5 +1,6 @@
 import { Product } from '../products/model.js';
 import { createPendingFiscalRecord } from '../nfe/service.js';
+import { getClientById } from '../clients/repository.js';
 import { createSale, getSaleById, listSales } from './repository.js';
 
 type SaleItemInput = {
@@ -17,10 +18,15 @@ export async function getSaleService(id: string) {
 
 export async function createSaleService(
   items: SaleItemInput[],
+  clientId: string,
   createdBy?: string
 ) {
   if (!items.length) {
     throw new Error('Sale items are required.');
+  }
+  const client = await getClientById(clientId);
+  if (!client) {
+    throw new Error('Client not found.');
   }
 
   const productIds = items.map((item) => item.productId);
@@ -61,6 +67,7 @@ export async function createSaleService(
   }
 
   const sale = await createSale({
+    clientId,
     items: saleItems,
     total,
     status: 'COMPLETED',

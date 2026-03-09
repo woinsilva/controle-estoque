@@ -28,7 +28,7 @@ export async function createSaleController(req: Request, res: Response) {
   }));
 
   try {
-    const sale = await createSaleService(items, req.user?.id);
+    const sale = await createSaleService(items, req.body.clientId, req.user?.id);
     await recordAudit({
       action: 'CREATE',
       entity: 'sale',
@@ -37,7 +37,7 @@ export async function createSaleController(req: Request, res: Response) {
       role: req.user?.role,
       ip: req.ip,
       userAgent: req.headers['user-agent'],
-      payload: { total: sale.total, items: sale.items.length }
+      payload: { total: sale.total, items: sale.items.length, clientId: sale.clientId }
     });
     return res.status(201).json(sale);
   } catch (error) {

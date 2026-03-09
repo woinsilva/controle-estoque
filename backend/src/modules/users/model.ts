@@ -8,6 +8,8 @@ export type UserDocument = {
   passwordHash: string;
   role: UserRole;
   active: boolean;
+  locale?: string;
+  theme?: 'light' | 'dark';
   createdAt: Date;
   updatedAt: Date;
 };
@@ -18,7 +20,9 @@ const userSchema = new Schema<UserDocument>(
     email: { type: String, required: true, unique: true, lowercase: true, index: true },
     passwordHash: { type: String, required: true },
     role: { type: String, enum: ['OPERATOR', 'MANAGER', 'ADMIN'], required: true },
-    active: { type: Boolean, default: true }
+    active: { type: Boolean, default: true },
+    locale: { type: String, default: 'pt' },
+    theme: { type: String, enum: ['light', 'dark'], default: 'light' }
   },
   { timestamps: true }
 );

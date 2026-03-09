@@ -7,6 +7,7 @@
     "dev": "tsx watch src/server.ts",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/server.js",
+    "test": "node scripts/run-tests.mjs",
     "lint": "eslint .",
     "format": "prettier --write \"src/**/*.ts\"",
     "seed:admin": "tsx src/modules/users/seed.ts"
