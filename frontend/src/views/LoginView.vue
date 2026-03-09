@@ -79,8 +79,8 @@ class LoginView extends Vue {
       );
       applyPreferences(locale, theme);
       await this.$router.push('/app');
-    } catch {
-      this.error = this.$t('login.error');
+    } catch (error) {
+      this.error = error instanceof Error ? error.message : (this.$t('login.error') as string);
     } finally {
       this.isLoading = false;
     }

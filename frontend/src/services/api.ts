@@ -22,13 +22,17 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   });
 
   if (!response.ok) {
-    if (response.status === 401) {
+    if (response.status === 401 && options.token) {
       localStorage.removeItem('token');
       localStorage.removeItem('role');
       localStorage.removeItem('userId');
+      localStorage.removeItem('clientId');
+      localStorage.removeItem('isProfessional');
       sessionStorage.removeItem('token');
       sessionStorage.removeItem('role');
       sessionStorage.removeItem('userId');
+      sessionStorage.removeItem('clientId');
+      sessionStorage.removeItem('isProfessional');
       window.location.href = '/login';
       throw new Error('Invalid or expired token.');
     }

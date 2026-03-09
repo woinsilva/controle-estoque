@@ -49,7 +49,22 @@ const messages = {
       button: 'Acessar',
       loading: 'Entrando...',
       error: 'Credenciais invalidas.',
-      hint: 'Ambiente de demonstracao. Autenticacao sera habilitada na proxima etapa.'
+      hint: 'Clientes recebem um email para confirmar a conta e definir a senha no primeiro acesso.'
+    },
+    activate: {
+      tag: 'Primeiro acesso',
+      title: 'Ative sua conta',
+      subtitle: 'Confirme seu email definindo uma nova senha.',
+      password: 'Nova senha',
+      confirmPassword: 'Confirmar senha',
+      button: 'Ativar conta',
+      loading: 'Ativando...',
+      success: 'Conta ativada com sucesso. Voce ja pode entrar no sistema.',
+      error: 'Nao foi possivel ativar a conta.',
+      invalidToken: 'Link de ativacao invalido ou expirado.',
+      passwordMinLength: 'A senha precisa ter pelo menos 6 caracteres.',
+      passwordMismatch: 'As senhas informadas nao coincidem.',
+      backToLogin: 'Voltar para o login'
     },
     products: {
       title: 'Produtos',
@@ -355,7 +370,22 @@ const messages = {
       button: 'Continue',
       loading: 'Signing in...',
       error: 'Invalid credentials.',
-      hint: 'Demo environment. Authentication will be enabled in the next step.'
+      hint: 'Clients receive an email to confirm the account and define a password on first access.'
+    },
+    activate: {
+      tag: 'First access',
+      title: 'Activate your account',
+      subtitle: 'Confirm your email by setting a new password.',
+      password: 'New password',
+      confirmPassword: 'Confirm password',
+      button: 'Activate account',
+      loading: 'Activating...',
+      success: 'Account activated successfully. You can now sign in.',
+      error: 'Could not activate the account.',
+      invalidToken: 'Invalid or expired activation link.',
+      passwordMinLength: 'Password must be at least 6 characters long.',
+      passwordMismatch: 'Passwords do not match.',
+      backToLogin: 'Back to login'
     },
     products: {
       title: 'Products',
@@ -661,7 +691,22 @@ const messages = {
       button: 'Acceder',
       loading: 'Ingresando...',
       error: 'Credenciales invalidas.',
-      hint: 'Entorno de demostracion. La autenticacion se habilitara en el siguiente paso.'
+      hint: 'Los clientes reciben un correo para confirmar la cuenta y definir la contrasena en el primer acceso.'
+    },
+    activate: {
+      tag: 'Primer acceso',
+      title: 'Activa tu cuenta',
+      subtitle: 'Confirma tu correo definiendo una nueva contrasena.',
+      password: 'Nueva contrasena',
+      confirmPassword: 'Confirmar contrasena',
+      button: 'Activar cuenta',
+      loading: 'Activando...',
+      success: 'Cuenta activada con exito. Ya puedes iniciar sesion.',
+      error: 'No se pudo activar la cuenta.',
+      invalidToken: 'Enlace de activacion invalido o vencido.',
+      passwordMinLength: 'La contrasena debe tener al menos 6 caracteres.',
+      passwordMismatch: 'Las contrasenas no coinciden.',
+      backToLogin: 'Volver al login'
     },
     products: {
       title: 'Productos',

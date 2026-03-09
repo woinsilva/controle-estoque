@@ -11,6 +11,7 @@ import AppointmentsView from '../views/AppointmentsView.vue';
 import ReportsView from '../views/ReportsView.vue';
 import ServicesView from '../views/ServicesView.vue';
 import SchedulesView from '../views/SchedulesView.vue';
+import ActivateAccountView from '../views/ActivateAccountView.vue';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -20,6 +21,12 @@ const router = createRouter({
       path: '/login',
       name: 'login',
       component: LoginView,
+      meta: { layout: 'public' }
+    },
+    {
+      path: '/activate-account',
+      name: 'activate-account',
+      component: ActivateAccountView,
       meta: { layout: 'public' }
     },
     {
