@@ -1002,7 +1002,12 @@ export default toNative(AppointmentsView);
 }
 
 .dialog {
-  min-width: min(720px, 92vw);
+  width: min(920px, 92vw);
+}
+
+:deep(.dialog .p-dialog-content) {
+  max-height: min(78vh, 820px);
+  overflow-y: auto;
 }
 
 .form {
