@@ -123,6 +123,69 @@
       </Column>
     </DataTable>
 
+    <section class="mobile-list">
+      <article v-for="appointment in appointments" :key="appointment.id" class="mobile-card">
+        <div class="mobile-card-head">
+          <div>
+            <strong>{{ clientName(appointment.clientId) }}</strong>
+            <small>{{ formatDateTime(appointment.scheduledAt) }}</small>
+          </div>
+          <span class="status-pill" :class="appointment.status.toLowerCase()">
+            {{ $t(`appointments.statuses.${appointment.status}`) }}
+          </span>
+        </div>
+        <dl class="mobile-meta">
+          <div>
+            <dt>Profissional</dt>
+            <dd>{{ professionalName(appointment.professionalId) }}</dd>
+          </div>
+          <div>
+            <dt>Servicos</dt>
+            <dd>{{ serviceNames(appointment.serviceIds) }}</dd>
+          </div>
+          <div>
+            <dt>{{ $t('appointments.fields.questionnaire') }}</dt>
+            <dd>{{ questionnaireLabel(appointment.id) }}</dd>
+          </div>
+          <div>
+            <dt>{{ $t('appointments.fields.notes') }}</dt>
+            <dd>{{ appointment.notes || '-' }}</dd>
+          </div>
+        </dl>
+        <div class="mobile-actions">
+          <button type="button" class="icon-button" :title="$t('appointments.edit')" @click="openEdit(appointment)">
+            <i class="pi pi-pencil" aria-hidden="true"></i>
+          </button>
+          <button
+            type="button"
+            class="icon-button"
+            :title="$t('appointments.goQuestionnaire')"
+            @click="goToQuestionnaire(appointment)"
+          >
+            <i class="pi pi-file-edit" aria-hidden="true"></i>
+          </button>
+          <button
+            :disabled="!questionnaireByAppointment[appointment.id]"
+            type="button"
+            class="icon-button"
+            :title="$t('appointments.viewResponse')"
+            @click="openResponseDialog(appointment)"
+          >
+            <i class="pi pi-eye" aria-hidden="true"></i>
+          </button>
+          <button
+            v-if="canDelete"
+            type="button"
+            class="icon-button danger"
+            :title="$t('appointments.delete')"
+            @click="confirmDelete(appointment)"
+          >
+            <i class="pi pi-trash" aria-hidden="true"></i>
+          </button>
+        </div>
+      </article>
+    </section>
+
     <Dialog v-model:visible="dialogOpen" modal :header="dialogTitle" class="dialog">
       <form class="form" @submit.prevent="submitAppointment">
         <label v-if="authStore.role !== 'CLIENT'" class="field">
@@ -1001,6 +1064,78 @@ export default toNative(AppointmentsView);
   background: var(--panel);
 }
 
+.mobile-list {
+  display: none;
+}
+
+.mobile-card {
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.78);
+  padding: 1rem;
+  display: grid;
+  gap: 0.9rem;
+}
+
+.mobile-card-head,
+.mobile-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.mobile-card-head small {
+  color: var(--muted);
+}
+
+.mobile-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin: 0;
+}
+
+.mobile-meta dt {
+  color: var(--muted);
+  font-size: 0.8rem;
+  margin-bottom: 0.2rem;
+}
+
+.mobile-meta dd {
+  margin: 0;
+  font-weight: 700;
+}
+
+.status-pill {
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  background: var(--panel-soft);
+  color: var(--muted);
+}
+
+.status-pill.scheduled {
+  background: var(--primary-soft);
+  color: var(--primary-strong);
+}
+
+.status-pill.in_progress {
+  background: rgba(180, 105, 18, 0.14);
+  color: var(--warning);
+}
+
+.status-pill.completed {
+  background: rgba(15, 118, 110, 0.12);
+  color: var(--primary-strong);
+}
+
+.status-pill.canceled {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
 .dialog {
   width: min(920px, 92vw);
 }
@@ -1270,8 +1405,44 @@ export default toNative(AppointmentsView);
 }
 
 @media (max-width: 700px) {
+  .appointments-header,
+  .dialog-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .actions {
+    width: 100%;
+  }
+
+  .actions > * {
+    width: 100%;
+  }
+
+  .filters {
+    padding: 0.85rem;
+  }
+
+  .table {
+    display: none;
+  }
+
+  .mobile-list {
+    display: grid;
+    gap: 0.85rem;
+  }
+
   .availability-calendar {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .calendar-day {
+    min-height: 74px;
+    padding: 0.6rem 0.45rem;
+  }
+
+  .time-slots {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 </style>

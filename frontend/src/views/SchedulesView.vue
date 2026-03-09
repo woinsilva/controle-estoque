@@ -986,6 +986,28 @@ export default toNative(SchedulesView);
 }
 
 @media (max-width: 760px) {
+  .toolbar,
+  .section-head,
+  .panel-actions,
+  .nav-group,
+  .view-group {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .professional-field {
+    max-width: none;
+  }
+
+  .day-cell {
+    min-height: auto;
+  }
+
+  .day-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
   .month-grid,
   .range-grid.week {
     grid-template-columns: 1fr;
@@ -994,6 +1016,14 @@ export default toNative(SchedulesView);
   .slot-row {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .primary,
+  .ghost,
+  .view-button,
+  .slot-row button {
+    width: 100%;
+    justify-content: center;
   }
 }
 </style>
