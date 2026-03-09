@@ -6,6 +6,15 @@ function timeToMinutes(value: string) {
   return hours * 60 + minutes;
 }
 
+function sortSlots(slots: { weekday: number; startTime: string; endTime: string }[]) {
+  return [...slots].sort((a, b) => {
+    if (a.weekday !== b.weekday) {
+      return a.weekday - b.weekday;
+    }
+    return timeToMinutes(a.startTime) - timeToMinutes(b.startTime);
+  });
+}
+
 export async function listSchedulesService() {
   return listSchedules();
 }
@@ -23,11 +32,28 @@ export async function upsertScheduleService(input: {
     throw new Error('Professional not found.');
   }
 
-  for (const slot of input.slots) {
+  const sortedSlots = sortSlots(input.slots);
+
+  for (const slot of sortedSlots) {
     if (timeToMinutes(slot.endTime) <= timeToMinutes(slot.startTime)) {
       throw new Error('Schedule end time must be after start time.');
     }
   }
 
-  return upsertSchedule(input);
+  for (let index = 1; index < sortedSlots.length; index += 1) {
+    const previous = sortedSlots[index - 1];
+    const current = sortedSlots[index];
+    if (previous.weekday !== current.weekday) {
+      continue;
+    }
+
+    if (timeToMinutes(previous.endTime) > timeToMinutes(current.startTime)) {
+      throw new Error('Schedule time ranges cannot overlap on the same day.');
+    }
+  }
+
+  return upsertSchedule({
+    professionalId: input.professionalId,
+    slots: sortedSlots
+  });
 }
