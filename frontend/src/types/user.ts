@@ -1,4 +1,4 @@
-export type UserRole = 'OPERATOR' | 'MANAGER' | 'ADMIN';
+export type UserRole = 'OPERATOR' | 'MANAGER' | 'ADMIN' | 'CLIENT';
 
 export type User = {
   id: string;
@@ -6,6 +6,10 @@ export type User = {
   email: string;
   role: UserRole;
   active: boolean;
+  clientId?: string;
+  isProfessional?: boolean;
+  emailConfirmed?: boolean;
+  passwordResetRequired?: boolean;
   locale?: string;
   theme?: 'light' | 'dark';
 };
@@ -16,6 +20,10 @@ export type UserInput = {
   password?: string;
   role: UserRole;
   active: boolean;
+  clientId?: string;
+  isProfessional?: boolean;
+  emailConfirmed?: boolean;
+  passwordResetRequired?: boolean;
   locale?: string;
   theme?: 'light' | 'dark';
 };

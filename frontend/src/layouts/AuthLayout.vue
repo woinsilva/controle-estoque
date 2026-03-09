@@ -6,7 +6,7 @@
         <strong>{{ $t('common.appName') }}</strong>
       </div>
       <nav class="menu">
-        <router-link to="/app">{{ $t('common.dashboard') }}</router-link>
+        <router-link v-if="canSeeDashboard" to="/app">{{ $t('common.dashboard') }}</router-link>
         <router-link v-if="canSeeProducts" to="/app/products">
           {{ $t('common.products') }}
         </router-link>
@@ -18,6 +18,12 @@
         </router-link>
         <router-link v-if="canSeeAppointments" to="/app/appointments">
           {{ $t('common.appointments') }}
+        </router-link>
+        <router-link v-if="canSeeServices" to="/app/services">
+          Servicos
+        </router-link>
+        <router-link v-if="canSeeSchedules" to="/app/schedules">
+          Agenda
         </router-link>
         <router-link v-if="canSeeReports" to="/app/reports">
           {{ $t('common.reports') }}
@@ -53,6 +59,10 @@ import { i18n } from '../i18n';
 export default class AuthLayout extends Vue {
   authStore = useAuthStore();
 
+  get canSeeDashboard() {
+    return this.authStore.role !== 'CLIENT';
+  }
+
   get canSeeProducts() {
     return ['MANAGER', 'ADMIN'].includes(this.authStore.role || '');
   }
@@ -74,6 +84,14 @@ export default class AuthLayout extends Vue {
   }
 
   get canSeeAppointments() {
+    return ['OPERATOR', 'MANAGER', 'ADMIN', 'CLIENT'].includes(this.authStore.role || '');
+  }
+
+  get canSeeServices() {
+    return ['OPERATOR', 'MANAGER', 'ADMIN'].includes(this.authStore.role || '');
+  }
+
+  get canSeeSchedules() {
     return ['OPERATOR', 'MANAGER', 'ADMIN'].includes(this.authStore.role || '');
   }
 

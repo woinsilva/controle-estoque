@@ -13,7 +13,7 @@
     </header>
 
     <section class="filters">
-      <label class="field">
+      <label v-if="authStore.role !== 'CLIENT'" class="field">
         <span>{{ $t('appointments.fields.client') }}</span>
         <select v-model="filterClientId" @change="loadAppointments(1)">
           <option value="">{{ $t('appointments.allClients') }}</option>
@@ -58,6 +58,16 @@
       <Column field="clientId" :header="$t('appointments.fields.client')">
         <template #body="{ data }">
           {{ clientName(data.clientId) }}
+        </template>
+      </Column>
+      <Column field="professionalId" header="Profissional">
+        <template #body="{ data }">
+          {{ professionalName(data.professionalId) }}
+        </template>
+      </Column>
+      <Column field="serviceId" header="Servico">
+        <template #body="{ data }">
+          {{ serviceName(data.serviceId) }}
         </template>
       </Column>
       <Column field="scheduledAt" :header="$t('appointments.fields.scheduledAt')">
@@ -115,12 +125,30 @@
 
     <Dialog v-model:visible="dialogOpen" modal :header="dialogTitle" class="dialog">
       <form class="form" @submit.prevent="submitAppointment">
-        <label class="field">
+        <label v-if="authStore.role !== 'CLIENT'" class="field">
           <span>{{ $t('appointments.fields.client') }}</span>
           <select v-model="form.clientId" required>
             <option value="">{{ $t('appointments.selectClient') }}</option>
             <option v-for="client in clients" :key="client.id" :value="client.id">
               {{ client.fullName }}
+            </option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Profissional</span>
+          <select v-model="form.professionalId" required>
+            <option value="">Selecione</option>
+            <option v-for="professional in professionals" :key="professional.id" :value="professional.id">
+              {{ professional.name }}
+            </option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Servico</span>
+          <select v-model="form.serviceId" required>
+            <option value="">Selecione</option>
+            <option v-for="service in services" :key="service.id" :value="service.id">
+              {{ service.name }} ({{ service.durationMinutes }} min)
             </option>
           </select>
         </label>
@@ -217,6 +245,8 @@ import { useAuthStore } from '../stores/auth';
 import type { Appointment, AppointmentInput, AppointmentListResponse, AppointmentStatus } from '../types/appointment';
 import type { ClientListResponse } from '../types/client';
 import type { QuestionnaireResponse } from '../types/questionnaire';
+import type { Service } from '../types/service';
+import type { User } from '../types/user';
 import ErrorCard from '../components/ErrorCard.vue';
 
 @Component({ components: { DataTable, Column, Dialog, ErrorCard } })
@@ -225,6 +255,8 @@ export default class AppointmentsView extends Vue {
   confirm = useConfirm();
   appointments: Appointment[] = [];
   clients: ClientListResponse['items'] = [];
+  professionals: Pick<User, 'id' | 'name'>[] = [];
+  services: Service[] = [];
   loading = false;
   error = '';
   dialogOpen = false;
@@ -240,6 +272,8 @@ export default class AppointmentsView extends Vue {
   dateTo = '';
   form: AppointmentInput = {
     clientId: '',
+    professionalId: '',
+    serviceId: '',
     scheduledAt: '',
     status: 'SCHEDULED',
     notes: ''
@@ -268,11 +302,30 @@ export default class AppointmentsView extends Vue {
     this.loading = true;
     this.error = '';
     try {
-      const clients = await apiGet<ClientListResponse>(
-        '/clients?page=1&limit=100&sortBy=createdAt&sortOrder=desc',
-        this.authStore.token
-      );
-      this.clients = clients.items;
+      const requests: Promise<unknown>[] = [
+        apiGet<Pick<User, 'id' | 'name'>[]>('/users/professionals', this.authStore.token),
+        apiGet<Service[]>('/services?active=true', this.authStore.token)
+      ];
+      if (this.authStore.role !== 'CLIENT') {
+        requests.unshift(
+          apiGet<ClientListResponse>(
+            '/clients?page=1&limit=100&sortBy=createdAt&sortOrder=desc',
+            this.authStore.token
+          )
+        );
+      }
+
+      const results = await Promise.all(requests);
+      if (this.authStore.role !== 'CLIENT') {
+        const [clients, professionals, services] = results as [ClientListResponse, Pick<User, 'id' | 'name'>[], Service[]];
+        this.clients = clients.items;
+        this.professionals = professionals;
+        this.services = services;
+      } else {
+        const [professionals, services] = results as [Pick<User, 'id' | 'name'>[], Service[]];
+        this.professionals = professionals;
+        this.services = services;
+      }
       await this.loadAppointments();
     } catch (err) {
       this.error = this.extractErrorMessage(err) || this.$t('appointments.error');
@@ -322,7 +375,9 @@ export default class AppointmentsView extends Vue {
     this.editingId = null;
     const now = new Date();
     this.form = {
-      clientId: '',
+      clientId: this.authStore.clientId || '',
+      professionalId: '',
+      serviceId: '',
       scheduledAt: this.toDateTimeLocal(now.toISOString()),
       status: 'SCHEDULED',
       notes: ''
@@ -334,6 +389,8 @@ export default class AppointmentsView extends Vue {
     this.editingId = appointment.id;
     this.form = {
       clientId: appointment.clientId,
+      professionalId: appointment.professionalId,
+      serviceId: appointment.serviceId,
       scheduledAt: this.toDateTimeLocal(appointment.scheduledAt),
       status: appointment.status,
       notes: appointment.notes || ''
@@ -350,6 +407,8 @@ export default class AppointmentsView extends Vue {
     this.error = '';
     const payload = {
       clientId: this.form.clientId,
+      professionalId: this.form.professionalId,
+      serviceId: this.form.serviceId,
       scheduledAt: new Date(this.form.scheduledAt).toISOString(),
       status: this.form.status,
       notes: this.form.notes?.trim() || undefined
@@ -563,7 +622,18 @@ export default class AppointmentsView extends Vue {
   }
 
   clientName(clientId: string) {
+    if (this.authStore.role === 'CLIENT' && this.authStore.clientId === clientId) {
+      return 'Meu cadastro';
+    }
     return this.clients.find((item) => item.id === clientId)?.fullName || clientId;
+  }
+
+  professionalName(professionalId: string) {
+    return this.professionals.find((item) => item.id === professionalId)?.name || professionalId;
+  }
+
+  serviceName(serviceId: string) {
+    return this.services.find((item) => item.id === serviceId)?.name || serviceId;
   }
 
   formatDateTime(value: string) {

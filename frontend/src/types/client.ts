@@ -1,18 +1,19 @@
 export type Client = {
   id: string;
   fullName: string;
-  email?: string;
+  email: string;
   phone: string;
   birthDate?: string;
   notes?: string;
   active: boolean;
+  userId?: string;
   createdAt: string;
   updatedAt: string;
 };
 
 export type ClientInput = {
   fullName: string;
-  email?: string;
+  email: string;
   phone: string;
   birthDate?: string;
   notes?: string;

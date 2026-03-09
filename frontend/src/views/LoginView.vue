@@ -41,6 +41,8 @@ type LoginResponse = {
     name: string;
     email: string;
     role: UserRole;
+    clientId?: string | null;
+    isProfessional?: boolean;
     locale?: 'pt' | 'en' | 'es';
     theme?: 'light' | 'dark';
   };
@@ -69,6 +71,8 @@ export default class LoginView extends Vue {
         result.token,
         result.user.role,
         result.user.id,
+        result.user.clientId || null,
+        Boolean(result.user.isProfessional),
         this.rememberMe,
         locale,
         theme

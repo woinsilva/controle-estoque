@@ -3,7 +3,10 @@ export type AppointmentStatus = 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'CAN
 export type Appointment = {
   id: string;
   clientId: string;
+  professionalId: string;
+  serviceId: string;
   scheduledAt: string;
+  endsAt: string;
   status: AppointmentStatus;
   notes?: string;
   createdBy?: string;
@@ -13,6 +16,8 @@ export type Appointment = {
 
 export type AppointmentInput = {
   clientId: string;
+  professionalId: string;
+  serviceId: string;
   scheduledAt: string;
   status: AppointmentStatus;
   notes?: string;

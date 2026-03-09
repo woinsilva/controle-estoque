@@ -60,6 +60,11 @@
           {{ data.active ? $t('common.yes') : $t('common.no') }}
         </template>
       </Column>
+      <Column field="isProfessional" header="Profissional">
+        <template #body="{ data }">
+          {{ data.isProfessional ? $t('common.yes') : $t('common.no') }}
+        </template>
+      </Column>
       <Column :header="$t('users.actions')">
         <template #body="{ data }">
           <button type="button" class="icon-button" @click="openEdit(data)" :title="$t('users.edit')">
@@ -99,6 +104,7 @@
               <option value="OPERATOR">{{ $t('roles.operator') }}</option>
               <option value="MANAGER">{{ $t('roles.manager') }}</option>
               <option value="ADMIN">{{ $t('roles.admin') }}</option>
+              <option value="CLIENT">Cliente</option>
             </select>
           </label>
           <label class="field">
@@ -119,6 +125,10 @@
           <label class="field checkbox">
             <input v-model="form.active" type="checkbox" />
             <span>{{ $t('users.fields.active') }}</span>
+          </label>
+          <label v-if="form.role !== 'CLIENT'" class="field checkbox">
+            <input v-model="form.isProfessional" type="checkbox" />
+            <span>Profissional</span>
           </label>
         </div>
         <div class="dialog-actions">
@@ -170,6 +180,7 @@ export default class UsersView extends Vue {
     password: '',
     role: 'OPERATOR',
     active: true,
+    isProfessional: false,
     locale: 'pt',
     theme: 'light'
   };
@@ -223,6 +234,7 @@ export default class UsersView extends Vue {
       password: '',
       role: 'OPERATOR',
       active: true,
+      isProfessional: false,
       locale: 'pt',
       theme: 'light'
     };
@@ -237,6 +249,7 @@ export default class UsersView extends Vue {
       password: '',
       role: user.role,
       active: user.active,
+      isProfessional: Boolean(user.isProfessional),
       locale: user.locale || 'pt',
       theme: user.theme || 'light'
     };
@@ -296,7 +309,8 @@ export default class UsersView extends Vue {
     const map: Record<UserRole, string> = {
       OPERATOR: this.$t('roles.operator'),
       MANAGER: this.$t('roles.manager'),
-      ADMIN: this.$t('roles.admin')
+      ADMIN: this.$t('roles.admin'),
+      CLIENT: 'Cliente'
     };
     return map[role];
   }

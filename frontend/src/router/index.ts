@@ -9,6 +9,8 @@ import ClientsView from '../views/ClientsView.vue';
 import QuestionnairesView from '../views/QuestionnairesView.vue';
 import AppointmentsView from '../views/AppointmentsView.vue';
 import ReportsView from '../views/ReportsView.vue';
+import ServicesView from '../views/ServicesView.vue';
+import SchedulesView from '../views/SchedulesView.vue';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -54,6 +56,18 @@ const router = createRouter({
       path: '/app/appointments',
       name: 'appointments',
       component: AppointmentsView,
+      meta: { layout: 'auth', requiresAuth: true, roles: ['OPERATOR', 'MANAGER', 'ADMIN', 'CLIENT'] }
+    },
+    {
+      path: '/app/services',
+      name: 'services',
+      component: ServicesView,
+      meta: { layout: 'auth', requiresAuth: true, roles: ['OPERATOR', 'MANAGER', 'ADMIN'] }
+    },
+    {
+      path: '/app/schedules',
+      name: 'schedules',
+      component: SchedulesView,
       meta: { layout: 'auth', requiresAuth: true, roles: ['OPERATOR', 'MANAGER', 'ADMIN'] }
     },
     {
@@ -78,6 +92,9 @@ router.beforeEach((to) => {
   const authStore = useAuthStore();
   if (!authStore.isAuthenticated) {
     return { name: 'login' };
+  }
+  if (authStore.role === 'CLIENT' && to.name !== 'appointments') {
+    return { name: 'appointments' };
   }
   const roles = to.meta.roles as string[] | undefined;
   if (roles && authStore.role && !roles.includes(authStore.role)) {

@@ -66,7 +66,7 @@
           </label>
           <label class="field">
             <span>{{ $t('clients.fields.email') }}</span>
-            <input v-model="form.email" type="email" />
+            <input v-model="form.email" type="email" required />
           </label>
           <label class="field">
             <span>{{ $t('clients.fields.phone') }}</span>
@@ -224,7 +224,7 @@ export default class ClientsView extends Vue {
     this.error = '';
     const payload = {
       fullName: this.form.fullName.trim(),
-      email: this.form.email?.trim() || undefined,
+      email: this.form.email.trim(),
       phone: this.form.phone.trim(),
       birthDate: this.form.birthDate || undefined,
       notes: this.form.notes?.trim() || undefined,
