@@ -130,7 +130,7 @@ class SchedulesView extends Vue {
       if (a.weekday !== b.weekday) {
         return a.weekday - b.weekday;
       }
-      return a.startTime.localeCompare(b.startTime);
+      return a.localId.localeCompare(b.localId);
     });
   }
 
