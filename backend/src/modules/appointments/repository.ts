@@ -26,7 +26,7 @@ export async function listAppointments(filters: AppointmentFilters, pagination: 
     query.professionalId = filters.professionalId;
   }
   if (filters.serviceId) {
-    query.serviceId = filters.serviceId;
+    query.serviceIds = filters.serviceId;
   }
   if (filters.status) {
     query.status = filters.status;
@@ -68,7 +68,7 @@ export async function getAppointmentById(id: string) {
 export async function createAppointment(data: {
   clientId: string;
   professionalId: string;
-  serviceId: string;
+  serviceIds: string[];
   scheduledAt: Date;
   endsAt: Date;
   status?: AppointmentStatus;
@@ -83,7 +83,7 @@ export async function updateAppointment(
   data: Partial<{
     clientId: string;
     professionalId: string;
-    serviceId: string;
+    serviceIds: string[];
     scheduledAt: Date;
     endsAt: Date;
     status: AppointmentStatus;

@@ -17,7 +17,7 @@ import {
 type AppointmentInput = {
   clientId: string;
   professionalId: string;
-  serviceId: string;
+  serviceIds: string[];
   scheduledAt: Date;
   status?: AppointmentStatus;
   notes?: string;
@@ -46,6 +46,10 @@ export class AppointmentServiceError extends Error {
     super(message);
     this.statusCode = statusCode;
   }
+}
+
+function getAppointmentServiceIds(appointment: { serviceIds?: string[]; serviceId?: string }) {
+  return appointment.serviceIds || (appointment.serviceId ? [appointment.serviceId] : []);
 }
 
 function normalizeNotes(value?: string) {
@@ -124,14 +128,18 @@ function getAvailableSlotsForDate(input: {
 
 async function validateAppointmentAvailability(input: {
   professionalId: string;
-  serviceId: string;
+  serviceIds: string[];
   scheduledAt: Date;
   excludeId?: string;
 }) {
-  const service = await getServiceById(input.serviceId);
-  if (!service || !service.active) {
+  if (input.serviceIds.length === 0) {
+    throw new AppointmentServiceError('At least one service is required.', 400);
+  }
+  const services = await Promise.all(input.serviceIds.map((serviceId) => getServiceById(serviceId)));
+  if (services.some((service) => !service || !service.active)) {
     throw new AppointmentServiceError('Service not found.', 404);
   }
+  const totalDurationMinutes = services.reduce((sum, service) => sum + (service?.durationMinutes || 0), 0);
 
   const professional = await getUserById(input.professionalId);
   if (!professional || !professional.active || !professional.isProfessional || professional.role === 'CLIENT') {
@@ -144,7 +152,7 @@ async function validateAppointmentAvailability(input: {
   }
 
   const startMinutes = getDateMinutes(input.scheduledAt);
-  const endsAt = new Date(input.scheduledAt.getTime() + service.durationMinutes * 60_000);
+  const endsAt = new Date(input.scheduledAt.getTime() + totalDurationMinutes * 60_000);
   const endMinutes = getDateMinutes(endsAt);
   const weekday = input.scheduledAt.getDay();
   const dateKey = toDateKey(input.scheduledAt);
@@ -173,7 +181,7 @@ async function validateAppointmentAvailability(input: {
     throw new AppointmentServiceError('Selected time conflicts with another appointment.', 409);
   }
 
-  return { service, professional, endsAt };
+  return { services, professional, endsAt, totalDurationMinutes };
 }
 
 export async function listAppointmentsService(input: ListAppointmentsInput) {
@@ -197,18 +205,23 @@ export async function listAppointmentsService(input: ListAppointmentsInput) {
 
 export async function getAppointmentAvailabilityService(input: {
   professionalId: string;
-  serviceId: string;
+  serviceIds: string[];
   month: string;
 }) {
+  if (input.serviceIds.length === 0) {
+    throw new AppointmentServiceError('At least one service is required.', 400);
+  }
+
   const professional = await getUserById(input.professionalId);
   if (!professional || !professional.active || !professional.isProfessional || professional.role === 'CLIENT') {
     throw new AppointmentServiceError('Professional not found.', 404);
   }
 
-  const service = await getServiceById(input.serviceId);
-  if (!service || !service.active) {
+  const services = await Promise.all(input.serviceIds.map((serviceId) => getServiceById(serviceId)));
+  if (services.some((service) => !service || !service.active)) {
     throw new AppointmentServiceError('Service not found.', 404);
   }
+  const totalDurationMinutes = services.reduce((sum, service) => sum + (service?.durationMinutes || 0), 0);
 
   const schedule = await getScheduleByProfessionalId(input.professionalId);
   if (!schedule) {
@@ -231,7 +244,7 @@ export async function getAppointmentAvailabilityService(input: {
   for (let cursor = new Date(rangeStart); cursor <= rangeEnd; cursor = addDays(cursor, 1)) {
     const slots = getAvailableSlotsForDate({
       date: cursor,
-      durationMinutes: service.durationMinutes,
+      durationMinutes: totalDurationMinutes,
       weeklySlots: schedule.slots,
       dateOverrides: schedule.dateOverrides,
       appointments: appointments
@@ -268,14 +281,14 @@ export async function createAppointmentService(input: AppointmentInput) {
 
   const { endsAt } = await validateAppointmentAvailability({
     professionalId: input.professionalId,
-    serviceId: input.serviceId,
+    serviceIds: input.serviceIds,
     scheduledAt: input.scheduledAt
   });
 
   return createAppointment({
     clientId: input.clientId,
     professionalId: input.professionalId,
-    serviceId: input.serviceId,
+    serviceIds: input.serviceIds,
     scheduledAt: input.scheduledAt,
     endsAt,
     status: input.status || 'SCHEDULED',
@@ -304,12 +317,12 @@ export async function updateAppointmentService(id: string, input: UpdateAppointm
   }
 
   const nextProfessionalId = input.professionalId || current.professionalId;
-  const nextServiceId = input.serviceId || current.serviceId;
+  const nextServiceIds = input.serviceIds || getAppointmentServiceIds(current);
   const nextScheduledAt = input.scheduledAt || current.scheduledAt;
 
   const { endsAt } = await validateAppointmentAvailability({
     professionalId: nextProfessionalId,
-    serviceId: nextServiceId,
+    serviceIds: nextServiceIds,
     scheduledAt: nextScheduledAt,
     excludeId: id
   });
@@ -317,7 +330,7 @@ export async function updateAppointmentService(id: string, input: UpdateAppointm
   return updateAppointment(id, {
     clientId: input.clientId,
     professionalId: input.professionalId,
-    serviceId: input.serviceId,
+    serviceIds: input.serviceIds,
     scheduledAt: input.scheduledAt,
     endsAt,
     status: input.status,

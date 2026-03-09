@@ -5,7 +5,7 @@ export type AppointmentStatus = 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'CAN
 export type AppointmentDocument = {
   clientId: string;
   professionalId: string;
-  serviceId: string;
+  serviceIds: string[];
   scheduledAt: Date;
   endsAt: Date;
   status: AppointmentStatus;
@@ -19,7 +19,7 @@ const appointmentSchema = new Schema<AppointmentDocument>(
   {
     clientId: { type: String, required: true, index: true },
     professionalId: { type: String, required: true, index: true },
-    serviceId: { type: String, required: true, index: true },
+    serviceIds: { type: [String], required: true, index: true },
     scheduledAt: { type: Date, required: true, index: true },
     endsAt: { type: Date, required: true, index: true },
     status: {

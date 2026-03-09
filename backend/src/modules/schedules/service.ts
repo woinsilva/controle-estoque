@@ -154,7 +154,17 @@ export async function getScheduleCalendarService(input: {
     weeklySlots: schedule?.slots || [],
     overrides,
     selectedDateOverride: overrides.find((item) => item.date === input.date) || null,
-    appointments,
+    appointments: appointments.map((appointment) => {
+      const normalized = appointment.toObject() as typeof appointment & {
+        serviceIds?: string[];
+        serviceId?: string;
+      };
+
+      return {
+        ...normalized,
+        serviceIds: normalized.serviceIds || (normalized.serviceId ? [normalized.serviceId] : [])
+      };
+    }),
     rangeStart,
     rangeEnd,
     selectedDate: input.date,

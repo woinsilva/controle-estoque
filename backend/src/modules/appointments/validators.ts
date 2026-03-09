@@ -8,7 +8,7 @@ const appointmentStatusEnum = z.enum(['SCHEDULED', 'IN_PROGRESS', 'COMPLETED', '
 export const createAppointmentSchema = z.object({
   clientId: z.string().regex(objectIdRegex, 'Invalid client id.'),
   professionalId: z.string().regex(objectIdRegex, 'Invalid professional id.'),
-  serviceId: z.string().regex(objectIdRegex, 'Invalid service id.'),
+  serviceIds: z.array(z.string().regex(objectIdRegex, 'Invalid service id.')).min(1),
   scheduledAt: z.coerce.date(),
   status: appointmentStatusEnum.optional().default('SCHEDULED'),
   notes: z.string().trim().max(2000).optional()
@@ -39,6 +39,9 @@ export const listAppointmentsQuerySchema = z.object({
 
 export const availabilityQuerySchema = z.object({
   professionalId: z.string().regex(objectIdRegex, 'Invalid professional id.'),
-  serviceId: z.string().regex(objectIdRegex, 'Invalid service id.'),
+  serviceIds: z
+    .string()
+    .transform((value) => value.split(',').map((item) => item.trim()).filter(Boolean))
+    .pipe(z.array(z.string().regex(objectIdRegex, 'Invalid service id.')).min(1)),
   month: z.string().regex(monthRegex, 'Invalid month.')
 });

@@ -16,7 +16,8 @@ function mapAppointment(appointment: {
   _id?: { toString: () => string };
   clientId: string;
   professionalId: string;
-  serviceId: string;
+  serviceIds?: string[];
+  serviceId?: string;
   scheduledAt: Date;
   endsAt: Date;
   status: 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELED';
@@ -29,7 +30,7 @@ function mapAppointment(appointment: {
     id: appointment.id || appointment._id?.toString() || '',
     clientId: appointment.clientId,
     professionalId: appointment.professionalId,
-    serviceId: appointment.serviceId,
+    serviceIds: appointment.serviceIds || (appointment.serviceId ? [appointment.serviceId] : []),
     scheduledAt: appointment.scheduledAt,
     endsAt: appointment.endsAt,
     status: appointment.status,
@@ -81,7 +82,7 @@ export async function getAppointmentAvailabilityController(req: Request, res: Re
   try {
     const result = await getAppointmentAvailabilityService({
       professionalId: String(req.query.professionalId),
-      serviceId: String(req.query.serviceId),
+      serviceIds: req.query.serviceIds as string[],
       month: String(req.query.month)
     });
     return res.status(200).json(result);
@@ -101,7 +102,7 @@ export async function createAppointmentController(req: Request, res: Response) {
     const appointment = await createAppointmentService({
       clientId,
       professionalId: req.body.professionalId,
-      serviceId: req.body.serviceId,
+      serviceIds: req.body.serviceIds,
       scheduledAt: req.body.scheduledAt,
       status: req.body.status,
       notes: req.body.notes,
@@ -118,7 +119,7 @@ export async function createAppointmentController(req: Request, res: Response) {
       payload: {
         clientId: appointment.clientId,
         professionalId: appointment.professionalId,
-        serviceId: appointment.serviceId,
+        serviceIds: appointment.serviceIds,
         scheduledAt: appointment.scheduledAt,
         status: appointment.status
       }
@@ -148,7 +149,7 @@ export async function updateAppointmentController(req: Request, res: Response) {
       payload: {
         clientId: appointment.clientId,
         professionalId: appointment.professionalId,
-        serviceId: appointment.serviceId,
+        serviceIds: appointment.serviceIds,
         scheduledAt: appointment.scheduledAt,
         status: appointment.status
       }
