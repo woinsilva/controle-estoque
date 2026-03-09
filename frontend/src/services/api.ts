@@ -47,7 +47,21 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     throw new Error(message);
   }
 
-  return (await response.json()) as T;
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
+  const contentLength = response.headers.get('content-length');
+  if (contentLength === '0') {
+    return undefined as T;
+  }
+
+  const text = await response.text();
+  if (!text) {
+    return undefined as T;
+  }
+
+  return JSON.parse(text) as T;
 }
 
 export function apiGet<T>(path: string, token?: string | null): Promise<T> {
