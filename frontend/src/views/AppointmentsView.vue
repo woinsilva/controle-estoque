@@ -178,15 +178,14 @@
 
         <div v-if="selectedResponse.signature" class="signature-view">
           <h4>{{ $t('questionnaires.signature.title') }}</h4>
-          <p><strong>{{ $t('questionnaires.signature.mode') }}:</strong> {{ selectedResponse.signature.mode }}</p>
-          <p><strong>{{ $t('questionnaires.signature.signedBy') }}:</strong> {{ selectedResponse.signature.signedBy }}</p>
+          <p><strong>{{ $t('questionnaires.signature.mode') }}:</strong> {{ signatureModeLabel(selectedResponse.signature.mode) }}</p>
           <img
             v-if="selectedResponse.signature.mode === 'DRAW'"
             :src="selectedResponse.signature.value"
             alt="Signature"
             class="signature-image"
           />
-          <p v-else>{{ selectedResponse.signature.value }}</p>
+          <p v-else><strong>{{ $t('questionnaires.signature.typedValue') }}:</strong> {{ selectedResponse.signature.value || '-' }}</p>
         </div>
 
         <div class="dialog-actions">
@@ -501,6 +500,12 @@ export default class AppointmentsView extends Vue {
       .replaceAll("'", '&#39;');
   }
 
+  signatureModeLabel(mode: 'DRAW' | 'TYPE' | 'UPLOAD') {
+    if (mode === 'DRAW') return this.$t('questionnaires.signature.draw');
+    if (mode === 'TYPE') return this.$t('questionnaires.signature.type');
+    return mode;
+  }
+
   generatePdfFromResponse() {
     if (!this.selectedResponse || !this.selectedAppointment) return;
     const client = this.clientName(this.selectedAppointment.clientId);
@@ -512,8 +517,8 @@ export default class AppointmentsView extends Vue {
       .join('');
     const signatureBlock = this.selectedResponse.signature
       ? this.selectedResponse.signature.mode === 'DRAW'
-        ? `<p><strong>Assinado por:</strong> ${this.escapeHtml(this.selectedResponse.signature.signedBy)}</p><img src="${this.selectedResponse.signature.value}" style="max-width:320px;border:1px solid #ccc;border-radius:8px;" />`
-        : `<p><strong>Assinado por:</strong> ${this.escapeHtml(this.selectedResponse.signature.signedBy)}</p><p><strong>Assinatura:</strong> ${this.escapeHtml(this.selectedResponse.signature.value)}</p>`
+        ? `<p><strong>${this.escapeHtml(String(this.$t('questionnaires.signature.mode')))}:</strong> ${this.escapeHtml(String(this.signatureModeLabel(this.selectedResponse.signature.mode)))}</p><img src="${this.selectedResponse.signature.value}" style="max-width:320px;border:1px solid #ccc;border-radius:8px;" />`
+        : `<p><strong>${this.escapeHtml(String(this.$t('questionnaires.signature.mode')))}:</strong> ${this.escapeHtml(String(this.signatureModeLabel(this.selectedResponse.signature.mode)))}</p><p><strong>${this.escapeHtml(String(this.$t('questionnaires.signature.typedValue')))}:</strong> ${this.escapeHtml(this.selectedResponse.signature.value || '-')}</p>`
       : '<p><strong>Assinatura:</strong> -</p>';
 
     const html = `

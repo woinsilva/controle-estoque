@@ -315,10 +315,6 @@
             v-model="signatureDrawData"
             :clear-label="$t('questionnaires.signature.clear')"
           />
-          <label class="field">
-            <span>{{ $t('questionnaires.signature.signedBy') }}</span>
-            <input v-model="signatureSignedBy" type="text" />
-          </label>
         </section>
 
         <div class="dialog-actions">
@@ -377,7 +373,6 @@ export default class QuestionnairesView extends Vue {
   signatureMode: 'DRAW' | 'TYPE' = 'DRAW';
   signatureDrawData = '';
   signatureText = '';
-  signatureSignedBy = '';
   builderField: {
     key: string;
     label: string;
@@ -611,7 +606,6 @@ export default class QuestionnairesView extends Vue {
     this.signatureMode = 'DRAW';
     this.signatureDrawData = '';
     this.signatureText = '';
-    this.signatureSignedBy = '';
     this.responseAppointments = [];
     await this.loadResponseAppointments(this.responseForm.clientId);
     this.responseDialogOpen = true;
@@ -840,7 +834,7 @@ export default class QuestionnairesView extends Vue {
               mode: this.signatureMode,
               value: signatureValue,
               signedAt: new Date().toISOString(),
-              signedBy: this.signatureSignedBy.trim() || selectedClient?.fullName || 'Cliente'
+              signedBy: selectedClient?.fullName || 'Cliente'
             }
           : undefined;
 
