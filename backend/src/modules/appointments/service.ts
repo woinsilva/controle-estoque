@@ -107,7 +107,7 @@ function getAvailableSlotsForDate(input: {
   for (const slot of baseSlots) {
     const start = timeToMinutes(slot.startTime);
     const end = timeToMinutes(slot.endTime);
-    for (let cursor = start; cursor + input.durationMinutes <= end; cursor += 5) {
+    for (let cursor = start; cursor + input.durationMinutes <= end; cursor += 15) {
       const candidateStart = new Date(input.date.getFullYear(), input.date.getMonth(), input.date.getDate(), 0, cursor, 0, 0);
       const candidateEnd = new Date(candidateStart.getTime() + input.durationMinutes * 60_000);
       const conflicts = input.appointments.some(
