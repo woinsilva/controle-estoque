@@ -121,6 +121,47 @@ class SchedulesView extends Vue {
     });
   }
 
+  getSlotIndex(weekday: number, index: number) {
+    let currentIndex = -1;
+    return this.slots.findIndex((slot) => {
+      if (slot.weekday !== weekday) {
+        return false;
+      }
+      currentIndex += 1;
+      return currentIndex === index;
+    });
+  }
+
+  validateDaySlots(weekday: number, slots: WeeklyAvailabilitySlot[]) {
+    const day = this.weekdays.find((item) => item.value === weekday);
+    const dayLabel = day?.label || 'este dia';
+    const daySlots = slots
+      .filter((slot) => slot.weekday === weekday)
+      .sort((a, b) => a.startTime.localeCompare(b.startTime));
+
+    for (const slot of daySlots) {
+      if (!slot.startTime || !slot.endTime) {
+        return `Preencha todos os horarios em ${dayLabel}.`;
+      }
+      if (this.timeToMinutes(slot.endTime) <= this.timeToMinutes(slot.startTime)) {
+        return `O horario final deve ser maior que o inicial em ${dayLabel}.`;
+      }
+    }
+
+    for (let index = 1; index < daySlots.length; index += 1) {
+      const previous = daySlots[index - 1];
+      const current = daySlots[index];
+      if (!previous || !current) {
+        continue;
+      }
+      if (this.timeToMinutes(previous.endTime) > this.timeToMinutes(current.startTime)) {
+        return `Existem horarios conflitantes em ${dayLabel}.`;
+      }
+    }
+
+    return '';
+  }
+
   toggleDay(weekday: number, event: Event) {
     const target = event.target as HTMLInputElement;
     if (target.checked) {
@@ -155,40 +196,37 @@ class SchedulesView extends Vue {
 
   updateDayTime(weekday: number, index: number, field: 'startTime' | 'endTime', event: Event) {
     const target = event.target as HTMLInputElement;
-    let currentIndex = -1;
-    this.slots = this.slots.map((slot) => {
-      if (slot.weekday !== weekday) {
-        return slot;
-      }
+    const slotIndex = this.getSlotIndex(weekday, index);
+    if (slotIndex < 0) {
+      return;
+    }
 
-      currentIndex += 1;
-      if (currentIndex !== index) {
-        return slot;
-      }
+    const nextSlots = [...this.slots];
+    const currentSlot = nextSlots[slotIndex];
+    if (!currentSlot) {
+      return;
+    }
+    nextSlots[slotIndex] = { ...currentSlot, [field]: target.value };
+    const validationError = this.validateDaySlots(weekday, nextSlots);
 
-      return { ...slot, [field]: target.value };
-    });
+    if (validationError) {
+      nextSlots[slotIndex] = { ...currentSlot, [field]: '' };
+      this.slots = nextSlots;
+      this.sortSlots();
+      this.error = validationError;
+      return;
+    }
+
+    this.slots = nextSlots;
     this.sortSlots();
+    this.error = '';
   }
 
   validateSlots() {
     for (const day of this.weekdays) {
-      const slots = this.daySlots(day.value);
-      for (const slot of slots) {
-        if (this.timeToMinutes(slot.endTime) <= this.timeToMinutes(slot.startTime)) {
-          return `O horario final deve ser maior que o inicial em ${day.label}.`;
-        }
-      }
-
-      for (let index = 1; index < slots.length; index += 1) {
-        const previous = slots[index - 1];
-        const current = slots[index];
-        if (!previous || !current) {
-          continue;
-        }
-        if (this.timeToMinutes(previous.endTime) > this.timeToMinutes(current.startTime)) {
-          return `Existem horarios conflitantes em ${day.label}.`;
-        }
+      const validationError = this.validateDaySlots(day.value, this.slots);
+      if (validationError) {
+        return validationError;
       }
     }
 
