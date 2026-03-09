@@ -5,6 +5,8 @@ import { env } from '../config/env.js';
 type TokenPayload = {
   sub: string;
   role: string;
+  clientId?: string | null;
+  isProfessional?: boolean;
 };
 
 export function authMiddleware(req: Request, res: Response, next: NextFunction) {
@@ -17,7 +19,12 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction) 
 
   try {
     const payload = jwt.verify(token, env.jwtSecret) as TokenPayload;
-    req.user = { id: payload.sub, role: payload.role };
+    req.user = {
+      id: payload.sub,
+      role: payload.role,
+      clientId: payload.clientId,
+      isProfessional: payload.isProfessional
+    };
     return next();
   } catch {
     return res.status(401).json({ error: 'Invalid or expired token.' });

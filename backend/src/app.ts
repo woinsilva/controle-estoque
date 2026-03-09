@@ -17,11 +17,13 @@ import questionnairesRoutes from './modules/questionnaires/routes.js';
 import appointmentsRoutes from './modules/appointments/routes.js';
 import dashboardRoutes from './modules/dashboard/routes.js';
 import reportsRoutes from './modules/reports/routes.js';
+import servicesRoutes from './modules/services/routes.js';
+import schedulesRoutes from './modules/schedules/routes.js';
 import { logger } from './config/logger.js';
 
 export const app = express();
 
-app.use(pinoHttp({ logger }));
+app.use((pinoHttp as unknown as (options: { logger: typeof logger }) => express.RequestHandler)({ logger }));
 app.use(helmet());
 app.use(cors({ origin: 'http://localhost:5173' }));
 app.use(express.json({ limit: '200kb' }));
@@ -56,6 +58,8 @@ app.use('/questionnaires', questionnairesRoutes);
 app.use('/appointments', appointmentsRoutes);
 app.use('/dashboard', dashboardRoutes);
 app.use('/reports', reportsRoutes);
+app.use('/services', servicesRoutes);
+app.use('/schedules', schedulesRoutes);
 
 app.get('/me', authMiddleware, (req, res) => {
   res.status(200).json({ user: req.user });

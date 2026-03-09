@@ -14,7 +14,10 @@ function mapAppointment(appointment: {
   id?: string;
   _id?: { toString: () => string };
   clientId: string;
+  professionalId: string;
+  serviceId: string;
   scheduledAt: Date;
+  endsAt: Date;
   status: 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELED';
   notes?: string;
   createdBy?: string;
@@ -24,7 +27,10 @@ function mapAppointment(appointment: {
   return {
     id: appointment.id || appointment._id?.toString() || '',
     clientId: appointment.clientId,
+    professionalId: appointment.professionalId,
+    serviceId: appointment.serviceId,
     scheduledAt: appointment.scheduledAt,
+    endsAt: appointment.endsAt,
     status: appointment.status,
     notes: appointment.notes,
     createdBy: appointment.createdBy,
@@ -36,6 +42,8 @@ function mapAppointment(appointment: {
 export async function listAppointmentsController(req: Request, res: Response) {
   const query = req.query as unknown as {
     clientId?: string;
+    professionalId?: string;
+    serviceId?: string;
     status?: 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELED';
     dateFrom?: Date;
     dateTo?: Date;
@@ -44,6 +52,12 @@ export async function listAppointmentsController(req: Request, res: Response) {
     sortBy: 'scheduledAt' | 'createdAt' | 'updatedAt';
     sortOrder: 'asc' | 'desc';
   };
+  if (req.user?.role === 'CLIENT') {
+    if (!req.user.clientId) {
+      return res.status(200).json({ items: [], total: 0, page: query.page, limit: query.limit, totalPages: 1 });
+    }
+    query.clientId = req.user.clientId || '';
+  }
   const result = await listAppointmentsService(query);
   return res.status(200).json({
     ...result,
@@ -56,13 +70,22 @@ export async function getAppointmentController(req: Request, res: Response) {
   if (!appointment) {
     return res.status(404).json({ error: 'Appointment not found.' });
   }
+  if (req.user?.role === 'CLIENT' && appointment.clientId !== req.user.clientId) {
+    return res.status(403).json({ error: 'Forbidden.' });
+  }
   return res.status(200).json(mapAppointment(appointment));
 }
 
 export async function createAppointmentController(req: Request, res: Response) {
   try {
+    if (req.user?.role === 'CLIENT' && !req.user.clientId) {
+      return res.status(403).json({ error: 'Client account is not linked to a client profile.' });
+    }
+    const clientId = req.user?.role === 'CLIENT' ? req.user.clientId || '' : req.body.clientId;
     const appointment = await createAppointmentService({
-      clientId: req.body.clientId,
+      clientId,
+      professionalId: req.body.professionalId,
+      serviceId: req.body.serviceId,
       scheduledAt: req.body.scheduledAt,
       status: req.body.status,
       notes: req.body.notes,
@@ -78,6 +101,8 @@ export async function createAppointmentController(req: Request, res: Response) {
       userAgent: req.headers['user-agent'],
       payload: {
         clientId: appointment.clientId,
+        professionalId: appointment.professionalId,
+        serviceId: appointment.serviceId,
         scheduledAt: appointment.scheduledAt,
         status: appointment.status
       }
@@ -106,6 +131,8 @@ export async function updateAppointmentController(req: Request, res: Response) {
       userAgent: req.headers['user-agent'],
       payload: {
         clientId: appointment.clientId,
+        professionalId: appointment.professionalId,
+        serviceId: appointment.serviceId,
         scheduledAt: appointment.scheduledAt,
         status: appointment.status
       }

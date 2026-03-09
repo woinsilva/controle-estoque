@@ -1,12 +1,25 @@
 import bcrypt from 'bcryptjs';
-import { createUser, deleteUser, findUserByEmail, getUserById, listUsers, updateUser } from './repository.js';
+import {
+  createUser,
+  deleteUser,
+  findUserByClientId,
+  findUserByEmail,
+  getUserById,
+  listProfessionals,
+  listUsers,
+  updateUser
+} from './repository.js';
 
 type CreateUserInput = {
   name: string;
   email: string;
   password: string;
-  role: 'OPERATOR' | 'MANAGER' | 'ADMIN';
+  role: 'OPERATOR' | 'MANAGER' | 'ADMIN' | 'CLIENT';
   active: boolean;
+  clientId?: string;
+  isProfessional?: boolean;
+  emailConfirmed?: boolean;
+  passwordResetRequired?: boolean;
 };
 
 export async function listUsersService() {
@@ -22,6 +35,12 @@ export async function createUserService(input: CreateUserInput & { locale?: stri
   if (existing) {
     throw new Error('Email already in use.');
   }
+  if (input.clientId) {
+    const existingClientUser = await findUserByClientId(input.clientId);
+    if (existingClientUser) {
+      throw new Error('Client already linked to another user.');
+    }
+  }
   const passwordHash = await bcrypt.hash(input.password, 10);
   return createUser({
     name: input.name,
@@ -29,6 +48,10 @@ export async function createUserService(input: CreateUserInput & { locale?: stri
     passwordHash,
     role: input.role,
     active: input.active,
+    clientId: input.clientId,
+    isProfessional: input.role === 'CLIENT' ? false : Boolean(input.isProfessional),
+    emailConfirmed: Boolean(input.emailConfirmed),
+    passwordResetRequired: Boolean(input.passwordResetRequired),
     locale: input.locale || 'pt',
     theme: input.theme || 'light'
   });
@@ -46,8 +69,12 @@ export async function updateUserService(
     name: string;
     email: string;
     passwordHash: string;
-    role: 'OPERATOR' | 'MANAGER' | 'ADMIN';
+    role: 'OPERATOR' | 'MANAGER' | 'ADMIN' | 'CLIENT';
     active: boolean;
+    clientId?: string;
+    isProfessional: boolean;
+    emailConfirmed: boolean;
+    passwordResetRequired: boolean;
     locale: string;
     theme: 'light' | 'dark';
   }> = {
@@ -55,6 +82,10 @@ export async function updateUserService(
     email: input.email,
     role: input.role,
     active: input.active,
+    clientId: input.clientId,
+    isProfessional: input.role === 'CLIENT' ? false : input.isProfessional,
+    emailConfirmed: input.emailConfirmed,
+    passwordResetRequired: input.passwordResetRequired,
     locale: input.locale,
     theme: input.theme
   };
@@ -78,4 +109,8 @@ export async function updateUserPreferencesService(
 
 export async function deleteUserService(id: string) {
   return deleteUser(id);
+}
+
+export async function listProfessionalsService() {
+  return listProfessionals();
 }

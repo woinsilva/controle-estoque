@@ -1,6 +1,6 @@
 import mongoose, { Schema } from 'mongoose';
 
-export type UserRole = 'OPERATOR' | 'MANAGER' | 'ADMIN';
+export type UserRole = 'OPERATOR' | 'MANAGER' | 'ADMIN' | 'CLIENT';
 
 export type UserDocument = {
   name: string;
@@ -8,6 +8,10 @@ export type UserDocument = {
   passwordHash: string;
   role: UserRole;
   active: boolean;
+  clientId?: string;
+  isProfessional: boolean;
+  emailConfirmed: boolean;
+  passwordResetRequired: boolean;
   locale?: string;
   theme?: 'light' | 'dark';
   createdAt: Date;
@@ -19,8 +23,12 @@ const userSchema = new Schema<UserDocument>(
     name: { type: String, required: true, trim: true },
     email: { type: String, required: true, unique: true, lowercase: true, index: true },
     passwordHash: { type: String, required: true },
-    role: { type: String, enum: ['OPERATOR', 'MANAGER', 'ADMIN'], required: true },
+    role: { type: String, enum: ['OPERATOR', 'MANAGER', 'ADMIN', 'CLIENT'], required: true },
     active: { type: Boolean, default: true },
+    clientId: { type: String, index: true },
+    isProfessional: { type: Boolean, default: false, index: true },
+    emailConfirmed: { type: Boolean, default: false },
+    passwordResetRequired: { type: Boolean, default: false },
     locale: { type: String, default: 'pt' },
     theme: { type: String, enum: ['light', 'dark'], default: 'light' }
   },

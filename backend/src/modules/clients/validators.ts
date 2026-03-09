@@ -4,13 +4,7 @@ const objectIdRegex = /^[a-f\d]{24}$/i;
 
 export const createClientSchema = z.object({
   fullName: z.string().trim().min(2).max(120),
-  email: z
-    .string()
-    .trim()
-    .toLowerCase()
-    .email()
-    .optional()
-    .or(z.literal('').transform(() => undefined)),
+  email: z.string().trim().toLowerCase().email(),
   phone: z.string().trim().min(8).max(20),
   birthDate: z.coerce.date().optional(),
   notes: z.string().trim().max(2000).optional(),

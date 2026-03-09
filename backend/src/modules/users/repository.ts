@@ -12,12 +12,26 @@ export async function findUserByEmail(email: string) {
   return User.findOne({ email: email.toLowerCase() }).exec();
 }
 
+export async function findUserByClientId(clientId: string) {
+  return User.findOne({ clientId }).exec();
+}
+
+export async function listProfessionals() {
+  return User.find({ active: true, isProfessional: true, role: { $ne: 'CLIENT' } })
+    .sort({ name: 1 })
+    .exec();
+}
+
 export async function createUser(data: {
   name: string;
   email: string;
   passwordHash: string;
-  role: 'OPERATOR' | 'MANAGER' | 'ADMIN';
+  role: 'OPERATOR' | 'MANAGER' | 'ADMIN' | 'CLIENT';
   active: boolean;
+  clientId?: string;
+  isProfessional?: boolean;
+  emailConfirmed?: boolean;
+  passwordResetRequired?: boolean;
   locale?: string;
   theme?: 'light' | 'dark';
 }) {
@@ -30,8 +44,12 @@ export async function updateUser(
     name: string;
     email: string;
     passwordHash: string;
-    role: 'OPERATOR' | 'MANAGER' | 'ADMIN';
+    role: 'OPERATOR' | 'MANAGER' | 'ADMIN' | 'CLIENT';
     active: boolean;
+    clientId?: string;
+    isProfessional: boolean;
+    emailConfirmed: boolean;
+    passwordResetRequired: boolean;
     locale: string;
     theme: 'light' | 'dark';
   }>

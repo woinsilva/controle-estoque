@@ -3,8 +3,9 @@ import type { FiscalPayload } from './issuer.js';
 import { createFiscalRecord, updateFiscalRecord } from './repository.js';
 
 export async function createPendingFiscalRecord(sale: SaleDocument) {
+  const saleId = String((sale as SaleDocument & { _id?: { toString: () => string } })._id?.toString?.() || '');
   const payload: FiscalPayload = {
-    saleId: sale.id,
+    saleId,
     total: sale.total,
     items: sale.items.map((item) => ({
       productId: item.productId,
@@ -17,7 +18,7 @@ export async function createPendingFiscalRecord(sale: SaleDocument) {
   };
 
   return createFiscalRecord({
-    saleId: sale.id,
+    saleId,
     payload
   });
 }

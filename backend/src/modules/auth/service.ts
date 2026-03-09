@@ -20,9 +20,9 @@ export async function login({ email, password }: LoginInput) {
   }
 
   const token = jwt.sign(
-    { sub: user.id, role: user.role },
+    { sub: user.id, role: user.role, clientId: user.clientId || null, isProfessional: user.isProfessional },
     env.jwtSecret,
-    { expiresIn: env.jwtExpiresIn }
+    { expiresIn: env.jwtExpiresIn as jwt.SignOptions['expiresIn'] }
   );
 
   return {
@@ -32,6 +32,10 @@ export async function login({ email, password }: LoginInput) {
       name: user.name,
       email: user.email,
       role: user.role,
+      clientId: user.clientId,
+      isProfessional: user.isProfessional,
+      emailConfirmed: user.emailConfirmed,
+      passwordResetRequired: user.passwordResetRequired,
       locale: user.locale || 'pt',
       theme: user.theme || 'light'
     }

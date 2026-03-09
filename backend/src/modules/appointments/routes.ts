@@ -24,19 +24,19 @@ router.use(authMiddleware);
 
 router.get(
   '/',
-  requireRole(['OPERATOR', 'MANAGER', 'ADMIN']),
+  requireRole(['OPERATOR', 'MANAGER', 'ADMIN', 'CLIENT']),
   validateQuery(listAppointmentsQuerySchema),
   listAppointmentsController
 );
 router.get(
   '/:id',
-  requireRole(['OPERATOR', 'MANAGER', 'ADMIN']),
+  requireRole(['OPERATOR', 'MANAGER', 'ADMIN', 'CLIENT']),
   validateParams(appointmentIdParamSchema),
   getAppointmentController
 );
 router.post(
   '/',
-  requireRole(['OPERATOR', 'MANAGER', 'ADMIN']),
+  requireRole(['OPERATOR', 'MANAGER', 'ADMIN', 'CLIENT']),
   validateBody(createAppointmentSchema),
   createAppointmentController
 );

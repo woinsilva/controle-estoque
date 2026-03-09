@@ -3,6 +3,7 @@ import {
   createUserService,
   deleteUserService,
   getUserService,
+  listProfessionalsService,
   listUsersService,
   updateUserPreferencesService,
   updateUserService
@@ -14,8 +15,12 @@ function normalizeUserInput(body: Record<string, unknown>) {
     name: String(body.name || '').trim(),
     email: String(body.email || '').trim().toLowerCase(),
     password: String(body.password || '').trim(),
-    role: String(body.role || 'OPERATOR') as 'OPERATOR' | 'MANAGER' | 'ADMIN',
+    role: String(body.role || 'OPERATOR') as 'OPERATOR' | 'MANAGER' | 'ADMIN' | 'CLIENT',
     active: body.active === undefined ? true : Boolean(body.active),
+    clientId: body.clientId ? String(body.clientId).trim() : undefined,
+    isProfessional: Boolean(body.isProfessional),
+    emailConfirmed: Boolean(body.emailConfirmed),
+    passwordResetRequired: Boolean(body.passwordResetRequired),
     locale: String(body.locale || 'pt') as 'pt' | 'en' | 'es',
     theme: String(body.theme || 'light') as 'light' | 'dark'
   };
@@ -45,8 +50,24 @@ export async function listUsersController(_req: Request, res: Response) {
       email: user.email,
       role: user.role,
       active: user.active,
+      clientId: user.clientId,
+      isProfessional: user.isProfessional,
+      emailConfirmed: user.emailConfirmed,
+      passwordResetRequired: user.passwordResetRequired,
       locale: user.locale,
       theme: user.theme
+    }))
+  );
+}
+
+export async function listProfessionalsController(_req: Request, res: Response) {
+  const users = await listProfessionalsService();
+  return res.status(200).json(
+    users.map((user) => ({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role
     }))
   );
 }
@@ -62,6 +83,10 @@ export async function getUserController(req: Request, res: Response) {
     email: user.email,
     role: user.role,
     active: user.active,
+    clientId: user.clientId,
+    isProfessional: user.isProfessional,
+    emailConfirmed: user.emailConfirmed,
+    passwordResetRequired: user.passwordResetRequired,
     locale: user.locale,
     theme: user.theme
   });
@@ -94,6 +119,10 @@ export async function createUserController(req: Request, res: Response) {
       email: user.email,
       role: user.role,
       active: user.active,
+      clientId: user.clientId,
+      isProfessional: user.isProfessional,
+      emailConfirmed: user.emailConfirmed,
+      passwordResetRequired: user.passwordResetRequired,
       locale: user.locale,
       theme: user.theme
     });
@@ -114,6 +143,10 @@ export async function updateUserController(req: Request, res: Response) {
     email: input.email,
     role: input.role,
     active: input.active,
+    clientId: input.clientId,
+    isProfessional: input.isProfessional,
+    emailConfirmed: input.emailConfirmed,
+    passwordResetRequired: input.passwordResetRequired,
     password: input.password || undefined,
     locale: input.locale,
     theme: input.theme
@@ -137,6 +170,10 @@ export async function updateUserController(req: Request, res: Response) {
     email: user.email,
     role: user.role,
     active: user.active,
+    clientId: user.clientId,
+    isProfessional: user.isProfessional,
+    emailConfirmed: user.emailConfirmed,
+    passwordResetRequired: user.passwordResetRequired,
     locale: user.locale,
     theme: user.theme
   });
@@ -160,6 +197,10 @@ export async function updatePreferencesController(req: Request, res: Response) {
     email: user.email,
     role: user.role,
     active: user.active,
+    clientId: user.clientId,
+    isProfessional: user.isProfessional,
+    emailConfirmed: user.emailConfirmed,
+    passwordResetRequired: user.passwordResetRequired,
     locale: user.locale,
     theme: user.theme
   });

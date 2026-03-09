@@ -4,7 +4,10 @@ export type AppointmentStatus = 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'CAN
 
 export type AppointmentDocument = {
   clientId: string;
+  professionalId: string;
+  serviceId: string;
   scheduledAt: Date;
+  endsAt: Date;
   status: AppointmentStatus;
   notes?: string;
   createdBy?: string;
@@ -15,7 +18,10 @@ export type AppointmentDocument = {
 const appointmentSchema = new Schema<AppointmentDocument>(
   {
     clientId: { type: String, required: true, index: true },
+    professionalId: { type: String, required: true, index: true },
+    serviceId: { type: String, required: true, index: true },
     scheduledAt: { type: Date, required: true, index: true },
+    endsAt: { type: Date, required: true, index: true },
     status: {
       type: String,
       enum: ['SCHEDULED', 'IN_PROGRESS', 'COMPLETED', 'CANCELED'],
@@ -29,5 +35,6 @@ const appointmentSchema = new Schema<AppointmentDocument>(
 );
 
 appointmentSchema.index({ clientId: 1, scheduledAt: -1 });
+appointmentSchema.index({ professionalId: 1, scheduledAt: 1, endsAt: 1 });
 
 export const Appointment = mongoose.model<AppointmentDocument>('Appointment', appointmentSchema);

@@ -6,6 +6,7 @@ import {
   createUserController,
   deleteUserController,
   getUserController,
+  listProfessionalsController,
   listUsersController,
   updatePreferencesController,
   updateUserController
@@ -17,6 +18,7 @@ const router = Router();
 router.use(authMiddleware);
 
 router.patch('/me/preferences', validateBody(preferencesSchema), updatePreferencesController);
+router.get('/professionals', listProfessionalsController);
 
 router.use(requireRole(['ADMIN']));
 

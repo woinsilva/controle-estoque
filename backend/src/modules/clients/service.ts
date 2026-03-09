@@ -1,4 +1,6 @@
 import { QuestionnaireResponse } from '../questionnaires/model.js';
+import { createUserService, deleteUserService, updateUserService } from '../users/service.js';
+import { findUserByClientId } from '../users/repository.js';
 import {
   createClient,
   deleteClient,
@@ -9,9 +11,11 @@ import {
   updateClient
 } from './repository.js';
 
+const DEFAULT_CLIENT_PASSWORD = 'Cliente123!';
+
 type ClientInput = {
   fullName: string;
-  email?: string;
+  email: string;
   phone: string;
   birthDate?: Date;
   notes?: string;
@@ -69,7 +73,7 @@ export async function createClientService(input: ClientInput) {
     ...input,
     fullName: input.fullName.trim(),
     phone: normalizePhone(input.phone),
-    email: normalizeEmail(input.email),
+    email: normalizeEmail(input.email) || '',
     notes: input.notes?.trim()
   };
 
@@ -84,7 +88,20 @@ export async function createClientService(input: ClientInput) {
     }
   }
 
-  return createClient(data);
+  const client = await createClient(data);
+  const user = await createUserService({
+    name: data.fullName,
+    email: data.email,
+    password: DEFAULT_CLIENT_PASSWORD,
+    role: 'CLIENT',
+    active: data.active,
+    clientId: client.id,
+    isProfessional: false,
+    emailConfirmed: false,
+    passwordResetRequired: true
+  });
+
+  return updateClient(client.id, { userId: user.id });
 }
 
 export async function updateClientService(id: string, input: UpdateClientInput) {
@@ -114,7 +131,24 @@ export async function updateClientService(id: string, input: UpdateClientInput) 
     }
   }
 
-  return updateClient(id, data);
+  const updated = await updateClient(id, data);
+  if (!updated) {
+    return null;
+  }
+
+  const linkedUser = await findUserByClientId(id);
+  if (linkedUser) {
+    await updateUserService(linkedUser.id, {
+      name: updated.fullName,
+      email: updated.email,
+      active: updated.active,
+      role: 'CLIENT',
+      clientId: id,
+      isProfessional: false
+    });
+  }
+
+  return getClientById(id);
 }
 
 export async function deleteClientService(id: string) {
@@ -124,6 +158,10 @@ export async function deleteClientService(id: string) {
       'Client cannot be deleted because it has questionnaire history.',
       409
     );
+  }
+  const linkedUser = await findUserByClientId(id);
+  if (linkedUser) {
+    await deleteUserService(linkedUser.id);
   }
   return deleteClient(id);
 }

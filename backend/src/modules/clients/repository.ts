@@ -50,11 +50,12 @@ export async function getClientById(id: string) {
 
 export async function createClient(data: {
   fullName: string;
-  email?: string;
+  email: string;
   phone: string;
   birthDate?: Date;
   notes?: string;
   active: boolean;
+  userId?: string;
 }) {
   return Client.create(data);
 }
@@ -63,11 +64,12 @@ export async function updateClient(
   id: string,
   data: Partial<{
     fullName: string;
-    email?: string;
+    email: string;
     phone: string;
     birthDate?: Date;
     notes?: string;
     active: boolean;
+    userId?: string;
   }>
 ) {
   return Client.findByIdAndUpdate(id, data, { new: true }).exec();

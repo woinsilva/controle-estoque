@@ -18,6 +18,7 @@ function mapClient(client: {
   birthDate?: Date;
   notes?: string;
   active: boolean;
+  userId?: string;
   createdAt: Date;
   updatedAt: Date;
 }) {
@@ -29,6 +30,7 @@ function mapClient(client: {
     birthDate: client.birthDate,
     notes: client.notes,
     active: client.active,
+    userId: client.userId,
     createdAt: client.createdAt,
     updatedAt: client.updatedAt
   };
@@ -61,6 +63,9 @@ export async function getClientController(req: Request, res: Response) {
 export async function createClientController(req: Request, res: Response) {
   try {
     const client = await createClientService(req.body);
+    if (!client) {
+      return res.status(400).json({ error: 'Could not create client.' });
+    }
     await recordAudit({
       action: 'CREATE',
       entity: 'client',

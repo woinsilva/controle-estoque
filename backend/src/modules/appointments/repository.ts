@@ -3,6 +3,8 @@ import { Appointment, type AppointmentDocument, type AppointmentStatus } from '.
 
 type AppointmentFilters = {
   clientId?: string;
+  professionalId?: string;
+  serviceId?: string;
   status?: AppointmentStatus;
   dateFrom?: Date;
   dateTo?: Date;
@@ -19,6 +21,12 @@ export async function listAppointments(filters: AppointmentFilters, pagination: 
   const query: FilterQuery<AppointmentDocument> = {};
   if (filters.clientId) {
     query.clientId = filters.clientId;
+  }
+  if (filters.professionalId) {
+    query.professionalId = filters.professionalId;
+  }
+  if (filters.serviceId) {
+    query.serviceId = filters.serviceId;
   }
   if (filters.status) {
     query.status = filters.status;
@@ -59,7 +67,10 @@ export async function getAppointmentById(id: string) {
 
 export async function createAppointment(data: {
   clientId: string;
+  professionalId: string;
+  serviceId: string;
   scheduledAt: Date;
+  endsAt: Date;
   status?: AppointmentStatus;
   notes?: string;
   createdBy?: string;
@@ -71,7 +82,10 @@ export async function updateAppointment(
   id: string,
   data: Partial<{
     clientId: string;
+    professionalId: string;
+    serviceId: string;
     scheduledAt: Date;
+    endsAt: Date;
     status: AppointmentStatus;
     notes?: string;
   }>
@@ -81,4 +95,24 @@ export async function updateAppointment(
 
 export async function deleteAppointment(id: string) {
   return Appointment.findByIdAndDelete(id).exec();
+}
+
+export async function findConflictingAppointments(input: {
+  professionalId: string;
+  start: Date;
+  end: Date;
+  excludeId?: string;
+}) {
+  const query: FilterQuery<AppointmentDocument> = {
+    professionalId: input.professionalId,
+    status: { $ne: 'CANCELED' },
+    scheduledAt: { $lt: input.end },
+    endsAt: { $gt: input.start }
+  };
+
+  if (input.excludeId) {
+    query._id = { $ne: input.excludeId };
+  }
+
+  return Appointment.find(query).sort({ scheduledAt: 1 }).exec();
 }
