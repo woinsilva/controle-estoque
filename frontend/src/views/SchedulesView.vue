@@ -42,25 +42,25 @@
       <button type="button" class="primary" @click="saveSchedule">Salvar agenda</button>
     </section>
 
-    <ErrorCard :message="error" />
   </section>
 </template>
 
 <script lang="ts">
 import { Component, Vue, toNative } from 'vue-facing-decorator';
+import { useToast } from 'primevue/usetoast';
 import { apiGet, apiPut } from '../services/api';
 import { useAuthStore } from '../stores/auth';
 import type { User } from '../types/user';
 import type { WeeklyAvailabilitySlot, WorkSchedule } from '../types/schedule';
-import ErrorCard from '../components/ErrorCard.vue';
 
 type EditableWeeklyAvailabilitySlot = WeeklyAvailabilitySlot & {
   localId: string;
 };
 
-@Component({ components: { ErrorCard } })
+@Component({})
 class SchedulesView extends Vue {
   authStore = useAuthStore();
+  toast = useToast();
   professionals: Pick<User, 'id' | 'name'>[] = [];
   selectedProfessionalId = '';
   slots: EditableWeeklyAvailabilitySlot[] = [];
@@ -95,11 +95,21 @@ class SchedulesView extends Vue {
     return hours * 60 + minutes;
   }
 
+  notify(severity: 'warn' | 'error' | 'success', message: string) {
+    this.toast.add({
+      severity,
+      summary: 'Agenda',
+      detail: message,
+      life: severity === 'success' ? 2500 : 3500
+    });
+  }
+
   async loadProfessionals() {
     try {
       this.professionals = await apiGet<Pick<User, 'id' | 'name'>[]>('/users/professionals', this.authStore.token);
     } catch (error) {
       this.error = error instanceof Error ? error.message : 'Nao foi possivel carregar os profissionais.';
+      this.notify('error', this.error);
     }
   }
 
@@ -252,6 +262,7 @@ class SchedulesView extends Vue {
       this.slots = nextSlots;
       this.sortSlots();
       this.error = fieldValidationError;
+      this.notify('warn', fieldValidationError);
       return;
     }
 
@@ -264,6 +275,7 @@ class SchedulesView extends Vue {
       this.slots = nextSlots;
       this.sortSlots();
       this.error = validationError;
+      this.notify('warn', validationError);
       return;
     }
 
@@ -288,6 +300,7 @@ class SchedulesView extends Vue {
     const validationError = this.validateSlots();
     if (validationError) {
       this.error = validationError;
+      this.notify('warn', validationError);
       return;
     }
     try {
@@ -298,8 +311,10 @@ class SchedulesView extends Vue {
         },
         this.authStore.token
       );
+      this.notify('success', 'Agenda salva com sucesso.');
     } catch (error) {
       this.error = error instanceof Error ? error.message : 'Nao foi possivel salvar a agenda.';
+      this.notify('error', this.error);
     }
   }
 }
