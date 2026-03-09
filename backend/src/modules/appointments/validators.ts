@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 const objectIdRegex = /^[a-f\d]{24}$/i;
+const monthRegex = /^\d{4}-\d{2}$/;
 
 const appointmentStatusEnum = z.enum(['SCHEDULED', 'IN_PROGRESS', 'COMPLETED', 'CANCELED']);
 
@@ -34,4 +35,10 @@ export const listAppointmentsQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(20),
   sortBy: z.enum(['scheduledAt', 'createdAt', 'updatedAt']).default('scheduledAt'),
   sortOrder: z.enum(['asc', 'desc']).default('desc')
+});
+
+export const availabilityQuerySchema = z.object({
+  professionalId: z.string().regex(objectIdRegex, 'Invalid professional id.'),
+  serviceId: z.string().regex(objectIdRegex, 'Invalid service id.'),
+  month: z.string().regex(monthRegex, 'Invalid month.')
 });

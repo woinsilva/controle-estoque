@@ -124,6 +124,7 @@ export async function listAppointmentsByProfessionalAndRange(input: {
 }) {
   return Appointment.find({
     professionalId: input.professionalId,
+    status: { $ne: 'CANCELED' },
     scheduledAt: { $gte: input.start, $lte: input.end }
   })
     .sort({ scheduledAt: 1 })

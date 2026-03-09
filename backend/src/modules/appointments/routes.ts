@@ -5,6 +5,7 @@ import { validateBody, validateParams, validateQuery } from '../../middlewares/v
 import {
   createAppointmentController,
   deleteAppointmentController,
+  getAppointmentAvailabilityController,
   getAppointmentController,
   listAppointmentsController,
   updateAppointmentController,
@@ -12,6 +13,7 @@ import {
 } from './controller.js';
 import {
   appointmentIdParamSchema,
+  availabilityQuerySchema,
   createAppointmentSchema,
   listAppointmentsQuerySchema,
   updateAppointmentSchema,
@@ -27,6 +29,12 @@ router.get(
   requireRole(['OPERATOR', 'MANAGER', 'ADMIN', 'CLIENT']),
   validateQuery(listAppointmentsQuerySchema),
   listAppointmentsController
+);
+router.get(
+  '/availability',
+  requireRole(['OPERATOR', 'MANAGER', 'ADMIN', 'CLIENT']),
+  validateQuery(availabilityQuerySchema),
+  getAppointmentAvailabilityController
 );
 router.get(
   '/:id',

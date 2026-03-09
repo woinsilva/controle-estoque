@@ -4,6 +4,7 @@ import {
   AppointmentServiceError,
   createAppointmentService,
   deleteAppointmentService,
+  getAppointmentAvailabilityService,
   getAppointmentService,
   listAppointmentsService,
   updateAppointmentService,
@@ -74,6 +75,21 @@ export async function getAppointmentController(req: Request, res: Response) {
     return res.status(403).json({ error: 'Forbidden.' });
   }
   return res.status(200).json(mapAppointment(appointment));
+}
+
+export async function getAppointmentAvailabilityController(req: Request, res: Response) {
+  try {
+    const result = await getAppointmentAvailabilityService({
+      professionalId: String(req.query.professionalId),
+      serviceId: String(req.query.serviceId),
+      month: String(req.query.month)
+    });
+    return res.status(200).json(result);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Could not load appointment availability.';
+    const status = err instanceof AppointmentServiceError ? err.statusCode : 400;
+    return res.status(status).json({ error: message });
+  }
 }
 
 export async function createAppointmentController(req: Request, res: Response) {

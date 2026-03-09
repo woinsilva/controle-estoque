@@ -9,6 +9,7 @@ import {
   deleteAppointment,
   findConflictingAppointments,
   getAppointmentById,
+  listAppointmentsByProfessionalAndRange,
   listAppointments,
   updateAppointment
 } from './repository.js';
@@ -67,6 +68,58 @@ function toDateKey(date: Date) {
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
+}
+
+function addDays(date: Date, days: number) {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
+}
+
+function startOfDay(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0);
+}
+
+function endOfDay(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999);
+}
+
+function formatTime(minutes: number) {
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+}
+
+function getAvailableSlotsForDate(input: {
+  date: Date;
+  durationMinutes: number;
+  weeklySlots: { weekday: number; startTime: string; endTime: string }[];
+  dateOverrides?: { date: string; slots: { startTime: string; endTime: string }[] }[];
+  appointments: { scheduledAt: Date; endsAt: Date }[];
+}) {
+  const dateKey = toDateKey(input.date);
+  const override = input.dateOverrides?.find((item) => item.date === dateKey);
+  const baseSlots = override
+    ? override.slots
+    : input.weeklySlots.filter((slot) => slot.weekday === input.date.getDay());
+
+  const slots: string[] = [];
+  for (const slot of baseSlots) {
+    const start = timeToMinutes(slot.startTime);
+    const end = timeToMinutes(slot.endTime);
+    for (let cursor = start; cursor + input.durationMinutes <= end; cursor += 5) {
+      const candidateStart = new Date(input.date.getFullYear(), input.date.getMonth(), input.date.getDate(), 0, cursor, 0, 0);
+      const candidateEnd = new Date(candidateStart.getTime() + input.durationMinutes * 60_000);
+      const conflicts = input.appointments.some(
+        (appointment) => candidateStart < appointment.endsAt && candidateEnd > appointment.scheduledAt
+      );
+      if (!conflicts) {
+        slots.push(formatTime(cursor));
+      }
+    }
+  }
+
+  return slots;
 }
 
 async function validateAppointmentAvailability(input: {
@@ -140,6 +193,67 @@ export async function listAppointmentsService(input: ListAppointmentsInput) {
       sortOrder: input.sortOrder
     }
   );
+}
+
+export async function getAppointmentAvailabilityService(input: {
+  professionalId: string;
+  serviceId: string;
+  month: string;
+}) {
+  const professional = await getUserById(input.professionalId);
+  if (!professional || !professional.active || !professional.isProfessional || professional.role === 'CLIENT') {
+    throw new AppointmentServiceError('Professional not found.', 404);
+  }
+
+  const service = await getServiceById(input.serviceId);
+  if (!service || !service.active) {
+    throw new AppointmentServiceError('Service not found.', 404);
+  }
+
+  const schedule = await getScheduleByProfessionalId(input.professionalId);
+  if (!schedule) {
+    return {
+      month: input.month,
+      days: []
+    };
+  }
+
+  const [year, month] = input.month.split('-').map(Number);
+  const rangeStart = startOfDay(new Date(year || 0, (month || 1) - 1, 1));
+  const rangeEnd = endOfDay(new Date(year || 0, month || 1, 0));
+  const appointments = await listAppointmentsByProfessionalAndRange({
+    professionalId: input.professionalId,
+    start: rangeStart,
+    end: rangeEnd
+  });
+
+  const days: { date: string; slots: string[] }[] = [];
+  for (let cursor = new Date(rangeStart); cursor <= rangeEnd; cursor = addDays(cursor, 1)) {
+    const slots = getAvailableSlotsForDate({
+      date: cursor,
+      durationMinutes: service.durationMinutes,
+      weeklySlots: schedule.slots,
+      dateOverrides: schedule.dateOverrides,
+      appointments: appointments
+        .filter((appointment: { scheduledAt: Date }) => toDateKey(appointment.scheduledAt) === toDateKey(cursor))
+        .map((appointment: { scheduledAt: Date; endsAt: Date }) => ({
+          scheduledAt: appointment.scheduledAt,
+          endsAt: appointment.endsAt
+        }))
+    });
+
+    if (slots.length > 0) {
+      days.push({
+        date: toDateKey(cursor),
+        slots
+      });
+    }
+  }
+
+  return {
+    month: input.month,
+    days
+  };
 }
 
 export async function getAppointmentService(id: string) {
