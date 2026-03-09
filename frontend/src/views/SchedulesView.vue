@@ -75,6 +75,13 @@ class SchedulesView extends Vue {
     void this.loadProfessionals();
   }
 
+  timeToMinutes(value: string) {
+    const parts = value.split(':').map(Number);
+    const hours = parts[0] ?? 0;
+    const minutes = parts[1] ?? 0;
+    return hours * 60 + minutes;
+  }
+
   async loadProfessionals() {
     try {
       this.professionals = await apiGet<Pick<User, 'id' | 'name'>[]>('/users/professionals', this.authStore.token);
@@ -164,8 +171,37 @@ class SchedulesView extends Vue {
     this.sortSlots();
   }
 
+  validateSlots() {
+    for (const day of this.weekdays) {
+      const slots = this.daySlots(day.value);
+      for (const slot of slots) {
+        if (this.timeToMinutes(slot.endTime) <= this.timeToMinutes(slot.startTime)) {
+          return `O horario final deve ser maior que o inicial em ${day.label}.`;
+        }
+      }
+
+      for (let index = 1; index < slots.length; index += 1) {
+        const previous = slots[index - 1];
+        const current = slots[index];
+        if (!previous || !current) {
+          continue;
+        }
+        if (this.timeToMinutes(previous.endTime) > this.timeToMinutes(current.startTime)) {
+          return `Existem horarios conflitantes em ${day.label}.`;
+        }
+      }
+    }
+
+    return '';
+  }
+
   async saveSchedule() {
     this.error = '';
+    const validationError = this.validateSlots();
+    if (validationError) {
+      this.error = validationError;
+      return;
+    }
     try {
       await apiPut(`/schedules/${this.selectedProfessionalId}`, { slots: this.slots }, this.authStore.token);
     } catch (error) {
