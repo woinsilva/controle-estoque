@@ -28,7 +28,11 @@
     >
       <Column field="fullName" :header="$t('clients.fields.fullName')" />
       <Column field="email" :header="$t('clients.fields.email')" />
-      <Column field="phone" :header="$t('clients.fields.phone')" />
+      <Column field="phone" :header="$t('clients.fields.phone')">
+        <template #body="{ data }">
+          {{ formatPhoneValue(data.phone) }}
+        </template>
+      </Column>
       <Column field="birthDate" :header="$t('clients.fields.birthDate')">
         <template #body="{ data }">
           {{ formatDate(data.birthDate) }}
@@ -70,7 +74,7 @@
           </label>
           <label class="field">
             <span>{{ $t('clients.fields.phone') }}</span>
-            <input v-model="form.phone" type="text" required />
+            <input :value="form.phone" type="text" required @input="onPhoneInput" />
           </label>
           <label class="field">
             <span>{{ $t('clients.fields.birthDate') }}</span>
@@ -108,6 +112,7 @@ import Dialog from 'primevue/dialog';
 import InputText from 'primevue/inputtext';
 import { useConfirm } from 'primevue/useconfirm';
 import { apiDelete, apiGet, apiPost, apiPut } from '../services/api';
+import { formatPhone } from '../services/phone';
 import { useAuthStore } from '../stores/auth';
 import type { Client, ClientInput, ClientListResponse } from '../types/client';
 import ErrorCard from '../components/ErrorCard.vue';
@@ -219,6 +224,11 @@ class ClientsView extends Vue {
     this.dialogOpen = false;
   }
 
+  onPhoneInput(event: Event) {
+    const target = event.target as HTMLInputElement;
+    this.form.phone = formatPhone(target.value);
+  }
+
   async submitClient() {
     this.loading = true;
     this.error = '';
@@ -271,6 +281,11 @@ class ClientsView extends Vue {
   formatDate(value?: string) {
     if (!value) return '-';
     return new Date(value).toLocaleDateString();
+  }
+
+  formatPhoneValue(value?: string) {
+    if (!value) return '-';
+    return formatPhone(value);
   }
 
   extractErrorMessage(error: unknown) {

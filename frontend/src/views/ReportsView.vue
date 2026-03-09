@@ -167,7 +167,7 @@
         </label>
         <label class="field">
           <span>{{ $t('clients.fields.phone') }}</span>
-          <input v-model="filters.clients.phone" type="text" />
+          <input :value="filters.clients.phone" type="text" @input="onClientPhoneInput" />
         </label>
       </div>
       <div class="stats">
@@ -189,7 +189,7 @@
           <tbody>
             <tr v-for="item in summary.clients.recent" :key="item.id">
               <td>{{ item.fullName }}</td>
-              <td>{{ item.phone }}</td>
+              <td>{{ formatPhoneValue(item.phone) }}</td>
               <td>{{ item.email || '-' }}</td>
               <td>{{ item.active ? $t('common.yes') : $t('common.no') }}</td>
               <td>{{ formatDate(item.createdAt) }}</td>
@@ -272,6 +272,7 @@
 <script lang="ts">
 import { Component, Vue, toNative } from 'vue-facing-decorator';
 import { apiGet } from '../services/api';
+import { formatPhone } from '../services/phone';
 import { useAuthStore } from '../stores/auth';
 import type { ReportsSummary } from '../types/reports';
 import type { ClientListResponse } from '../types/client';
@@ -407,6 +408,11 @@ class ReportsView extends Vue {
     }
   }
 
+  onClientPhoneInput(event: Event) {
+    const target = event.target as HTMLInputElement;
+    this.filters.clients.phone = formatPhone(target.value);
+  }
+
   formatDate(value?: string) {
     if (!value) return '-';
     return new Date(value).toLocaleString();
@@ -427,6 +433,11 @@ class ReportsView extends Vue {
       style: 'currency',
       currency: settings.currency
     }).format(value);
+  }
+
+  formatPhoneValue(value?: string) {
+    if (!value) return '-';
+    return formatPhone(value);
   }
 }
 export default toNative(ReportsView);
