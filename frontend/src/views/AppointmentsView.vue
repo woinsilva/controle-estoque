@@ -157,7 +157,15 @@
             placeholder="Selecione um ou mais servicos"
             class="services-multiselect"
             @change="onAvailabilityInputsChange"
-          />
+          >
+            <template #option="{ option }">
+              <div class="service-option">
+                <strong>{{ option.name }}</strong>
+                <small>{{ option.durationLabel }} · {{ option.priceLabel }}</small>
+              </div>
+            </template>
+          </MultiSelect>
+          <small class="services-total">Total dos servicos: {{ selectedServicesTotalLabel }}</small>
         </label>
         <section class="field full availability-field">
           <div class="availability-header">
@@ -435,9 +443,23 @@ class AppointmentsView extends Vue {
 
   get serviceOptions() {
     return this.services.map((service) => ({
-      label: `${service.name} (${service.durationMinutes} min)`,
-      value: service.id
+      label: `${service.name} · ${service.durationMinutes} min · ${this.formatCurrency(service.price)}`,
+      value: service.id,
+      name: service.name,
+      durationLabel: `${service.durationMinutes} min`,
+      priceLabel: this.formatCurrency(service.price)
     }));
+  }
+
+  get selectedServicesTotal() {
+    return this.form.serviceIds.reduce((total, serviceId) => {
+      const service = this.services.find((item) => item.id === serviceId);
+      return total + (service?.price || 0);
+    }, 0);
+  }
+
+  get selectedServicesTotalLabel() {
+    return this.formatCurrency(this.selectedServicesTotal);
   }
 
   async loadInitialData() {
@@ -862,6 +884,13 @@ class AppointmentsView extends Vue {
       .join(', ') || '-';
   }
 
+  formatCurrency(value: number) {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(value || 0);
+  }
+
   formatDateTime(value: string) {
     return new Date(value).toLocaleString();
   }
@@ -931,6 +960,16 @@ export default toNative(AppointmentsView);
   display: grid;
   gap: 0.5rem;
   font-weight: 500;
+}
+
+.service-option {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.service-option small,
+.services-total {
+  color: var(--muted);
 }
 
 .field input,
