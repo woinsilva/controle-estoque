@@ -154,7 +154,10 @@
         </label>
         <section class="field full availability-field">
           <div class="availability-header">
-            <span>{{ $t('appointments.fields.scheduledAt') }}</span>
+            <div>
+              <span>{{ $t('appointments.fields.scheduledAt') }}</span>
+              <p class="availability-subtitle">Escolha um dia com vaga e depois selecione um horario livre.</p>
+            </div>
             <div class="availability-nav">
               <button type="button" class="ghost small" @click="changeAvailabilityMonth(-1)">Anterior</button>
               <strong>{{ availabilityMonthLabel }}</strong>
@@ -180,20 +183,37 @@
                 :disabled="!day.available"
                 @click="selectAvailabilityDate(day.date)"
               >
-                <span>{{ day.dayNumber }}</span>
-                <small v-if="day.available">{{ availabilityCount(day.date) }} horarios</small>
+                <span class="calendar-day-number">{{ day.dayNumber }}</span>
+                <small v-if="day.available" class="calendar-day-count">{{ availabilityCount(day.date) }} vagas</small>
+                <small v-else class="calendar-day-empty">Sem vaga</small>
               </button>
             </div>
 
-            <label class="field">
-              <span>Horario disponivel</span>
-              <select v-model="selectedAvailabilityTime" required @change="syncScheduledAtFromAvailability">
-                <option value="">Selecione um horario</option>
-                <option v-for="slot in selectedAvailabilitySlots" :key="slot" :value="slot">
+            <div class="availability-side">
+              <div class="selected-date-card">
+                <span class="selected-date-label">Data selecionada</span>
+                <strong>{{ selectedAvailabilityDateLabel }}</strong>
+              </div>
+
+              <div class="time-slots">
+                <button
+                  v-for="slot in selectedAvailabilitySlots"
+                  :key="slot"
+                  type="button"
+                  class="time-slot"
+                  :class="{ active: selectedAvailabilityTime === slot }"
+                  @click="selectAvailabilityTime(slot)"
+                >
                   {{ slot }}
-                </option>
-              </select>
-            </label>
+                </button>
+                <p v-if="selectedAvailabilityDate && !selectedAvailabilitySlots.length" class="availability-hint">
+                  Nenhum horario disponivel nesta data.
+                </p>
+                <p v-if="!selectedAvailabilityDate" class="availability-hint">
+                  Selecione um dia destacado no calendario.
+                </p>
+              </div>
+            </div>
           </div>
           <p v-else class="availability-hint">Selecione profissional e servico para consultar as datas disponiveis.</p>
         </section>
@@ -355,6 +375,17 @@ class AppointmentsView extends Vue {
     return new Date(year || 0, (month || 1) - 1, 1).toLocaleDateString('pt-BR', {
       month: 'long',
       year: 'numeric'
+    });
+  }
+
+  get selectedAvailabilityDateLabel() {
+    if (!this.selectedAvailabilityDate) {
+      return 'Nenhuma data selecionada';
+    }
+    return new Date(`${this.selectedAvailabilityDate}T12:00:00`).toLocaleDateString('pt-BR', {
+      weekday: 'long',
+      day: '2-digit',
+      month: 'long'
     });
   }
 
@@ -548,6 +579,11 @@ class AppointmentsView extends Vue {
     this.selectedAvailabilityDate = date;
     const currentSlots = this.selectedAvailabilitySlots;
     this.selectedAvailabilityTime = currentSlots[0] || '';
+    this.syncScheduledAtFromAvailability();
+  }
+
+  selectAvailabilityTime(value: string) {
+    this.selectedAvailabilityTime = value;
     this.syncScheduledAtFromAvailability();
   }
 
@@ -894,6 +930,146 @@ export default toNative(AppointmentsView);
   gap: 1rem;
 }
 
+.full {
+  grid-column: 1 / -1;
+}
+
+.availability-field {
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(8, 116, 172, 0.04), rgba(255, 255, 255, 0.7));
+  padding: 1rem;
+}
+
+.availability-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.availability-subtitle {
+  margin: 0.35rem 0 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.availability-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.availability-picker {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(240px, 0.9fr);
+  gap: 1rem;
+}
+
+.availability-calendar {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.weekday-label {
+  text-align: center;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.calendar-day {
+  min-height: 86px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: #fff;
+  padding: 0.65rem 0.5rem;
+  display: grid;
+  align-content: start;
+  gap: 0.35rem;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.calendar-day.available {
+  border-color: rgba(8, 116, 172, 0.35);
+  background: linear-gradient(180deg, rgba(8, 116, 172, 0.08), rgba(255, 255, 255, 0.96));
+}
+
+.calendar-day.available:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(8, 116, 172, 0.12);
+}
+
+.calendar-day.selected {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(8, 116, 172, 0.18);
+}
+
+.calendar-day.outside {
+  opacity: 0.45;
+}
+
+.calendar-day-number {
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.calendar-day-count,
+.calendar-day-empty {
+  font-size: 0.76rem;
+  color: var(--muted);
+}
+
+.availability-side {
+  display: grid;
+  gap: 0.9rem;
+  align-content: start;
+}
+
+.selected-date-card {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: #fff;
+  padding: 0.9rem 1rem;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.selected-date-label {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.time-slots {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(88px, 1fr));
+  gap: 0.65rem;
+}
+
+.time-slot {
+  padding: 0.7rem 0.8rem;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--text);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.time-slot.active {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--primary-ink);
+}
+
 .dialog-actions {
   display: flex;
   gap: 0.75rem;
@@ -916,6 +1092,10 @@ export default toNative(AppointmentsView);
   background: transparent;
   color: var(--muted);
   cursor: pointer;
+}
+
+.ghost.small {
+  padding: 0.5rem 0.85rem;
 }
 
 .icon-button {
@@ -991,5 +1171,22 @@ export default toNative(AppointmentsView);
   border: 1px solid var(--border);
   border-radius: 8px;
   background: #fff;
+}
+
+.availability-hint {
+  margin: 0;
+  color: var(--muted);
+}
+
+@media (max-width: 960px) {
+  .availability-picker {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .availability-calendar {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }
 </style>
