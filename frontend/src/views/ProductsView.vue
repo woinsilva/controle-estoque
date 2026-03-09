@@ -55,6 +55,44 @@
       </Column>
     </DataTable>
 
+    <section class="mobile-list">
+      <article v-for="product in products" :key="product._id" class="mobile-card">
+        <div class="mobile-card-head">
+          <div>
+            <strong>{{ product.name }}</strong>
+            <small>SKU {{ product.sku }}</small>
+          </div>
+          <span class="status-pill" :class="{ active: product.active }">
+            {{ product.active ? $t('common.yes') : $t('common.no') }}
+          </span>
+        </div>
+        <dl class="mobile-meta">
+          <div>
+            <dt>{{ $t('products.fields.price') }}</dt>
+            <dd>{{ formatCurrency(product.price) }}</dd>
+          </div>
+          <div>
+            <dt>{{ $t('products.fields.stock') }}</dt>
+            <dd>{{ product.stockQty }}</dd>
+          </div>
+        </dl>
+        <div v-if="canManage" class="mobile-actions">
+          <button type="button" class="icon-button" @click="openEdit(product)" :title="$t('products.edit')">
+            <i class="pi pi-pencil" aria-hidden="true"></i>
+          </button>
+          <button
+            v-if="canDelete"
+            type="button"
+            class="icon-button danger"
+            @click="confirmDelete(product)"
+            :title="$t('products.delete')"
+          >
+            <i class="pi pi-trash" aria-hidden="true"></i>
+          </button>
+        </div>
+      </article>
+    </section>
+
     <Dialog v-model:visible="dialogOpen" modal :header="dialogTitle" class="dialog">
       <form class="product-form" @submit.prevent="submitProduct">
         <div class="grid">
@@ -339,6 +377,63 @@ export default toNative(ProductsView);
   background: var(--panel);
 }
 
+.mobile-list {
+  display: none;
+}
+
+.mobile-card {
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.78);
+  padding: 1rem;
+  display: grid;
+  gap: 0.9rem;
+}
+
+.mobile-card-head,
+.mobile-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.mobile-card-head small {
+  color: var(--muted);
+}
+
+.mobile-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin: 0;
+}
+
+.mobile-meta dt {
+  color: var(--muted);
+  font-size: 0.8rem;
+  margin-bottom: 0.2rem;
+}
+
+.mobile-meta dd {
+  margin: 0;
+  font-weight: 700;
+}
+
+.status-pill {
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  background: var(--danger-soft);
+  color: var(--danger);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.status-pill.active {
+  background: var(--primary-soft);
+  color: var(--primary-strong);
+}
+
 .dialog {
   min-width: min(680px, 90vw);
 }
@@ -397,4 +492,25 @@ export default toNative(ProductsView);
   border-color: rgba(180, 35, 24, 0.4);
 }
 
+@media (max-width: 760px) {
+  .products-header,
+  .actions,
+  .dialog-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .actions > * {
+    width: 100%;
+  }
+
+  .table {
+    display: none;
+  }
+
+  .mobile-list {
+    display: grid;
+    gap: 0.85rem;
+  }
+}
 </style>

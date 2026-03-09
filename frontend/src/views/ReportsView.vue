@@ -67,6 +67,16 @@
           </tbody>
         </table>
       </div>
+      <div class="mobile-report-list">
+        <article v-for="item in summary.products.lowStockItems" :key="item.id" class="report-card">
+          <strong>{{ item.name }}</strong>
+          <small>SKU {{ item.sku }}</small>
+          <div class="report-card-row">
+            <span>{{ $t('products.fields.stock') }}: {{ item.stockQty }}</span>
+            <span>{{ formatCurrency(item.price) }}</span>
+          </div>
+        </article>
+      </div>
     </section>
 
     <section class="panel">
@@ -139,6 +149,16 @@
           </tbody>
         </table>
       </div>
+      <div class="mobile-report-list">
+        <article v-for="item in summary.sales.recent" :key="item.id" class="report-card">
+          <strong>#{{ item.id.slice(-6).toUpperCase() }}</strong>
+          <small>{{ formatDate(item.createdAt) }}</small>
+          <div class="report-card-row">
+            <span>{{ item.status }}</span>
+            <span>{{ formatCurrency(item.total) }}</span>
+          </div>
+        </article>
+      </div>
     </section>
 
     <section class="panel">
@@ -197,6 +217,16 @@
             <tr v-if="!summary.clients.recent.length"><td colspan="5">-</td></tr>
           </tbody>
         </table>
+      </div>
+      <div class="mobile-report-list">
+        <article v-for="item in summary.clients.recent" :key="item.id" class="report-card">
+          <strong>{{ item.fullName }}</strong>
+          <small>{{ item.email || '-' }}</small>
+          <div class="report-card-row">
+            <span>{{ formatPhoneValue(item.phone) }}</span>
+            <span>{{ item.active ? $t('common.yes') : $t('common.no') }}</span>
+          </div>
+        </article>
       </div>
     </section>
 
@@ -262,6 +292,16 @@
             <tr v-if="!summary.appointments.recent.length"><td colspan="4">-</td></tr>
           </tbody>
         </table>
+      </div>
+      <div class="mobile-report-list">
+        <article v-for="item in summary.appointments.recent" :key="item.id" class="report-card">
+          <strong>{{ item.clientName }}</strong>
+          <small>{{ formatDate(item.scheduledAt) }}</small>
+          <div class="report-card-row">
+            <span>{{ item.status }}</span>
+            <span>{{ formatDate(item.createdAt) }}</span>
+          </div>
+        </article>
       </div>
     </section>
 
@@ -547,6 +587,31 @@ export default toNative(ReportsView);
   overflow: auto;
 }
 
+.mobile-report-list {
+  display: none;
+}
+
+.report-card {
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.82);
+  padding: 0.95rem;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.report-card small {
+  color: var(--muted);
+}
+
+.report-card-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-weight: 700;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
@@ -582,5 +647,30 @@ thead th {
   border: 1px solid #ffd4ce;
   border-radius: 10px;
   padding: 0.75rem;
+}
+
+@media (max-width: 760px) {
+  .panel-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .panel-head .primary {
+    width: 100%;
+  }
+
+  .filters,
+  .stats {
+    grid-template-columns: 1fr;
+  }
+
+  .table-wrap {
+    display: none;
+  }
+
+  .mobile-report-list {
+    display: grid;
+    gap: 0.75rem;
+  }
 }
 </style>

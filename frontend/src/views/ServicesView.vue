@@ -33,6 +33,38 @@
       </Column>
     </DataTable>
 
+    <section class="mobile-list">
+      <article v-for="service in services" :key="service.id" class="mobile-card">
+        <div class="mobile-card-head">
+          <div>
+            <strong>{{ service.name }}</strong>
+            <small>{{ service.description || 'Sem descricao' }}</small>
+          </div>
+          <span class="status-pill" :class="{ active: service.active }">
+            {{ service.active ? $t('common.yes') : $t('common.no') }}
+          </span>
+        </div>
+        <dl class="mobile-meta">
+          <div>
+            <dt>Duracao</dt>
+            <dd>{{ service.durationMinutes }} min</dd>
+          </div>
+          <div>
+            <dt>Valor</dt>
+            <dd>{{ formatCurrency(service.price) }}</dd>
+          </div>
+        </dl>
+        <div class="mobile-actions">
+          <button type="button" class="icon-button" @click="openEdit(service)">
+            <i class="pi pi-pencil" aria-hidden="true"></i>
+          </button>
+          <button type="button" class="icon-button danger" @click="removeService(service.id)">
+            <i class="pi pi-trash" aria-hidden="true"></i>
+          </button>
+        </div>
+      </article>
+    </section>
+
     <Dialog v-model:visible="dialogOpen" modal :header="editingId ? 'Editar servico' : 'Novo servico'" class="dialog">
       <form class="form" @submit.prevent="submitService">
         <label class="field">
@@ -164,6 +196,15 @@ export default toNative(ServicesView);
 .page-header h2 { margin: 0; }
 .page-header p { margin: 0; color: var(--muted); }
 .table { border-radius: 18px; border: 1px solid var(--border); background: var(--panel); }
+.mobile-list { display: none; }
+.mobile-card { border: 1px solid var(--border); border-radius: 20px; background: rgba(255,255,255,0.78); padding: 1rem; display: grid; gap: 0.85rem; }
+.mobile-card-head, .mobile-actions { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
+.mobile-card-head small { color: var(--muted); }
+.mobile-meta { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.8rem; margin: 0; }
+.mobile-meta dt { color: var(--muted); font-size: 0.8rem; margin-bottom: 0.2rem; }
+.mobile-meta dd { margin: 0; font-weight: 700; }
+.status-pill { padding: 0.35rem 0.7rem; border-radius: 999px; background: var(--danger-soft); color: var(--danger); font-size: 0.78rem; font-weight: 800; }
+.status-pill.active { background: var(--primary-soft); color: var(--primary-strong); }
 .dialog { min-width: min(640px, 90vw); }
 .field { display: grid; gap: 0.5rem; font-weight: 500; }
 .field input, .field textarea { padding: 0.7rem 0.9rem; border-radius: 12px; border: 1px solid var(--border); background: #fffdf9; }
@@ -173,4 +214,10 @@ export default toNative(ServicesView);
 .ghost { padding: 0.6rem 1.1rem; border-radius: 12px; border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; }
 .icon-button { border: 1px solid var(--border); background: var(--panel-strong); color: var(--primary); cursor: pointer; width: 32px; height: 32px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; }
 .icon-button.danger { color: #b42318; border-color: rgba(180, 35, 24, 0.4); }
+@media (max-width: 760px) {
+  .page-header, .dialog-actions { flex-direction: column; align-items: stretch; }
+  .page-header > * { width: 100%; }
+  .table { display: none; }
+  .mobile-list { display: grid; gap: 0.85rem; }
+}
 </style>

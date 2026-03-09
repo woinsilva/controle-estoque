@@ -43,6 +43,28 @@
       </Column>
     </DataTable>
 
+    <section class="mobile-list">
+      <article v-for="sale in sales" :key="sale._id" class="mobile-card">
+        <div class="mobile-card-head">
+          <div>
+            <strong>{{ clientName(sale.clientId) }}</strong>
+            <small>{{ sale._id }}</small>
+          </div>
+          <span class="status-pill">{{ sale.status }}</span>
+        </div>
+        <dl class="mobile-meta">
+          <div>
+            <dt>{{ $t('sales.fields.total') }}</dt>
+            <dd>{{ formatCurrency(sale.total) }}</dd>
+          </div>
+          <div>
+            <dt>{{ $t('sales.fields.createdAt') }}</dt>
+            <dd>{{ formatDate(sale.createdAt) }}</dd>
+          </div>
+        </dl>
+      </article>
+    </section>
+
     <Dialog v-model:visible="dialogOpen" modal :header="$t('sales.new')" class="dialog">
       <form class="sale-form" @submit.prevent="submitSale">
         <label class="field">
@@ -340,6 +362,57 @@ export default toNative(SalesView);
   background: var(--panel);
 }
 
+.mobile-list {
+  display: none;
+}
+
+.mobile-card {
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.78);
+  padding: 1rem;
+  display: grid;
+  gap: 0.9rem;
+}
+
+.mobile-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.mobile-card-head small {
+  color: var(--muted);
+}
+
+.mobile-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin: 0;
+}
+
+.mobile-meta dt {
+  color: var(--muted);
+  font-size: 0.8rem;
+  margin-bottom: 0.2rem;
+}
+
+.mobile-meta dd {
+  margin: 0;
+  font-weight: 700;
+}
+
+.status-pill {
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  background: var(--primary-soft);
+  color: var(--primary-strong);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
 .dialog {
   min-width: min(760px, 92vw);
 }
@@ -421,8 +494,37 @@ export default toNative(SalesView);
 }
 
 @media (max-width: 900px) {
+  .sales-header,
+  .actions,
+  .dialog-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .actions > * {
+    width: 100%;
+  }
+
   .row {
     grid-template-columns: 1fr;
+  }
+
+  .items-head {
+    display: none;
+  }
+
+  .items-row {
+    grid-template-columns: 1fr;
+    gap: 0.4rem;
+  }
+
+  .table {
+    display: none;
+  }
+
+  .mobile-list {
+    display: grid;
+    gap: 0.85rem;
   }
 }
 </style>
