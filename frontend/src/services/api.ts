@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
 
 type RequestOptions = {
   method?: string;
@@ -22,6 +22,17 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   });
 
   if (!response.ok) {
+    if (response.status === 401) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('role');
+      localStorage.removeItem('userId');
+      sessionStorage.removeItem('token');
+      sessionStorage.removeItem('role');
+      sessionStorage.removeItem('userId');
+      window.location.href = '/login';
+      throw new Error('Invalid or expired token.');
+    }
+
     let message = 'API request failed';
     try {
       const data = (await response.json()) as { error?: string; message?: string };
@@ -49,4 +60,8 @@ export function apiPut<T>(path: string, body: unknown, token?: string | null): P
 
 export function apiDelete<T>(path: string, token?: string | null): Promise<T> {
   return request<T>(path, { method: 'DELETE', token });
+}
+
+export function apiPatch<T>(path: string, body: unknown, token?: string | null): Promise<T> {
+  return request<T>(path, { method: 'PATCH', body, token });
 }

@@ -42,11 +42,12 @@
         <div class="panel-body">
           <div class="row" v-for="item in recentSales" :key="item.id">
             <div>
-              <strong>{{ item.label }}</strong>
+              <strong>{{ saleLabel(item.id) }}</strong>
               <p>{{ item.detail }}</p>
             </div>
             <span>{{ formatCurrency(item.amount) }}</span>
           </div>
+          <p v-if="!recentSales.length" class="empty-row">-</p>
         </div>
       </section>
 
@@ -63,9 +64,11 @@
             </div>
             <span class="pill danger">{{ item.qty }}</span>
           </div>
+          <p v-if="!lowStockItems.length" class="empty-row">-</p>
         </div>
       </section>
     </div>
+    <p v-if="error" class="dashboard-error">{{ error }}</p>
   </section>
 </template>
 
@@ -73,23 +76,22 @@
 import { Component, Vue } from 'vue-facing-decorator';
 import { useAuthStore } from '../stores/auth';
 import { i18n } from '../i18n';
+import { apiGet } from '../services/api';
+import type { DashboardLowStockItem, DashboardRecentSale, DashboardSummary } from '../types/dashboard';
 
 @Component({})
 export default class DashboardView extends Vue {
   authStore = useAuthStore();
-  lowStock = 4;
-  salesToday = 12;
-  pendingOrders = 2;
-  recentSales = [
-    { id: 'S-221', label: 'Venda S-221', detail: 'Operador A', amount: 1240.5 },
-    { id: 'S-220', label: 'Venda S-220', detail: 'Operador B', amount: 980.0 },
-    { id: 'S-219', label: 'Venda S-219', detail: 'Operador A', amount: 430.25 }
-  ];
-  lowStockItems = [
-    { sku: 'TSH-002', name: 'Camiseta Basica', qty: 3 },
-    { sku: 'CAF-010', name: 'Cafe Premium', qty: 5 },
-    { sku: 'SAB-007', name: 'Sabonete Artesanal', qty: 2 }
-  ];
+  lowStock = 0;
+  salesToday = 0;
+  pendingOrders = 0;
+  recentSales: DashboardRecentSale[] = [];
+  lowStockItems: DashboardLowStockItem[] = [];
+  error = '';
+
+  mounted() {
+    void this.loadDashboard();
+  }
 
   get profileLabel() {
     const role = this.authStore.role || 'OPERATOR';
@@ -107,6 +109,24 @@ export default class DashboardView extends Vue {
 
   get canSeeProducts() {
     return ['MANAGER', 'ADMIN'].includes(this.authStore.role || '');
+  }
+
+  async loadDashboard() {
+    this.error = '';
+    try {
+      const summary = await apiGet<DashboardSummary>('/dashboard/summary', this.authStore.token);
+      this.lowStock = summary.lowStock;
+      this.salesToday = summary.salesToday;
+      this.pendingOrders = summary.pendingOrders;
+      this.recentSales = summary.recentSales;
+      this.lowStockItems = summary.lowStockItems;
+    } catch (err) {
+      this.error = err instanceof Error ? err.message : this.$t('dashboard.loadError');
+    }
+  }
+
+  saleLabel(saleId: string) {
+    return `#${saleId.slice(-6).toUpperCase()}`;
   }
 
   formatCurrency(value: number) {
@@ -264,6 +284,11 @@ export default class DashboardView extends Vue {
   font-size: 0.85rem;
 }
 
+.empty-row {
+  margin: 0;
+  color: var(--muted);
+}
+
 .pill {
   padding: 0.35rem 0.7rem;
   border-radius: 999px;
@@ -274,6 +299,15 @@ export default class DashboardView extends Vue {
 .pill.danger {
   background: #ffe3db;
   color: #b42318;
+}
+
+.dashboard-error {
+  margin: 0;
+  color: #b42318;
+  background: #fff1ef;
+  border: 1px solid #ffd4ce;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
 }
 
 @media (max-width: 900px) {

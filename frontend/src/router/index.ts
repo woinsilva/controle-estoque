@@ -3,6 +3,12 @@ import { useAuthStore } from '../stores/auth';
 import LoginView from '../views/LoginView.vue';
 import DashboardView from '../views/DashboardView.vue';
 import ProductsView from '../views/ProductsView.vue';
+import SalesView from '../views/SalesView.vue';
+import UsersView from '../views/UsersView.vue';
+import ClientsView from '../views/ClientsView.vue';
+import QuestionnairesView from '../views/QuestionnairesView.vue';
+import AppointmentsView from '../views/AppointmentsView.vue';
+import ReportsView from '../views/ReportsView.vue';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -25,6 +31,42 @@ const router = createRouter({
       name: 'products',
       component: ProductsView,
       meta: { layout: 'auth', requiresAuth: true, roles: ['OPERATOR', 'MANAGER', 'ADMIN'] }
+    },
+    {
+      path: '/app/sales',
+      name: 'sales',
+      component: SalesView,
+      meta: { layout: 'auth', requiresAuth: true, roles: ['OPERATOR', 'MANAGER', 'ADMIN'] }
+    },
+    {
+      path: '/app/clients',
+      name: 'clients',
+      component: ClientsView,
+      meta: { layout: 'auth', requiresAuth: true, roles: ['OPERATOR', 'MANAGER', 'ADMIN'] }
+    },
+    {
+      path: '/app/questionnaires',
+      name: 'questionnaires',
+      component: QuestionnairesView,
+      meta: { layout: 'auth', requiresAuth: true, roles: ['OPERATOR', 'MANAGER', 'ADMIN'] }
+    },
+    {
+      path: '/app/appointments',
+      name: 'appointments',
+      component: AppointmentsView,
+      meta: { layout: 'auth', requiresAuth: true, roles: ['OPERATOR', 'MANAGER', 'ADMIN'] }
+    },
+    {
+      path: '/app/reports',
+      name: 'reports',
+      component: ReportsView,
+      meta: { layout: 'auth', requiresAuth: true, roles: ['OPERATOR', 'MANAGER', 'ADMIN'] }
+    },
+    {
+      path: '/app/users',
+      name: 'users',
+      component: UsersView,
+      meta: { layout: 'auth', requiresAuth: true, roles: ['ADMIN'] }
     }
   ]
 });

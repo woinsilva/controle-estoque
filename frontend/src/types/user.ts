@@ -6,4 +6,16 @@ export type User = {
   email: string;
   role: UserRole;
   active: boolean;
+  locale?: string;
+  theme?: 'light' | 'dark';
+};
+
+export type UserInput = {
+  name: string;
+  email: string;
+  password?: string;
+  role: UserRole;
+  active: boolean;
+  locale?: string;
+  theme?: 'light' | 'dark';
 };

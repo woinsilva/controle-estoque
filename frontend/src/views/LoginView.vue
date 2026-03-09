@@ -30,6 +30,7 @@
 <script lang="ts">
 import { Component, Vue } from 'vue-facing-decorator';
 import { apiPost } from '../services/api';
+import { applyPreferences } from '../services/preferences';
 import { useAuthStore } from '../stores/auth';
 import type { UserRole } from '../types/user';
 
@@ -40,6 +41,8 @@ type LoginResponse = {
     name: string;
     email: string;
     role: UserRole;
+    locale?: 'pt' | 'en' | 'es';
+    theme?: 'light' | 'dark';
   };
 };
 
@@ -60,7 +63,17 @@ export default class LoginView extends Vue {
         email: this.email,
         password: this.password
       });
-      this.authStore.setSession(result.token, result.user.role, this.rememberMe);
+      const locale = result.user.locale || 'pt';
+      const theme = result.user.theme || 'light';
+      this.authStore.setSession(
+        result.token,
+        result.user.role,
+        result.user.id,
+        this.rememberMe,
+        locale,
+        theme
+      );
+      applyPreferences(locale, theme);
       await this.$router.push('/app');
     } catch {
       this.error = this.$t('login.error');

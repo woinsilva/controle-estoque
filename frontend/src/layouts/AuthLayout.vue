@@ -10,8 +10,24 @@
         <router-link v-if="canSeeProducts" to="/app/products">
           {{ $t('common.products') }}
         </router-link>
-        <span v-if="canSeeSales">{{ $t('common.sales') }}</span>
-        <span v-if="canSeeUsers">{{ $t('common.users') }}</span>
+        <router-link v-if="canSeeSales" to="/app/sales">
+          {{ $t('common.sales') }}
+        </router-link>
+        <router-link v-if="canSeeClients" to="/app/clients">
+          {{ $t('common.clients') }}
+        </router-link>
+        <router-link v-if="canSeeAppointments" to="/app/appointments">
+          {{ $t('common.appointments') }}
+        </router-link>
+        <router-link v-if="canSeeReports" to="/app/reports">
+          {{ $t('common.reports') }}
+        </router-link>
+        <router-link v-if="canSeeQuestionnaires" to="/app/questionnaires">
+          {{ $t('common.questionnaires') }}
+        </router-link>
+        <router-link v-if="canSeeUsers" to="/app/users">
+          {{ $t('common.users') }}
+        </router-link>
       </nav>
       <div class="language">
         <span>{{ $t('common.language') }}</span>
@@ -47,6 +63,22 @@ export default class AuthLayout extends Vue {
 
   get canSeeUsers() {
     return this.authStore.role === 'ADMIN';
+  }
+
+  get canSeeClients() {
+    return ['OPERATOR', 'MANAGER', 'ADMIN'].includes(this.authStore.role || '');
+  }
+
+  get canSeeQuestionnaires() {
+    return ['OPERATOR', 'MANAGER', 'ADMIN'].includes(this.authStore.role || '');
+  }
+
+  get canSeeAppointments() {
+    return ['OPERATOR', 'MANAGER', 'ADMIN'].includes(this.authStore.role || '');
+  }
+
+  get canSeeReports() {
+    return ['OPERATOR', 'MANAGER', 'ADMIN'].includes(this.authStore.role || '');
   }
 
   get localeValue() {
