@@ -22,7 +22,9 @@
         {{ isLoading ? $t('login.loading') : $t('login.button') }}
       </button>
     </form>
-    <p class="hint">{{ $t('login.hint') }}</p>
+    <div class="hint-card">
+      <p class="hint">{{ $t('login.hint') }}</p>
+    </div>
     <p v-if="error" class="error">{{ error }}</p>
   </section>
 </template>
@@ -92,23 +94,25 @@ export default toNative(LoginView);
 <style scoped>
 .login-card {
   width: min(420px, 100%);
-  padding: 2.5rem;
-  border-radius: 24px;
-  background: var(--panel);
+  padding: 2.6rem;
+  border-radius: 30px;
+  background: rgba(255, 255, 255, 0.78);
   border: 1px solid var(--border);
   box-shadow: var(--shadow);
+  backdrop-filter: blur(18px);
 }
 
 .login-head h2 {
   margin: 0.4rem 0;
-  font-size: 2rem;
+  font-size: 2.2rem;
+  letter-spacing: -0.04em;
 }
 
 .tag {
-  color: var(--primary);
-  font-weight: 600;
+  color: var(--primary-strong);
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.16em;
   font-size: 0.7rem;
   margin: 0;
 }
@@ -116,6 +120,7 @@ export default toNative(LoginView);
 .subtitle {
   margin: 0;
   color: var(--muted);
+  font-size: 0.98rem;
 }
 
 .login-form {
@@ -127,14 +132,14 @@ export default toNative(LoginView);
 .field {
   display: grid;
   gap: 0.5rem;
-  font-weight: 500;
+  font-weight: 700;
 }
 
 .field input {
-  padding: 0.75rem 0.9rem;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  background: #fffdf9;
+  padding: 0.92rem 1rem;
+  border-radius: 16px;
+  border: 1px solid var(--border-strong);
+  background: rgba(255, 255, 255, 0.88);
 }
 
 .remember {
@@ -151,24 +156,37 @@ export default toNative(LoginView);
 }
 
 button {
-  padding: 0.85rem 1rem;
-  border-radius: 14px;
+  padding: 0.95rem 1rem;
+  border-radius: 16px;
   border: none;
-  background: var(--primary);
+  background: linear-gradient(135deg, var(--primary), #14a39a);
   color: var(--primary-ink);
-  font-weight: 600;
+  font-weight: 800;
   cursor: pointer;
+  box-shadow: 0 16px 32px rgba(15, 118, 110, 0.2);
 }
 
 .error {
   margin-top: 1rem;
-  color: #b42318;
-  font-weight: 500;
+  color: var(--danger);
+  font-weight: 700;
+  background: var(--danger-soft);
+  border: 1px solid rgba(185, 56, 47, 0.18);
+  border-radius: 14px;
+  padding: 0.85rem 1rem;
+}
+
+.hint-card {
+  margin-top: 1.5rem;
+  padding: 1rem 1.1rem;
+  background: rgba(247, 250, 246, 0.82);
+  border: 1px solid var(--border);
+  border-radius: 18px;
 }
 
 .hint {
-  margin-top: 1.5rem;
-  font-size: 0.85rem;
+  margin: 0;
+  font-size: 0.88rem;
   color: var(--muted);
 }
 </style>

@@ -156,14 +156,17 @@ export default toNative(DashboardView);
 }
 
 .hero {
-  background: linear-gradient(120deg, #ffffff, #f6efe4);
+  background:
+    radial-gradient(circle at top right, rgba(223, 190, 124, 0.24), transparent 28%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.84), rgba(246, 252, 249, 0.72));
   border: 1px solid var(--border);
-  border-radius: 24px;
-  padding: 2rem;
+  border-radius: 30px;
+  padding: 2.2rem;
   display: flex;
   justify-content: space-between;
   gap: 2rem;
   align-items: center;
+  box-shadow: var(--shadow-soft);
 }
 
 .eyebrow {
@@ -177,7 +180,8 @@ export default toNative(DashboardView);
 
 .hero h2 {
   margin: 0 0 0.4rem;
-  font-size: 2rem;
+  font-size: 2.25rem;
+  letter-spacing: -0.05em;
 }
 
 .subtitle {
@@ -186,11 +190,12 @@ export default toNative(DashboardView);
 }
 
 .profile-pill {
-  padding: 0.6rem 1.2rem;
+  padding: 0.75rem 1.15rem;
   border-radius: 999px;
-  background: #f0e6d7;
+  background: rgba(255, 255, 255, 0.76);
   border: 1px solid var(--border);
-  font-weight: 600;
+  font-weight: 800;
+  box-shadow: var(--shadow-soft);
 }
 
 .cards {
@@ -200,18 +205,20 @@ export default toNative(DashboardView);
 }
 
 .stat {
-  padding: 1.5rem;
-  border-radius: 18px;
+  padding: 1.6rem;
+  border-radius: 24px;
   border: 1px solid var(--border);
-  background: #fffdf8;
+  background: rgba(255, 255, 255, 0.76);
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
+  box-shadow: var(--shadow-soft);
 }
 
 .stat strong {
-  font-size: 1.8rem;
+  font-size: 2rem;
+  letter-spacing: -0.04em;
 }
 
 .stat h3 {
@@ -224,12 +231,12 @@ export default toNative(DashboardView);
 }
 
 .stat.danger {
-  background: #fff3ef;
-  border-color: #f5c2b3;
+  background: linear-gradient(135deg, rgba(255, 241, 238, 0.94), rgba(255, 255, 255, 0.76));
+  border-color: rgba(185, 56, 47, 0.16);
 }
 
 .stat.muted {
-  background: #f7f4ef;
+  background: linear-gradient(135deg, rgba(247, 250, 246, 0.94), rgba(255, 255, 255, 0.76));
 }
 
 .panels {
@@ -239,9 +246,9 @@ export default toNative(DashboardView);
 }
 
 .panel {
-  border-radius: 18px;
+  border-radius: 24px;
   border: 1px solid var(--border);
-  background: var(--panel);
+  background: rgba(255, 255, 255, 0.78);
   padding: 1.5rem;
   box-shadow: var(--shadow);
 }
@@ -273,8 +280,8 @@ export default toNative(DashboardView);
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--border);
+  padding: 0.8rem 0.2rem;
+  border-bottom: 1px solid rgba(24, 54, 39, 0.08);
 }
 
 .row:last-child {
@@ -294,23 +301,23 @@ export default toNative(DashboardView);
 }
 
 .pill {
-  padding: 0.35rem 0.7rem;
+  padding: 0.45rem 0.8rem;
   border-radius: 999px;
-  background: #f3efe7;
-  font-weight: 600;
+  background: var(--panel-soft);
+  font-weight: 800;
 }
 
 .pill.danger {
-  background: #ffe3db;
-  color: #b42318;
+  background: var(--danger-soft);
+  color: var(--danger);
 }
 
 .dashboard-error {
   margin: 0;
-  color: #b42318;
-  background: #fff1ef;
-  border: 1px solid #ffd4ce;
-  border-radius: 10px;
+  color: var(--danger);
+  background: var(--danger-soft);
+  border: 1px solid rgba(185, 56, 47, 0.18);
+  border-radius: 16px;
   padding: 0.75rem 1rem;
 }
 
