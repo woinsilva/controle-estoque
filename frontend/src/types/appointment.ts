@@ -4,7 +4,7 @@ export type Appointment = {
   id: string;
   clientId: string;
   professionalId: string;
-  serviceId: string;
+  serviceIds: string[];
   scheduledAt: string;
   endsAt: string;
   status: AppointmentStatus;
@@ -17,7 +17,7 @@ export type Appointment = {
 export type AppointmentInput = {
   clientId: string;
   professionalId: string;
-  serviceId: string;
+  serviceIds: string[];
   scheduledAt: string;
   status: AppointmentStatus;
   notes?: string;

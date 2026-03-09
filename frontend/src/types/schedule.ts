@@ -37,7 +37,7 @@ export type ScheduleCalendarResponse = {
     id: string;
     clientId: string;
     professionalId: string;
-    serviceId: string;
+    serviceIds: string[];
     scheduledAt: string;
     endsAt: string;
     status: 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELED';

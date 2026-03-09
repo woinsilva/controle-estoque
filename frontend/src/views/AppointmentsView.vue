@@ -65,9 +65,9 @@
           {{ professionalName(data.professionalId) }}
         </template>
       </Column>
-      <Column field="serviceId" header="Servico">
+      <Column field="serviceIds" header="Servicos">
         <template #body="{ data }">
-          {{ serviceName(data.serviceId) }}
+          {{ serviceNames(data.serviceIds) }}
         </template>
       </Column>
       <Column field="scheduledAt" :header="$t('appointments.fields.scheduledAt')">
@@ -144,13 +144,20 @@
           </select>
         </label>
         <label class="field">
-          <span>Servico</span>
-          <select v-model="form.serviceId" required @change="onAvailabilityInputsChange">
-            <option value="">Selecione</option>
-            <option v-for="service in services" :key="service.id" :value="service.id">
-              {{ service.name }} ({{ service.durationMinutes }} min)
-            </option>
-          </select>
+          <span>Servicos</span>
+          <MultiSelect
+            v-model="form.serviceIds"
+            :options="serviceOptions"
+            optionLabel="label"
+            optionValue="value"
+            display="chip"
+            filter
+            :maxSelectedLabels="3"
+            selectedItemsLabel="{0} servicos"
+            placeholder="Selecione um ou mais servicos"
+            class="services-multiselect"
+            @change="onAvailabilityInputsChange"
+          />
         </label>
         <section class="field full availability-field">
           <div class="availability-header">
@@ -165,7 +172,7 @@
             </div>
           </div>
 
-          <div v-if="form.professionalId && form.serviceId" class="availability-picker">
+          <div v-if="form.professionalId && form.serviceIds.length" class="availability-picker">
             <div class="availability-calendar">
               <div v-for="weekday in availabilityWeekdays" :key="weekday" class="weekday-label">
                 {{ weekday }}
@@ -215,7 +222,7 @@
               </div>
             </div>
           </div>
-          <p v-else class="availability-hint">Selecione profissional e servico para consultar as datas disponiveis.</p>
+          <p v-else class="availability-hint">Selecione profissional e pelo menos um servico para consultar as datas disponiveis.</p>
         </section>
         <label class="field">
           <span>{{ $t('appointments.fields.status') }}</span>
@@ -300,6 +307,7 @@ import { Component, Vue, toNative } from 'vue-facing-decorator';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Dialog from 'primevue/dialog';
+import MultiSelect from 'primevue/multiselect';
 import { useConfirm } from 'primevue/useconfirm';
 import { apiDelete, apiGet, apiPost, apiPut } from '../services/api';
 import { useAuthStore } from '../stores/auth';
@@ -316,7 +324,7 @@ import type { Service } from '../types/service';
 import type { User } from '../types/user';
 import ErrorCard from '../components/ErrorCard.vue';
 
-@Component({ components: { DataTable, Column, Dialog, ErrorCard } })
+@Component({ components: { DataTable, Column, Dialog, MultiSelect, ErrorCard } })
 class AppointmentsView extends Vue {
   authStore = useAuthStore();
   confirm = useConfirm();
@@ -340,7 +348,7 @@ class AppointmentsView extends Vue {
   form: AppointmentInput = {
     clientId: '',
     professionalId: '',
-    serviceId: '',
+    serviceIds: [],
     scheduledAt: '',
     status: 'SCHEDULED',
     notes: ''
@@ -425,6 +433,13 @@ class AppointmentsView extends Vue {
     return days;
   }
 
+  get serviceOptions() {
+    return this.services.map((service) => ({
+      label: `${service.name} (${service.durationMinutes} min)`,
+      value: service.id
+    }));
+  }
+
   async loadInitialData() {
     this.loading = true;
     this.error = '';
@@ -503,7 +518,7 @@ class AppointmentsView extends Vue {
     this.form = {
       clientId: this.authStore.clientId || '',
       professionalId: '',
-      serviceId: '',
+      serviceIds: [],
       scheduledAt: '',
       status: 'SCHEDULED',
       notes: ''
@@ -520,7 +535,7 @@ class AppointmentsView extends Vue {
     this.form = {
       clientId: appointment.clientId,
       professionalId: appointment.professionalId,
-      serviceId: appointment.serviceId,
+      serviceIds: [...appointment.serviceIds],
       scheduledAt: appointment.scheduledAt,
       status: appointment.status,
       notes: appointment.notes || ''
@@ -555,13 +570,18 @@ class AppointmentsView extends Vue {
   }
 
   async loadAvailability() {
-    if (!this.form.professionalId || !this.form.serviceId) {
+    if (!this.form.professionalId || this.form.serviceIds.length === 0) {
       this.availability = null;
       return;
     }
     try {
+      const query = new URLSearchParams({
+        professionalId: this.form.professionalId,
+        serviceIds: this.form.serviceIds.join(','),
+        month: this.availabilityMonth
+      });
       this.availability = await apiGet<AppointmentAvailabilityResponse>(
-        `/appointments/availability?professionalId=${this.form.professionalId}&serviceId=${this.form.serviceId}&month=${this.availabilityMonth}`,
+        `/appointments/availability?${query.toString()}`,
         this.authStore.token
       );
     } catch (err) {
@@ -599,6 +619,11 @@ class AppointmentsView extends Vue {
     this.loading = true;
     this.error = '';
     this.syncScheduledAtFromAvailability();
+    if (this.form.serviceIds.length === 0) {
+      this.error = 'Selecione pelo menos um servico.';
+      this.loading = false;
+      return;
+    }
     if (!this.form.scheduledAt) {
       this.error = 'Selecione uma data e horario disponiveis.';
       this.loading = false;
@@ -607,7 +632,7 @@ class AppointmentsView extends Vue {
     const payload = {
       clientId: this.form.clientId,
       professionalId: this.form.professionalId,
-      serviceId: this.form.serviceId,
+      serviceIds: this.form.serviceIds,
       scheduledAt: this.form.scheduledAt,
       status: this.form.status,
       notes: this.form.notes?.trim() || undefined
@@ -831,8 +856,10 @@ class AppointmentsView extends Vue {
     return this.professionals.find((item) => item.id === professionalId)?.name || professionalId;
   }
 
-  serviceName(serviceId: string) {
-    return this.services.find((item) => item.id === serviceId)?.name || serviceId;
+  serviceNames(serviceIds: string[] = []) {
+    return serviceIds
+      .map((serviceId) => this.services.find((item) => item.id === serviceId)?.name || serviceId)
+      .join(', ') || '-';
   }
 
   formatDateTime(value: string) {
@@ -913,6 +940,20 @@ export default toNative(AppointmentsView);
   border-radius: 12px;
   border: 1px solid var(--border);
   background: #fffdf9;
+}
+
+:deep(.services-multiselect) {
+  min-height: 48px;
+}
+
+:deep(.services-multiselect .p-multiselect-label) {
+  padding: 0.65rem 0.85rem;
+}
+
+:deep(.services-multiselect .p-multiselect-token) {
+  background: rgba(8, 116, 172, 0.12);
+  color: var(--text);
+  border-radius: 999px;
 }
 
 .table {

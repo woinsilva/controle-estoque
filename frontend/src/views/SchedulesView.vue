@@ -96,7 +96,7 @@
               <div v-for="appointment in appointmentsForDate(day.date)" :key="appointment.id" class="event-card">
                 <strong>{{ formatTimeRange(appointment.scheduledAt, appointment.endsAt) }}</strong>
                 <span>{{ clientName(appointment.clientId) }}</span>
-                <small>{{ serviceName(appointment.serviceId) }}</small>
+                <small>{{ serviceNames(appointment.serviceIds) }}</small>
               </div>
             </div>
             <p v-else class="empty-state">Sem atendimentos.</p>
@@ -116,7 +116,7 @@
             <article v-for="appointment in selectedDateAppointments" :key="appointment.id" class="appointment-item">
               <strong>{{ formatTimeRange(appointment.scheduledAt, appointment.endsAt) }}</strong>
               <span>{{ clientName(appointment.clientId) }}</span>
-              <small>{{ serviceName(appointment.serviceId) }}</small>
+              <small>{{ serviceNames(appointment.serviceIds) }}</small>
             </article>
           </div>
           <p v-else class="empty-state">Nenhum atendimento marcado nesta data.</p>
@@ -498,8 +498,10 @@ class SchedulesView extends Vue {
     return this.clients.find((item) => item.id === clientId)?.fullName || clientId;
   }
 
-  serviceName(serviceId: string) {
-    return this.services.find((item) => item.id === serviceId)?.name || serviceId;
+  serviceNames(serviceIds: string[] = []) {
+    return serviceIds
+      .map((serviceId) => this.services.find((item) => item.id === serviceId)?.name || serviceId)
+      .join(', ') || '-';
   }
 
   formatTime(value: string) {
