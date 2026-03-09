@@ -3,7 +3,6 @@ import { z } from 'zod';
 const objectIdRegex = /^[a-f\d]{24}$/i;
 
 export const questionnaireTemplateSchema = z.object({
-  code: z.string().trim().min(1),
   name: z.string().min(1),
   schema: z.record(z.string(), z.unknown())
 });

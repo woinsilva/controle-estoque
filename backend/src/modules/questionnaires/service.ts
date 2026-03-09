@@ -6,9 +6,10 @@ import {
   createTemplate,
   getLatestTemplateVersion,
   getResponseById,
-  listResponsesByAppointment,
   getTemplateById,
+  listResponsesByAppointment,
   listResponsesByClient,
+  listTemplateCodes,
   listTemplates,
   publishTemplate,
   updateTemplateById
@@ -30,16 +31,25 @@ export async function listTemplatesService(code?: string) {
   return withUsage;
 }
 
+async function generateNextTemplateCode() {
+  const codes = await listTemplateCodes();
+  const numericCodes = codes
+    .map((code) => Number.parseInt(String(code), 10))
+    .filter((value) => Number.isFinite(value));
+  const nextCode = numericCodes.length ? Math.max(...numericCodes) + 1 : 1;
+  return String(nextCode);
+}
+
 export async function createTemplateService(input: {
-  code: string;
   name: string;
   schema: Record<string, unknown>;
   createdBy?: string;
 }) {
-  const latest = await getLatestTemplateVersion(input.code);
+  const code = await generateNextTemplateCode();
+  const latest = await getLatestTemplateVersion(code);
   const version = latest ? latest.version + 1 : 1;
   return createTemplate({
-    code: input.code,
+    code,
     name: input.name,
     version,
     schema: input.schema,
@@ -54,7 +64,6 @@ export async function publishTemplateService(id: string) {
 export async function updateTemplateService(
   id: string,
   input: {
-    code: string;
     name: string;
     schema: Record<string, unknown>;
   }

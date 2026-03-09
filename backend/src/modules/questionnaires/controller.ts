@@ -18,7 +18,6 @@ export async function listTemplatesController(req: Request, res: Response) {
 
 export async function createTemplateController(req: Request, res: Response) {
   const template = await createTemplateService({
-    code: req.body.code,
     name: req.body.name,
     schema: req.body.schema,
     createdBy: req.user?.id
@@ -37,7 +36,6 @@ export async function publishTemplateController(req: Request, res: Response) {
 export async function updateTemplateController(req: Request, res: Response) {
   try {
     const template = await updateTemplateService(req.params.id, {
-      code: req.body.code,
       name: req.body.name,
       schema: req.body.schema
     });

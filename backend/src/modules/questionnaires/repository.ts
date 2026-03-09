@@ -13,6 +13,10 @@ export async function getLatestTemplateVersion(code: string) {
   return QuestionnaireTemplate.findOne({ code: code.toUpperCase() }).sort({ version: -1 }).exec();
 }
 
+export async function listTemplateCodes() {
+  return QuestionnaireTemplate.distinct('code').exec();
+}
+
 export async function createTemplate(data: {
   code: string;
   name: string;
@@ -44,13 +48,12 @@ export async function publishTemplate(id: string) {
 
 export async function updateTemplateById(
   id: string,
-  data: { code: string; name: string; schema: Record<string, unknown> }
+  data: { name: string; schema: Record<string, unknown> }
 ) {
   return QuestionnaireTemplate.findByIdAndUpdate(
     id,
     {
       $set: {
-        code: data.code.toUpperCase(),
         name: data.name,
         schema: data.schema
       }

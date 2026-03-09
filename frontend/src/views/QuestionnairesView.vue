@@ -91,10 +91,6 @@
     >
       <form class="form" @submit.prevent="submitTemplate">
         <label class="field">
-          <span>{{ $t('questionnaires.fields.code') }}</span>
-          <input v-model="templateForm.code" type="text" required />
-        </label>
-        <label class="field">
           <span>{{ $t('questionnaires.fields.name') }}</span>
           <input v-model="templateForm.name" type="text" required />
         </label>
@@ -386,7 +382,6 @@ export default class QuestionnairesView extends Vue {
   editingFieldIndex = -1;
   editingTemplateId = '';
   templateForm = {
-    code: '',
     name: ''
   };
   responseForm = {
@@ -467,7 +462,6 @@ export default class QuestionnairesView extends Vue {
       template && typeof template === 'object' && '_id' in template && 'schema' in template ? template : undefined;
     this.editingTemplateId = validTemplate?._id || '';
     this.templateForm = {
-      code: validTemplate?.code || '',
       name: validTemplate?.name || ''
     };
     this.builderField = {
@@ -806,7 +800,6 @@ export default class QuestionnairesView extends Vue {
         }))
       } as Record<string, unknown>;
       const payload = {
-        code: this.templateForm.code.trim(),
         name: this.templateForm.name.trim(),
         schema
       };
