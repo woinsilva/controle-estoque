@@ -146,13 +146,13 @@ class AuthLayout extends Vue {
         to: '/app',
         label: String(this.$t('common.dashboard')),
         icon: 'pi pi-home',
-        visible: this.authStore.role !== 'CLIENT'
+        visible: ['MANAGER', 'ADMIN'].includes(this.authStore.role || '')
       },
       {
         to: '/app/products',
         label: String(this.$t('common.products')),
         icon: 'pi pi-box',
-        visible: ['MANAGER', 'ADMIN'].includes(this.authStore.role || '')
+        visible: ['OPERATOR', 'MANAGER', 'ADMIN'].includes(this.authStore.role || '')
       },
       {
         to: '/app/sales',
@@ -176,7 +176,7 @@ class AuthLayout extends Vue {
         to: '/app/services',
         label: 'Servicos',
         icon: 'pi pi-briefcase',
-        visible: ['OPERATOR', 'MANAGER', 'ADMIN'].includes(this.authStore.role || '')
+        visible: ['MANAGER', 'ADMIN'].includes(this.authStore.role || '')
       },
       {
         to: '/app/schedules',
@@ -188,13 +188,13 @@ class AuthLayout extends Vue {
         to: '/app/reports',
         label: String(this.$t('common.reports')),
         icon: 'pi pi-chart-line',
-        visible: ['OPERATOR', 'MANAGER', 'ADMIN'].includes(this.authStore.role || '')
+        visible: ['MANAGER', 'ADMIN'].includes(this.authStore.role || '')
       },
       {
         to: '/app/questionnaires',
         label: String(this.$t('common.questionnaires')),
         icon: 'pi pi-file-edit',
-        visible: ['OPERATOR', 'MANAGER', 'ADMIN'].includes(this.authStore.role || '')
+        visible: ['MANAGER', 'ADMIN'].includes(this.authStore.role || '')
       },
       {
         to: '/app/users',

@@ -60,6 +60,12 @@ export async function listAppointmentsController(req: Request, res: Response) {
     }
     query.clientId = req.user.clientId || '';
   }
+  if (req.user?.role === 'OPERATOR') {
+    if (!req.user.id || !req.user.isProfessional) {
+      return res.status(200).json({ items: [], total: 0, page: query.page, limit: query.limit, totalPages: 1 });
+    }
+    query.professionalId = req.user.id;
+  }
   const result = await listAppointmentsService(query);
   return res.status(200).json({
     ...result,
@@ -75,13 +81,23 @@ export async function getAppointmentController(req: Request, res: Response) {
   if (req.user?.role === 'CLIENT' && appointment.clientId !== req.user.clientId) {
     return res.status(403).json({ error: 'Forbidden.' });
   }
+  if (req.user?.role === 'OPERATOR' && appointment.professionalId !== req.user.id) {
+    return res.status(403).json({ error: 'Forbidden.' });
+  }
   return res.status(200).json(mapAppointment(appointment));
 }
 
 export async function getAppointmentAvailabilityController(req: Request, res: Response) {
   try {
+    const professionalId =
+      req.user?.role === 'OPERATOR' && req.user.id ? req.user.id : String(req.query.professionalId);
+
+    if (req.user?.role === 'OPERATOR' && !req.user.isProfessional) {
+      return res.status(403).json({ error: 'Forbidden.' });
+    }
+
     const result = await getAppointmentAvailabilityService({
-      professionalId: String(req.query.professionalId),
+      professionalId,
       serviceIds: req.query.serviceIds as string[],
       month: String(req.query.month)
     });
@@ -98,10 +114,14 @@ export async function createAppointmentController(req: Request, res: Response) {
     if (req.user?.role === 'CLIENT' && !req.user.clientId) {
       return res.status(403).json({ error: 'Client account is not linked to a client profile.' });
     }
+    if (req.user?.role === 'OPERATOR' && !req.user.isProfessional) {
+      return res.status(403).json({ error: 'Forbidden.' });
+    }
     const clientId = req.user?.role === 'CLIENT' ? req.user.clientId || '' : req.body.clientId;
+    const professionalId = req.user?.role === 'OPERATOR' ? req.user.id || '' : req.body.professionalId;
     const appointment = await createAppointmentService({
       clientId,
-      professionalId: req.body.professionalId,
+      professionalId,
       serviceIds: req.body.serviceIds,
       scheduledAt: req.body.scheduledAt,
       status: req.body.status,
@@ -134,6 +154,17 @@ export async function createAppointmentController(req: Request, res: Response) {
 
 export async function updateAppointmentController(req: Request, res: Response) {
   try {
+    const current = await getAppointmentService(req.params.id);
+    if (!current) {
+      return res.status(404).json({ error: 'Appointment not found.' });
+    }
+    if (req.user?.role === 'OPERATOR') {
+      if (!req.user.isProfessional || current.professionalId !== req.user.id) {
+        return res.status(403).json({ error: 'Forbidden.' });
+      }
+      req.body.professionalId = req.user.id;
+    }
+
     const appointment = await updateAppointmentService(req.params.id, req.body);
     if (!appointment) {
       return res.status(404).json({ error: 'Appointment not found.' });
@@ -163,6 +194,14 @@ export async function updateAppointmentController(req: Request, res: Response) {
 }
 
 export async function updateAppointmentStatusController(req: Request, res: Response) {
+  const current = await getAppointmentService(req.params.id);
+  if (!current) {
+    return res.status(404).json({ error: 'Appointment not found.' });
+  }
+  if (req.user?.role === 'OPERATOR' && current.professionalId !== req.user.id) {
+    return res.status(403).json({ error: 'Forbidden.' });
+  }
+
   const appointment = await updateAppointmentStatusService(req.params.id, req.body.status);
   if (!appointment) {
     return res.status(404).json({ error: 'Appointment not found.' });

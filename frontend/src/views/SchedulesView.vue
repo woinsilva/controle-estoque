@@ -8,7 +8,7 @@
     </header>
 
     <section class="toolbar">
-      <label class="field professional-field">
+      <label v-if="!isOperatorRole" class="field professional-field">
         <span>Profissional</span>
         <AppSelect
           v-model="selectedProfessionalId"
@@ -265,6 +265,10 @@ class SchedulesView extends Vue {
     return this.toDateKey(new Date());
   }
 
+  get isOperatorRole() {
+    return this.authStore.role === 'OPERATOR';
+  }
+
   get professionalOptions() {
     return this.professionals.map((professional) => ({
       label: professional.name,
@@ -343,11 +347,16 @@ class SchedulesView extends Vue {
         apiGet<Service[]>('/services?active=true', this.authStore.token)
       ]);
 
-      this.professionals = professionals;
+      this.professionals = this.isOperatorRole
+        ? professionals.filter((professional) => professional.id === this.authStore.userId)
+        : professionals;
       this.clients = clients.items;
       this.services = services;
-      if (professionals[0]) {
-        this.selectedProfessionalId = professionals[0].id;
+      if (this.isOperatorRole && this.authStore.userId) {
+        this.selectedProfessionalId = this.authStore.userId;
+        await this.loadCalendar();
+      } else if (this.professionals[0]) {
+        this.selectedProfessionalId = this.professionals[0].id;
         await this.loadCalendar();
       }
     } catch (error) {

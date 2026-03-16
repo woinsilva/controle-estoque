@@ -193,7 +193,7 @@
           <span>{{ $t('appointments.fields.client') }}</span>
           <AppSelect v-model="form.clientId" :options="clientOptions" :placeholder="$t('appointments.selectClient')" />
         </label>
-        <label class="field">
+        <label v-if="!isOperatorRole" class="field">
           <span>Profissional</span>
           <AppSelect
             v-model="form.professionalId"
@@ -441,6 +441,10 @@ class AppointmentsView extends Vue {
     return this.authStore.role === 'CLIENT';
   }
 
+  get isOperatorRole() {
+    return this.authStore.role === 'OPERATOR';
+  }
+
   get dialogTitle() {
     return this.editingId ? this.$t('appointments.edit') : this.$t('appointments.new');
   }
@@ -563,7 +567,9 @@ class AppointmentsView extends Vue {
       if (this.authStore.role !== 'CLIENT') {
         const [clients, professionals, services] = results as [ClientListResponse, Pick<User, 'id' | 'name'>[], Service[]];
         this.clients = clients.items;
-        this.professionals = professionals;
+        this.professionals = this.isOperatorRole
+          ? professionals.filter((professional) => professional.id === this.authStore.userId)
+          : professionals;
         this.services = services;
       } else {
         const [professionals, services] = results as [Pick<User, 'id' | 'name'>[], Service[]];
@@ -619,7 +625,7 @@ class AppointmentsView extends Vue {
     this.editingId = null;
     this.form = {
       clientId: this.authStore.clientId || '',
-      professionalId: '',
+      professionalId: this.isOperatorRole ? this.authStore.userId || '' : '',
       serviceIds: [],
       scheduledAt: '',
       status: 'SCHEDULED',

@@ -22,7 +22,7 @@ const router = Router();
 
 router.use(authMiddleware);
 
-router.get('/templates', requireRole(['OPERATOR', 'MANAGER', 'ADMIN']), listTemplatesController);
+router.get('/templates', requireRole(['MANAGER', 'ADMIN']), listTemplatesController);
 router.post(
   '/templates',
   requireRole(['MANAGER', 'ADMIN']),
@@ -39,19 +39,19 @@ router.post('/templates/:id/publish', requireRole(['MANAGER', 'ADMIN']), publish
 
 router.get(
   '/responses/client/:clientId',
-  requireRole(['OPERATOR', 'MANAGER', 'ADMIN']),
+  requireRole(['MANAGER', 'ADMIN']),
   listResponsesByClientController
 );
 router.get(
   '/responses/appointment/:appointmentId',
-  requireRole(['OPERATOR', 'MANAGER', 'ADMIN']),
+  requireRole(['MANAGER', 'ADMIN']),
   validateParams(appointmentIdParamSchema),
   listResponsesByAppointmentController
 );
-router.get('/responses/:id', requireRole(['OPERATOR', 'MANAGER', 'ADMIN']), getResponseController);
+router.get('/responses/:id', requireRole(['MANAGER', 'ADMIN']), getResponseController);
 router.post(
   '/responses',
-  requireRole(['OPERATOR', 'MANAGER', 'ADMIN']),
+  requireRole(['MANAGER', 'ADMIN']),
   validateBody(questionnaireResponseSchema),
   createResponseController
 );

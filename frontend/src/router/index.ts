@@ -33,7 +33,7 @@ const router = createRouter({
       path: '/app',
       name: 'dashboard',
       component: DashboardView,
-      meta: { layout: 'auth', requiresAuth: true, roles: ['OPERATOR', 'MANAGER', 'ADMIN'] }
+      meta: { layout: 'auth', requiresAuth: true, roles: ['MANAGER', 'ADMIN'] }
     },
     {
       path: '/app/products',
@@ -57,7 +57,7 @@ const router = createRouter({
       path: '/app/questionnaires',
       name: 'questionnaires',
       component: QuestionnairesView,
-      meta: { layout: 'auth', requiresAuth: true, roles: ['OPERATOR', 'MANAGER', 'ADMIN'] }
+      meta: { layout: 'auth', requiresAuth: true, roles: ['MANAGER', 'ADMIN'] }
     },
     {
       path: '/app/appointments',
@@ -69,7 +69,7 @@ const router = createRouter({
       path: '/app/services',
       name: 'services',
       component: ServicesView,
-      meta: { layout: 'auth', requiresAuth: true, roles: ['OPERATOR', 'MANAGER', 'ADMIN'] }
+      meta: { layout: 'auth', requiresAuth: true, roles: ['MANAGER', 'ADMIN'] }
     },
     {
       path: '/app/schedules',
@@ -81,7 +81,7 @@ const router = createRouter({
       path: '/app/reports',
       name: 'reports',
       component: ReportsView,
-      meta: { layout: 'auth', requiresAuth: true, roles: ['OPERATOR', 'MANAGER', 'ADMIN'] }
+      meta: { layout: 'auth', requiresAuth: true, roles: ['MANAGER', 'ADMIN'] }
     },
     {
       path: '/app/users',
@@ -100,11 +100,17 @@ router.beforeEach((to) => {
   if (!authStore.isAuthenticated) {
     return { name: 'login' };
   }
-  if (authStore.role === 'CLIENT' && to.name !== 'appointments') {
-    return { name: 'appointments' };
-  }
   const roles = to.meta.roles as string[] | undefined;
   if (roles && authStore.role && !roles.includes(authStore.role)) {
+    if (authStore.role === 'CLIENT') {
+      return { name: to.name === 'users' ? 'users' : 'appointments' };
+    }
+    if (authStore.role === 'OPERATOR') {
+      return { name: 'products' };
+    }
+    if (authStore.role === 'MANAGER' || authStore.role === 'ADMIN') {
+      return { name: 'dashboard' };
+    }
     return { name: 'login' };
   }
   return true;

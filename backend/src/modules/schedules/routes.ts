@@ -22,12 +22,7 @@ const router = Router();
 router.use(authMiddleware);
 
 router.get('/', requireRole(['OPERATOR', 'MANAGER', 'ADMIN']), listSchedulesController);
-router.get(
-  '/:professionalId',
-  requireRole(['OPERATOR', 'MANAGER', 'ADMIN', 'CLIENT']),
-  validateParams(professionalIdParamSchema),
-  getScheduleController
-);
+router.get('/:professionalId', requireRole(['OPERATOR', 'MANAGER', 'ADMIN']), validateParams(professionalIdParamSchema), getScheduleController);
 router.get(
   '/:professionalId/calendar',
   requireRole(['OPERATOR', 'MANAGER', 'ADMIN']),

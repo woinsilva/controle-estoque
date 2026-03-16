@@ -6,6 +6,6 @@ import { getDashboardSummaryController } from './controller.js';
 const router = Router();
 
 router.use(authMiddleware);
-router.get('/summary', requireRole(['OPERATOR', 'MANAGER', 'ADMIN']), getDashboardSummaryController);
+router.get('/summary', requireRole(['MANAGER', 'ADMIN']), getDashboardSummaryController);
 
 export default router;

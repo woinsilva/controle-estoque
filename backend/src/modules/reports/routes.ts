@@ -6,6 +6,6 @@ import { getReportsSummaryController } from './controller.js';
 const router = Router();
 
 router.use(authMiddleware);
-router.get('/summary', requireRole(['OPERATOR', 'MANAGER', 'ADMIN']), getReportsSummaryController);
+router.get('/summary', requireRole(['MANAGER', 'ADMIN']), getReportsSummaryController);
 
 export default router;

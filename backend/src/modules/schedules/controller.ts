@@ -26,12 +26,24 @@ function mapSchedule(schedule: {
   };
 }
 
-export async function listSchedulesController(_req: Request, res: Response) {
+export async function listSchedulesController(req: Request, res: Response) {
+  if (req.user?.role === 'OPERATOR') {
+    if (!req.user.id || !req.user.isProfessional) {
+      return res.status(200).json([]);
+    }
+    const schedule = await getScheduleByProfessionalIdService(req.user.id);
+    return res.status(200).json(schedule ? [mapSchedule(schedule)] : []);
+  }
+
   const schedules = await listSchedulesService();
   return res.status(200).json(schedules.map(mapSchedule));
 }
 
 export async function getScheduleController(req: Request, res: Response) {
+  if (req.user?.role === 'OPERATOR' && req.params.professionalId !== req.user.id) {
+    return res.status(403).json({ error: 'Forbidden.' });
+  }
+
   const schedule = await getScheduleByProfessionalIdService(req.params.professionalId);
   if (!schedule) {
     return res.status(404).json({ error: 'Schedule not found.' });
@@ -41,6 +53,10 @@ export async function getScheduleController(req: Request, res: Response) {
 
 export async function upsertScheduleController(req: Request, res: Response) {
   try {
+    if (req.user?.role === 'OPERATOR' && req.params.professionalId !== req.user.id) {
+      return res.status(403).json({ error: 'Forbidden.' });
+    }
+
     const schedule = await upsertScheduleService({
       professionalId: req.params.professionalId,
       slots: req.body.slots
@@ -54,6 +70,10 @@ export async function upsertScheduleController(req: Request, res: Response) {
 
 export async function upsertDateOverrideController(req: Request, res: Response) {
   try {
+    if (req.user?.role === 'OPERATOR' && req.params.professionalId !== req.user.id) {
+      return res.status(403).json({ error: 'Forbidden.' });
+    }
+
     const schedule = await upsertDateOverrideService({
       professionalId: req.params.professionalId,
       date: req.params.date,
@@ -68,6 +88,10 @@ export async function upsertDateOverrideController(req: Request, res: Response) 
 
 export async function getScheduleCalendarController(req: Request, res: Response) {
   try {
+    if (req.user?.role === 'OPERATOR' && req.params.professionalId !== req.user.id) {
+      return res.status(403).json({ error: 'Forbidden.' });
+    }
+
     const calendar = await getScheduleCalendarService({
       professionalId: req.params.professionalId,
       date: String(req.query.date),
