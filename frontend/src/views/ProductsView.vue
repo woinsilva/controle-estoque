@@ -445,13 +445,15 @@ export default toNative(ProductsView);
 
 .grid {
   display: grid;
-  gap: 1rem;
+  gap: 1.4rem 1rem;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  align-items: start;
 }
 
 .field {
   display: grid;
-  gap: 0.5rem;
+  gap: 0.45rem;
+  align-content: start;
   font-weight: 500;
 }
 

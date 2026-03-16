@@ -23,9 +23,23 @@ import { logger } from './config/logger.js';
 
 export const app = express();
 
+const localOriginPattern =
+  /^https?:\/\/(localhost|127\.0\.0\.1|10(?:\.\d{1,3}){3}|172\.(1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2}|192\.168(?:\.\d{1,3}){2})(:\d+)?$/;
+
 app.use((pinoHttp as unknown as (options: { logger: typeof logger }) => express.RequestHandler)({ logger }));
 app.use(helmet());
-app.use(cors({ origin: 'http://localhost:5173' }));
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin || localOriginPattern.test(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error('CORS origin not allowed.'));
+    }
+  })
+);
 app.use(express.json({ limit: '200kb' }));
 app.use(mongoSanitize());
 

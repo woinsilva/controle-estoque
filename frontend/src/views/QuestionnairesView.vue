@@ -966,7 +966,7 @@ export default toNative(QuestionnairesView);
 
 .form {
   display: grid;
-  gap: 1rem;
+  gap: 1.4rem;
 }
 
 .builder {
@@ -983,8 +983,9 @@ export default toNative(QuestionnairesView);
 
 .builder-grid {
   display: grid;
-  gap: 0.8rem;
+  gap: 1.2rem 0.8rem;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
 }
 
 .builder-grid .full {
@@ -1050,24 +1051,22 @@ export default toNative(QuestionnairesView);
 
 .dynamic-grid {
   display: grid;
-  gap: 1rem;
+  gap: 1.4rem 1rem;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  align-items: start;
 }
 
 .field {
   display: grid;
-  gap: 0.5rem;
+  gap: 0.45rem;
+  align-content: start;
   font-weight: 500;
 }
 
 .field-hint {
   color: var(--danger, #b42318);
   font-size: 0.8rem;
-}
-
-.field-hint {
-  color: var(--danger, #b42318);
-  font-size: 0.8rem;
+  min-height: 1.1rem;
 }
 
 .boolean-field {

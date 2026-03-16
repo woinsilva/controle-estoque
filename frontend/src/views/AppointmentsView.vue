@@ -1021,7 +1021,8 @@ export default toNative(AppointmentsView);
 
 .field {
   display: grid;
-  gap: 0.5rem;
+  gap: 0.45rem;
+  align-content: start;
   font-weight: 500;
 }
 
@@ -1147,7 +1148,7 @@ export default toNative(AppointmentsView);
 
 .form {
   display: grid;
-  gap: 1rem;
+  gap: 1.4rem;
 }
 
 .full {

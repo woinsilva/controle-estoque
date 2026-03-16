@@ -1,10 +1,59 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+import { notify } from './notifications';
+
+function resolveApiBaseUrl(): string {
+  if (import.meta.env.VITE_API_BASE_URL) {
+    return import.meta.env.VITE_API_BASE_URL;
+  }
+
+  const { protocol, hostname } = window.location;
+  return `${protocol}//${hostname}:3001`;
+}
+
+const API_BASE_URL = resolveApiBaseUrl();
 
 type RequestOptions = {
   method?: string;
   body?: unknown;
   token?: string | null;
 };
+
+type ApiErrorResponse = {
+  error?: string;
+  message?: string;
+  details?: {
+    fieldErrors?: Record<string, string[]>;
+    formErrors?: string[];
+  };
+};
+
+function formatApiError(data: ApiErrorResponse): string {
+  const messages: string[] = [];
+
+  if (data.error) {
+    messages.push(data.error);
+  } else if (data.message) {
+    messages.push(data.message);
+  }
+
+  const formErrors = data.details?.formErrors || [];
+  for (const formError of formErrors) {
+    if (formError && !messages.includes(formError)) {
+      messages.push(formError);
+    }
+  }
+
+  const fieldErrors = data.details?.fieldErrors || {};
+  for (const [field, errors] of Object.entries(fieldErrors)) {
+    for (const fieldError of errors) {
+      const message = `${field}: ${fieldError}`;
+      if (fieldError && !messages.includes(message)) {
+        messages.push(message);
+      }
+    }
+  }
+
+  return messages.filter(Boolean).join(' | ') || 'API request failed';
+}
 
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const headers: Record<string, string> = {
@@ -23,6 +72,11 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
 
   if (!response.ok) {
     if (response.status === 401 && options.token) {
+      notify({
+        severity: 'error',
+        summary: 'Sessao expirada',
+        detail: 'Invalid or expired token.'
+      });
       localStorage.removeItem('token');
       localStorage.removeItem('role');
       localStorage.removeItem('userId');
@@ -39,11 +93,18 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
 
     let message = 'API request failed';
     try {
-      const data = (await response.json()) as { error?: string; message?: string };
-      message = data.error || data.message || message;
+      const data = (await response.json()) as ApiErrorResponse;
+      message = formatApiError(data);
     } catch {
       // Ignore JSON parse errors for empty responses.
     }
+
+    notify({
+      severity: 'error',
+      summary: 'Erro',
+      detail: message
+    });
+
     throw new Error(message);
   }
 

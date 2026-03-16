@@ -143,6 +143,16 @@ const messages = {
       themeLight: 'Claro',
       themeDark: 'Escuro',
       savePreferences: 'Salvar preferencias',
+      validation: {
+        fixFields: 'Corrija os campos destacados antes de continuar.',
+        nameRequired: 'O nome do usuario e obrigatorio.',
+        emailRequired: 'O email e obrigatorio.',
+        emailInvalid: 'Informe um email valido.',
+        emailInUse: 'Este email ja esta em uso.',
+        passwordRequired: 'A senha e obrigatoria.',
+        passwordMin: 'A senha deve ter ao menos 6 caracteres.',
+        roleRequired: 'O perfil e obrigatorio.'
+      },
       fields: {
         id: 'ID',
         name: 'Nome',
@@ -464,6 +474,16 @@ const messages = {
       themeLight: 'Light',
       themeDark: 'Dark',
       savePreferences: 'Save preferences',
+      validation: {
+        fixFields: 'Fix the highlighted fields before continuing.',
+        nameRequired: 'User name is required.',
+        emailRequired: 'Email is required.',
+        emailInvalid: 'Enter a valid email address.',
+        emailInUse: 'This email is already in use.',
+        passwordRequired: 'Password is required.',
+        passwordMin: 'Password must be at least 6 characters long.',
+        roleRequired: 'Role is required.'
+      },
       fields: {
         id: 'ID',
         name: 'Name',
@@ -785,6 +805,16 @@ const messages = {
       themeLight: 'Claro',
       themeDark: 'Oscuro',
       savePreferences: 'Guardar preferencias',
+      validation: {
+        fixFields: 'Corrige los campos resaltados antes de continuar.',
+        nameRequired: 'El nombre del usuario es obligatorio.',
+        emailRequired: 'El correo es obligatorio.',
+        emailInvalid: 'Ingresa un correo valido.',
+        emailInUse: 'Este correo ya esta en uso.',
+        passwordRequired: 'La contrasena es obligatoria.',
+        passwordMin: 'La contrasena debe tener al menos 6 caracteres.',
+        roleRequired: 'El perfil es obligatorio.'
+      },
       fields: {
         id: 'ID',
         name: 'Nombre',

@@ -206,7 +206,7 @@ export default toNative(ServicesView);
 .status-pill { padding: 0.35rem 0.7rem; border-radius: 999px; background: var(--danger-soft); color: var(--danger); font-size: 0.78rem; font-weight: 800; }
 .status-pill.active { background: var(--primary-soft); color: var(--primary-strong); }
 .dialog { min-width: min(640px, 90vw); }
-.field { display: grid; gap: 0.5rem; font-weight: 500; }
+.field { display: grid; gap: 0.45rem; align-content: start; font-weight: 500; }
 .field input, .field textarea { padding: 0.7rem 0.9rem; border-radius: 12px; border: 1px solid var(--border); background: #fffdf9; }
 .field.checkbox { display: flex; align-items: center; gap: 0.6rem; }
 .dialog-actions, .page-header { display: flex; gap: 0.75rem; }

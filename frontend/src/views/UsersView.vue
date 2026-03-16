@@ -124,26 +124,30 @@
     <Dialog v-model:visible="dialogOpen" modal :header="dialogTitle" class="dialog">
       <form class="user-form" @submit.prevent="submitUser">
         <div class="grid">
-          <label class="field">
+          <label class="field" :class="{ invalid: Boolean(formErrors.name) }">
             <span>{{ $t('users.fields.name') }}</span>
-            <input v-model="form.name" type="text" />
+            <input v-model="form.name" type="text" @blur="validateField('name')" />
+            <small v-if="formErrors.name" class="field-error">{{ formErrors.name }}</small>
           </label>
-          <label class="field">
+          <label class="field" :class="{ invalid: Boolean(formErrors.email) }">
             <span>{{ $t('users.fields.email') }}</span>
-            <input v-model="form.email" type="email" />
+            <input v-model="form.email" type="email" @blur="validateField('email')" />
+            <small v-if="formErrors.email" class="field-error">{{ formErrors.email }}</small>
           </label>
-          <label class="field">
+          <label class="field" :class="{ invalid: Boolean(formErrors.password) }">
             <span>{{ $t('users.fields.password') }}</span>
-            <input v-model="form.password" type="password" :placeholder="passwordPlaceholder" />
+            <input v-model="form.password" type="password" :placeholder="passwordPlaceholder" @blur="validateField('password')" />
+            <small v-if="formErrors.password" class="field-error">{{ formErrors.password }}</small>
           </label>
-          <label class="field">
+          <label class="field" :class="{ invalid: Boolean(formErrors.role) }">
             <span>{{ $t('users.fields.role') }}</span>
-            <select v-model="form.role">
+            <select v-model="form.role" @change="validateField('role')">
               <option value="OPERATOR">{{ $t('roles.operator') }}</option>
               <option value="MANAGER">{{ $t('roles.manager') }}</option>
               <option value="ADMIN">{{ $t('roles.admin') }}</option>
               <option value="CLIENT">Cliente</option>
             </select>
+            <small v-if="formErrors.role" class="field-error">{{ formErrors.role }}</small>
           </label>
           <label class="field">
             <span>{{ $t('common.language') }}</span>
@@ -179,8 +183,6 @@
         </div>
       </form>
     </Dialog>
-
-    <ErrorCard :message="error" />
   </section>
 </template>
 
@@ -193,17 +195,18 @@ import InputText from 'primevue/inputtext';
 import { FilterMatchMode } from '@primevue/core/api';
 import { useConfirm } from 'primevue/useconfirm';
 import { apiDelete, apiGet, apiPatch, apiPost, apiPut } from '../services/api';
+import { notify } from '../services/notifications';
 import { useAuthStore } from '../stores/auth';
 import type { User, UserInput, UserRole } from '../types/user';
 import { applyPreferences } from '../services/preferences';
-import ErrorCard from '../components/ErrorCard.vue';
 
-@Component({ components: { DataTable, Column, Dialog, InputText, ErrorCard } })
+type UserFormField = 'name' | 'email' | 'password' | 'role';
+
+@Component({ components: { DataTable, Column, Dialog, InputText } })
 class UsersView extends Vue {
   authStore = useAuthStore();
   confirm = useConfirm();
   loading = false;
-  error = '';
   users: User[] = [];
   dialogOpen = false;
   editingId: string | null = null;
@@ -212,6 +215,7 @@ class UsersView extends Vue {
   };
   selectedLocale: 'pt' | 'en' | 'es' = 'pt';
   selectedTheme: 'light' | 'dark' = 'light';
+  formErrors: Partial<Record<UserFormField, string>> = {};
   form: UserInput = {
     name: '',
     email: '',
@@ -239,11 +243,10 @@ class UsersView extends Vue {
 
   async loadUsers() {
     this.loading = true;
-    this.error = '';
     try {
       this.users = await apiGet<User[]>('/users', this.authStore.token);
     } catch (err) {
-      this.error = this.extractErrorMessage(err) || this.$t('users.error');
+      this.showError(this.extractErrorMessage(err) || this.$t('users.error'));
     } finally {
       this.loading = false;
     }
@@ -251,14 +254,13 @@ class UsersView extends Vue {
 
   async savePreferences() {
     this.loading = true;
-    this.error = '';
     try {
       const payload = { locale: this.selectedLocale, theme: this.selectedTheme };
       await apiPatch('/users/me/preferences', payload, this.authStore.token);
       this.authStore.setPreferences(this.selectedLocale, this.selectedTheme);
       applyPreferences(this.selectedLocale, this.selectedTheme);
     } catch (err) {
-      this.error = this.extractErrorMessage(err) || this.$t('users.error');
+      this.showError(this.extractErrorMessage(err) || this.$t('users.error'));
     } finally {
       this.loading = false;
     }
@@ -276,6 +278,7 @@ class UsersView extends Vue {
       locale: 'pt',
       theme: 'light'
     };
+    this.formErrors = {};
     this.dialogOpen = true;
   }
 
@@ -291,16 +294,23 @@ class UsersView extends Vue {
       locale: user.locale || 'pt',
       theme: user.theme || 'light'
     };
+    this.formErrors = {};
     this.dialogOpen = true;
   }
 
   closeDialog() {
     this.dialogOpen = false;
+    this.formErrors = {};
   }
 
   async submitUser() {
+    this.formErrors = this.validateForm();
+    if (Object.keys(this.formErrors).length > 0) {
+      this.showError(String(this.$t('users.validation.fixFields')));
+      return;
+    }
+
     this.loading = true;
-    this.error = '';
     try {
       if (this.editingId) {
         await apiPut(`/users/${this.editingId}`, this.form, this.authStore.token);
@@ -310,7 +320,9 @@ class UsersView extends Vue {
       await this.loadUsers();
       this.dialogOpen = false;
     } catch (err) {
-      this.error = this.extractErrorMessage(err) || this.$t('users.error');
+      const message = this.extractErrorMessage(err) || this.$t('users.error');
+      this.applyApiFieldErrors(message);
+      this.showError(message);
     } finally {
       this.loading = false;
     }
@@ -318,7 +330,7 @@ class UsersView extends Vue {
 
   confirmDelete(user: User) {
     if (this.isSelf(user.id)) {
-      this.error = this.$t('users.selfDelete');
+      this.showError(String(this.$t('users.selfDelete')));
       return;
     }
     this.confirm.require({
@@ -332,12 +344,11 @@ class UsersView extends Vue {
 
   async deleteUser(user: User) {
     this.loading = true;
-    this.error = '';
     try {
       await apiDelete(`/users/${user.id}`, this.authStore.token);
       await this.loadUsers();
     } catch (err) {
-      this.error = this.extractErrorMessage(err) || this.$t('users.error');
+      this.showError(this.extractErrorMessage(err) || this.$t('users.error'));
     } finally {
       this.loading = false;
     }
@@ -357,11 +368,92 @@ class UsersView extends Vue {
     return this.authStore.userId === userId;
   }
 
+  validateField(field: UserFormField) {
+    const nextErrors = { ...this.formErrors };
+    const message = this.getFieldValidationMessage(field);
+    if (message) {
+      nextErrors[field] = message;
+    } else {
+      delete nextErrors[field];
+    }
+    this.formErrors = nextErrors;
+  }
+
+  validateForm() {
+    const fields: UserFormField[] = ['name', 'email', 'password', 'role'];
+    return fields.reduce<Partial<Record<UserFormField, string>>>((errors, field) => {
+      const message = this.getFieldValidationMessage(field);
+      if (message) {
+        errors[field] = message;
+      }
+      return errors;
+    }, {});
+  }
+
+  getFieldValidationMessage(field: UserFormField) {
+    switch (field) {
+      case 'name':
+        if (!this.form.name.trim()) {
+          return String(this.$t('users.validation.nameRequired'));
+        }
+        return '';
+      case 'email':
+        if (!this.form.email.trim()) {
+          return String(this.$t('users.validation.emailRequired'));
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.form.email.trim())) {
+          return String(this.$t('users.validation.emailInvalid'));
+        }
+        return '';
+      case 'password':
+        if (!this.editingId && !this.form.password?.trim()) {
+          return String(this.$t('users.validation.passwordRequired'));
+        }
+        if (this.form.password?.trim() && this.form.password.trim().length < 6) {
+          return String(this.$t('users.validation.passwordMin'));
+        }
+        return '';
+      case 'role':
+        if (!this.form.role) {
+          return String(this.$t('users.validation.roleRequired'));
+        }
+        return '';
+      default:
+        return '';
+    }
+  }
+
   extractErrorMessage(error: unknown) {
     if (error instanceof Error) {
       return error.message;
     }
     return '';
+  }
+
+  applyApiFieldErrors(message: string) {
+    const nextErrors = { ...this.formErrors };
+
+    if (/email already in use/i.test(message)) {
+      nextErrors.email = String(this.$t('users.validation.emailInUse'));
+    }
+
+    if (/password:/i.test(message) || /expected string to have >=6 characters/i.test(message)) {
+      nextErrors.password = String(this.$t('users.validation.passwordMin'));
+    }
+
+    this.formErrors = nextErrors;
+  }
+
+  showError(message: string) {
+    if (!message) {
+      return;
+    }
+
+    notify({
+      severity: 'error',
+      summary: 'Erro',
+      detail: message
+    });
   }
 }
 export default toNative(UsersView);
@@ -508,13 +600,15 @@ export default toNative(UsersView);
 
 .grid {
   display: grid;
-  gap: 1rem;
+  gap: 1.4rem 1rem;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  align-items: start;
 }
 
 .field {
   display: grid;
-  gap: 0.5rem;
+  gap: 0.45rem;
+  align-content: start;
   font-weight: 500;
 }
 
@@ -524,6 +618,19 @@ export default toNative(UsersView);
   border-radius: 12px;
   border: 1px solid var(--border);
   background: #fffdf9;
+}
+
+.field.invalid input,
+.field.invalid select {
+  border-color: #f97316;
+  box-shadow: 0 0 0 1px rgba(249, 115, 22, 0.18);
+}
+
+.field-error {
+  color: #ef4444;
+  font-size: 0.82rem;
+  line-height: 1.3;
+  min-height: 1.1rem;
 }
 
 .field.checkbox {

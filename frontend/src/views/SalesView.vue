@@ -424,14 +424,15 @@ export default toNative(SalesView);
 
 .row {
   display: grid;
-  gap: 1rem;
+  gap: 1.4rem 1rem;
   grid-template-columns: 2fr 1fr auto;
-  align-items: end;
+  align-items: start;
 }
 
 .field {
   display: grid;
-  gap: 0.5rem;
+  gap: 0.45rem;
+  align-content: start;
   font-weight: 500;
 }
 

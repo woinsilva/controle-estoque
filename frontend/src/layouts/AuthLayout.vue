@@ -209,7 +209,7 @@ export default toNative(AuthLayout);
 }
 
 .auth-layout.collapsed {
-  grid-template-columns: 92px minmax(0, 1fr);
+  grid-template-columns: 104px minmax(0, 1fr);
 }
 
 .sidebar {
@@ -282,23 +282,44 @@ export default toNative(AuthLayout);
   display: grid;
   gap: 0.35rem;
   align-content: start;
+  min-width: 0;
 }
 
 .nav-item {
   display: flex;
   align-items: center;
   gap: 0.85rem;
+  width: 100%;
+  min-width: 0;
   min-height: 50px;
   padding: 0.9rem 1rem;
   border-radius: 18px;
+  box-sizing: border-box;
   color: var(--muted);
   font-weight: 700;
 }
 
+.collapsed .sidebar {
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+}
+
+.collapsed .sidebar-nav {
+  justify-items: center;
+}
+
 .collapsed .nav-item {
   justify-content: center;
-  padding-left: 0.6rem;
-  padding-right: 0.6rem;
+  width: 52px;
+  min-width: 52px;
+  min-height: 52px;
+  padding-left: 0;
+  padding-right: 0;
+  border-radius: 16px;
+}
+
+.collapsed .nav-item.router-link-active {
+  box-shadow: 0 10px 22px rgba(15, 118, 110, 0.16);
 }
 
 .nav-item:hover {
@@ -318,7 +339,7 @@ export default toNative(AuthLayout);
 
 .sidebar-foot.compact {
   flex-direction: column;
-  align-items: stretch;
+  align-items: center;
 }
 
 .logout-button,
@@ -338,6 +359,14 @@ export default toNative(AuthLayout);
   padding: 0.75rem 1rem;
   cursor: pointer;
   font-weight: 800;
+}
+
+.sidebar-foot.compact .logout-button {
+  width: 52px;
+  min-width: 52px;
+  min-height: 52px;
+  padding: 0;
+  border-radius: 16px;
 }
 
 .ghost-icon {
