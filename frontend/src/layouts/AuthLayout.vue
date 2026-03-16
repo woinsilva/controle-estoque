@@ -1,13 +1,12 @@
 <template>
-  <div class="auth-layout" :class="{ collapsed: sidebarCollapsed, 'mobile-open': mobileSidebarOpen }">
+  <div class="auth-layout" :class="{ collapsed: sidebarCollapsed && !isMobile, 'mobile-open': mobileSidebarOpen, 'is-mobile': isMobile }">
     <div v-if="mobileSidebarOpen" class="mobile-backdrop" @click="closeMobileSidebar"></div>
 
     <aside class="sidebar">
       <div class="sidebar-head">
         <button
-          v-if="isMobile"
           type="button"
-          class="sidebar-toggle ghost-icon"
+          class="sidebar-toggle ghost-icon mobile-sidebar-close"
           aria-label="Fechar menu"
           @click="closeMobileSidebar"
         >
@@ -212,13 +211,25 @@ class AuthLayout extends Vue {
   }
 
   handleResize = () => {
-    this.isMobile = window.innerWidth <= 960;
+    const viewportWidth = window.visualViewport?.width || window.innerWidth || window.screen.width || 0;
+    const screenWidth = window.screen.width || viewportWidth;
+    const screenHeight = window.screen.height || viewportWidth;
+    const shortestSide = Math.min(viewportWidth || Infinity, screenWidth || Infinity, screenHeight || Infinity);
+    const cssMobileMatch = window.matchMedia?.('(max-width: 960px)').matches ?? false;
+    const hasCoarsePointer = window.matchMedia?.('(pointer: coarse)').matches ?? false;
+    const mobileUserAgent = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+
+    this.isMobile = cssMobileMatch || shortestSide <= 960 || (hasCoarsePointer && shortestSide <= 1280) || mobileUserAgent;
     if (this.isMobile) {
       this.mobileSidebarOpen = false;
     }
   };
 
   toggleSidebar() {
+    if (this.isMobile) {
+      this.closeMobileSidebar();
+      return;
+    }
     this.sidebarCollapsed = !this.sidebarCollapsed;
     localStorage.setItem('sidebarCollapsed', String(this.sidebarCollapsed));
   }
@@ -497,6 +508,10 @@ export default toNative(AuthLayout);
   cursor: pointer;
 }
 
+.mobile-sidebar-close {
+  display: none;
+}
+
 .main-shell {
   min-width: 0;
   display: grid;
@@ -522,6 +537,56 @@ export default toNative(AuthLayout);
   background: rgba(11, 18, 15, 0.38);
   backdrop-filter: blur(3px);
   z-index: 24;
+}
+
+.auth-layout.is-mobile,
+.auth-layout.is-mobile.collapsed {
+  grid-template-columns: 1fr;
+}
+
+.auth-layout.is-mobile .sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: min(320px, 86vw);
+  transform: translateX(-100%);
+  transition: transform 0.22s ease;
+  box-shadow: var(--shadow);
+}
+
+.auth-layout.is-mobile.mobile-open .sidebar {
+  transform: translateX(0);
+}
+
+.auth-layout.is-mobile .mobile-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9rem 0.9rem 0;
+}
+
+.auth-layout.is-mobile .mobile-sidebar-close {
+  display: inline-flex;
+}
+
+.auth-layout.is-mobile .sidebar-head > .sidebar-toggle:not(.mobile-sidebar-close) {
+  display: none;
+}
+
+.auth-layout.is-mobile .mobile-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.auth-layout.is-mobile .mobile-brand strong {
+  letter-spacing: -0.03em;
+}
+
+.auth-layout.is-mobile .content-shell {
+  padding: 0.95rem 0.9rem 1.5rem;
 }
 
 .status-prompt-dialog {

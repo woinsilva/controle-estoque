@@ -317,6 +317,26 @@ select:disabled {
     display: none;
   }
 
+  .content,
+  .content > *,
+  .p-dialog,
+  .p-dialog-content,
+  .p-dialog-content > * {
+    min-width: 0;
+  }
+
+  .icon-button {
+    width: 44px !important;
+    min-width: 44px !important;
+    height: 44px !important;
+    border-radius: 12px !important;
+    font-size: 1.05rem !important;
+  }
+
+  .icon-button i {
+    font-size: 1.05rem !important;
+  }
+
   .p-dialog {
     width: min(100vw - 1rem, 100vw) !important;
     max-height: calc(100vh - 1rem);
@@ -328,6 +348,64 @@ select:disabled {
   .p-dialog .p-dialog-content {
     padding-left: 1rem;
     padding-right: 1rem;
+  }
+
+  .p-dialog .grid,
+  .p-dialog .form,
+  .p-dialog .product-form,
+  .p-dialog .profile-form-grid,
+  .p-dialog [class*='form-grid'],
+  .p-dialog [class*='builder-grid'],
+  .p-dialog [class*='picker'],
+  .content [class*='profile-form-grid'] {
+    grid-template-columns: 1fr !important;
+  }
+
+  .p-dialog .field,
+  .p-dialog .full,
+  .p-dialog .grid > *,
+  .p-dialog .form > *,
+  .p-dialog [class*='form-grid'] > *,
+  .p-dialog [class*='builder-grid'] > *,
+  .p-dialog [class*='picker'] > *,
+  .content [class*='profile-form-grid'] > * {
+    min-width: 0;
+    grid-column: auto !important;
+  }
+
+  .p-dialog input,
+  .p-dialog textarea,
+  .p-dialog select,
+  .p-dialog .p-inputtext,
+  .p-dialog .p-select,
+  .p-dialog .p-dropdown,
+  .p-dialog .p-multiselect,
+  .p-dialog .p-inputnumber,
+  .p-dialog .p-inputnumber-input,
+  .p-dialog .p-datepicker,
+  .p-dialog .p-calendar,
+  .p-dialog .p-calendar input,
+  .content [class*='profile-form-grid'] input,
+  .content [class*='profile-form-grid'] textarea,
+  .content [class*='profile-form-grid'] select,
+  .content [class*='profile-form-grid'] .p-inputtext,
+  .content [class*='profile-form-grid'] .p-select,
+  .content [class*='profile-form-grid'] .p-dropdown,
+  .content [class*='profile-form-grid'] .p-multiselect,
+  .content [class*='profile-form-grid'] .p-inputnumber,
+  .content [class*='profile-form-grid'] .p-inputnumber-input,
+  .content [class*='profile-form-grid'] .p-datepicker,
+  .content [class*='profile-form-grid'] .p-calendar,
+  .content [class*='profile-form-grid'] .p-calendar input {
+    width: 100% !important;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .p-dialog .dialog-actions,
+  .p-dialog [class*='actions'],
+  .content [class*='profile-form-grid'] + .dialog-actions {
+    flex-wrap: wrap;
   }
 
   .p-datatable .p-datatable-thead > tr > th,
