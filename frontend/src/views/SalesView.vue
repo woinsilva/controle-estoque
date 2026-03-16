@@ -69,23 +69,22 @@
       <form class="sale-form" @submit.prevent="submitSale">
         <label class="field">
           <span>{{ $t('sales.fields.client') }}</span>
-          <select v-model="selectedClientId">
-            <option value="">{{ $t('sales.selectClient') }}</option>
-            <option v-for="client in clients" :key="client.id" :value="client.id">
-              {{ client.fullName }}
-            </option>
-          </select>
+          <AppSelect
+            v-model="selectedClientId"
+            :options="clientOptions"
+            :placeholder="$t('sales.selectClient')"
+          />
         </label>
 
         <div class="row">
           <label class="field">
             <span>{{ $t('sales.fields.product') }}</span>
-            <select v-model="selectedProductId">
-              <option value="">{{ $t('sales.selectProduct') }}</option>
-              <option v-for="product in products" :key="product._id" :value="product._id">
-                {{ product.name }} ({{ product.sku }})
-              </option>
-            </select>
+            <AppSelect
+              v-model="selectedProductId"
+              :options="productOptions"
+              :placeholder="$t('sales.selectProduct')"
+              :filterFields="['label', 'sku']"
+            />
           </label>
           <label class="field">
             <span>{{ $t('sales.fields.quantity') }}</span>
@@ -141,6 +140,7 @@ import Column from 'primevue/column';
 import Dialog from 'primevue/dialog';
 import InputText from 'primevue/inputtext';
 import { FilterMatchMode } from '@primevue/core/api';
+import AppSelect from '../components/AppSelect.vue';
 import { useAuthStore } from '../stores/auth';
 import { apiGet, apiPost } from '../services/api';
 import type { Product } from '../types/product';
@@ -157,7 +157,7 @@ type SaleItemView = {
   total: number;
 };
 
-@Component({ components: { DataTable, Column, Dialog, InputText, ErrorCard } })
+@Component({ components: { DataTable, Column, Dialog, InputText, ErrorCard, AppSelect } })
 class SalesView extends Vue {
   authStore = useAuthStore();
   products: Product[] = [];
@@ -180,6 +180,21 @@ class SalesView extends Vue {
 
   get itemsTotal() {
     return this.items.reduce((sum, item) => sum + item.total, 0);
+  }
+
+  get clientOptions() {
+    return this.clients.map((client) => ({
+      label: client.fullName,
+      value: client.id
+    }));
+  }
+
+  get productOptions() {
+    return this.products.map((product) => ({
+      label: `${product.name} (${product.sku})`,
+      value: product._id,
+      sku: product.sku
+    }));
   }
 
   async loadData() {
@@ -436,8 +451,7 @@ export default toNative(SalesView);
   font-weight: 500;
 }
 
-.field input,
-.field select {
+.field input {
   padding: 0.7rem 0.9rem;
   border-radius: 12px;
   border: 1px solid var(--border);

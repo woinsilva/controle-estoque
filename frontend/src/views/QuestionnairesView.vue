@@ -61,12 +61,13 @@
       <div class="filters">
         <label class="field">
           <span>{{ $t('questionnaires.fields.client') }}</span>
-          <select v-model="selectedClientId" @change="loadResponses">
-            <option value="">{{ $t('questionnaires.selectClient') }}</option>
-            <option v-for="client in clients" :key="client.id" :value="client.id">
-              {{ client.fullName }}
-            </option>
-          </select>
+          <AppSelect
+            v-model="selectedClientId"
+            :options="clientOptions"
+            :placeholder="$t('questionnaires.selectClient')"
+            :showClear="true"
+            @change="loadResponses"
+          />
         </label>
       </div>
 
@@ -104,14 +105,7 @@
             </label>
             <label class="field">
               <span>{{ $t('questionnaires.builder.type') }}</span>
-              <select v-model="builderField.type">
-                <option value="text">{{ $t('questionnaires.builder.types.text') }}</option>
-                <option value="textarea">{{ $t('questionnaires.builder.types.textarea') }}</option>
-                <option value="number">{{ $t('questionnaires.builder.types.number') }}</option>
-                <option value="date">{{ $t('questionnaires.builder.types.date') }}</option>
-                <option value="boolean">{{ $t('questionnaires.builder.types.boolean') }}</option>
-                <option value="select">{{ $t('questionnaires.builder.types.select') }}</option>
-              </select>
+              <AppSelect v-model="builderField.type" :options="builderTypeOptions" />
             </label>
             <label v-if="builderField.type === 'select'" class="field full">
               <span>{{ $t('questionnaires.builder.options') }}</span>
@@ -190,47 +184,36 @@
       <form class="form" @submit.prevent="submitResponse">
         <label class="field">
           <span>{{ $t('questionnaires.fields.client') }}</span>
-          <select v-model="responseForm.clientId" :disabled="Boolean(prefilledClientId)" required @change="onResponseClientChange">
-            <option value="">{{ $t('questionnaires.selectClient') }}</option>
-            <option v-for="client in clients" :key="client.id" :value="client.id">
-              {{ client.fullName }}
-            </option>
-          </select>
+          <AppSelect
+            v-model="responseForm.clientId"
+            :options="clientOptions"
+            :placeholder="$t('questionnaires.selectClient')"
+            :disabled="Boolean(prefilledClientId)"
+            @change="onResponseClientChange"
+          />
         </label>
         <label class="field">
           <span>{{ $t('questionnaires.fields.template') }}</span>
-          <select v-model="responseForm.templateId" required @change="onTemplateChange">
-            <option value="">{{ $t('questionnaires.selectTemplate') }}</option>
-            <option
-              v-for="template in templates"
-              :key="template._id"
-              :value="template._id"
-              :disabled="template.status !== 'PUBLISHED'"
-            >
-              {{ formatTemplateOption(template) }}
-            </option>
-          </select>
+          <AppSelect
+            v-model="responseForm.templateId"
+            :options="templateOptions"
+            :placeholder="$t('questionnaires.selectTemplate')"
+            :optionDisabled="'disabled'"
+            @change="onTemplateChange"
+          />
           <small v-if="!publishedTemplates.length" class="field-hint">
             {{ $t('questionnaires.onlyPublishedHint') }}
           </small>
         </label>
         <label class="field">
           <span>{{ $t('questionnaires.fields.appointment') }}</span>
-          <select
+          <AppSelect
             v-model="responseForm.appointmentId"
+            :options="responseAppointmentOptions"
+            :placeholder="$t('questionnaires.selectAppointment')"
+            :optionDisabled="'disabled'"
             :disabled="Boolean(prefilledAppointmentId)"
-            required
-          >
-            <option value="">{{ $t('questionnaires.selectAppointment') }}</option>
-            <option
-              v-for="appointment in responseAppointments"
-              :key="appointment.id"
-              :value="appointment.id"
-              :disabled="isAppointmentAnswered(appointment.id)"
-            >
-              {{ formatAppointmentOption(appointment) }}
-            </option>
-          </select>
+          />
         </label>
 
         <div v-if="dynamicFields.length" class="dynamic-grid">
@@ -264,15 +247,13 @@
               :required="Boolean(field.required)"
               @input="onTextInput(field.key, $event)"
             />
-            <select
+            <AppSelect
               v-else-if="field.type === 'select'"
-              :value="stringValue(field.key)"
-              :required="Boolean(field.required)"
-              @change="onTextInput(field.key, $event)"
-            >
-              <option value="">{{ $t('common.select') }}</option>
-              <option v-for="opt in field.options || []" :key="opt" :value="opt">{{ opt }}</option>
-            </select>
+              :modelValue="stringValue(field.key)"
+              :options="dynamicFieldOptions(field)"
+              :placeholder="$t('common.select')"
+              @update:modelValue="setDynamicSelectValue(field.key, $event)"
+            />
             <label v-else class="boolean-field">
               <input
                 type="checkbox"
@@ -293,10 +274,7 @@
           <h4>{{ $t('questionnaires.signature.title') }}</h4>
           <label class="field">
             <span>{{ $t('questionnaires.signature.mode') }}</span>
-            <select v-model="signatureMode">
-              <option value="DRAW">{{ $t('questionnaires.signature.draw') }}</option>
-              <option value="TYPE">{{ $t('questionnaires.signature.type') }}</option>
-            </select>
+            <AppSelect v-model="signatureMode" :options="signatureModeOptions" />
           </label>
           <label v-if="signatureMode === 'TYPE'" class="field">
             <span>{{ $t('questionnaires.signature.typedValue') }}</span>
@@ -327,6 +305,7 @@ import { Component, Vue, toNative } from 'vue-facing-decorator';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Dialog from 'primevue/dialog';
+import AppSelect from '../components/AppSelect.vue';
 import { apiGet, apiPost, apiPut } from '../services/api';
 import { useAuthStore } from '../stores/auth';
 import type { Appointment, AppointmentListResponse } from '../types/appointment';
@@ -345,7 +324,7 @@ type DynamicField = {
   options?: string[];
 };
 
-@Component({ components: { DataTable, Column, Dialog, ErrorCard, SignaturePad } })
+@Component({ components: { DataTable, Column, Dialog, ErrorCard, SignaturePad, AppSelect } })
 class QuestionnairesView extends Vue {
   authStore = useAuthStore();
   templates: QuestionnaireTemplate[] = [];
@@ -405,6 +384,43 @@ class QuestionnairesView extends Vue {
 
   get selectedTemplate() {
     return this.templates.find((item) => item._id === this.responseForm.templateId);
+  }
+
+  get clientOptions() {
+    return this.clients.map((client) => ({
+      label: client.fullName,
+      value: client.id
+    }));
+  }
+
+  get builderTypeOptions() {
+    return ['text', 'textarea', 'number', 'date', 'boolean', 'select'].map((type) => ({
+      label: String(this.$t(`questionnaires.builder.types.${type}`)),
+      value: type
+    }));
+  }
+
+  get templateOptions() {
+    return this.templates.map((template) => ({
+      label: this.formatTemplateOption(template),
+      value: template._id,
+      disabled: template.status !== 'PUBLISHED'
+    }));
+  }
+
+  get responseAppointmentOptions() {
+    return this.responseAppointments.map((appointment) => ({
+      label: this.formatAppointmentOption(appointment),
+      value: appointment.id,
+      disabled: this.isAppointmentAnswered(appointment.id)
+    }));
+  }
+
+  get signatureModeOptions() {
+    return [
+      { label: String(this.$t('questionnaires.signature.draw')), value: 'DRAW' },
+      { label: String(this.$t('questionnaires.signature.type')), value: 'TYPE' }
+    ];
   }
 
   async loadInitialData() {
@@ -757,6 +773,17 @@ class QuestionnairesView extends Vue {
     return Boolean(this.dynamicAnswers[key]);
   }
 
+  dynamicFieldOptions(field: DynamicField) {
+    return (field.options || []).map((option) => ({
+      label: option,
+      value: option
+    }));
+  }
+
+  setDynamicSelectValue(key: string, value: string) {
+    this.dynamicAnswers[key] = value;
+  }
+
   onTextInput(key: string, event: Event) {
     const target = event.target as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
     this.dynamicAnswers[key] = target.value;
@@ -1077,7 +1104,6 @@ export default toNative(QuestionnairesView);
 }
 
 .field input,
-.field select,
 .field textarea {
   padding: 0.7rem 0.9rem;
   border-radius: 12px;

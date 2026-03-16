@@ -15,22 +15,23 @@
     <section class="filters">
       <label v-if="authStore.role !== 'CLIENT'" class="field">
         <span>{{ $t('appointments.fields.client') }}</span>
-        <select v-model="filterClientId" @change="loadAppointments(1)">
-          <option value="">{{ $t('appointments.allClients') }}</option>
-          <option v-for="client in clients" :key="client.id" :value="client.id">
-            {{ client.fullName }}
-          </option>
-        </select>
+        <AppSelect
+          v-model="filterClientId"
+          :options="clientOptions"
+          :placeholder="$t('appointments.allClients')"
+          :showClear="true"
+          @change="loadAppointments(1)"
+        />
       </label>
       <label class="field">
         <span>{{ $t('appointments.fields.status') }}</span>
-        <select v-model="filterStatus" @change="loadAppointments(1)">
-          <option value="">{{ $t('appointments.allStatuses') }}</option>
-          <option value="SCHEDULED">{{ $t('appointments.statuses.SCHEDULED') }}</option>
-          <option value="IN_PROGRESS">{{ $t('appointments.statuses.IN_PROGRESS') }}</option>
-          <option value="COMPLETED">{{ $t('appointments.statuses.COMPLETED') }}</option>
-          <option value="CANCELED">{{ $t('appointments.statuses.CANCELED') }}</option>
-        </select>
+        <AppSelect
+          v-model="filterStatus"
+          :options="appointmentStatusOptions"
+          :placeholder="$t('appointments.allStatuses')"
+          :showClear="true"
+          @change="loadAppointments(1)"
+        />
       </label>
       <label class="field">
         <span>{{ $t('appointments.fields.dateFrom') }}</span>
@@ -190,21 +191,16 @@
       <form class="form" @submit.prevent="submitAppointment">
         <label v-if="authStore.role !== 'CLIENT'" class="field">
           <span>{{ $t('appointments.fields.client') }}</span>
-          <select v-model="form.clientId" required>
-            <option value="">{{ $t('appointments.selectClient') }}</option>
-            <option v-for="client in clients" :key="client.id" :value="client.id">
-              {{ client.fullName }}
-            </option>
-          </select>
+          <AppSelect v-model="form.clientId" :options="clientOptions" :placeholder="$t('appointments.selectClient')" />
         </label>
         <label class="field">
           <span>Profissional</span>
-          <select v-model="form.professionalId" required @change="onAvailabilityInputsChange">
-            <option value="">Selecione</option>
-            <option v-for="professional in professionals" :key="professional.id" :value="professional.id">
-              {{ professional.name }}
-            </option>
-          </select>
+          <AppSelect
+            v-model="form.professionalId"
+            :options="professionalOptions"
+            :placeholder="$t('common.select')"
+            @change="onAvailabilityInputsChange"
+          />
         </label>
         <label class="field">
           <span>Servicos</span>
@@ -297,12 +293,7 @@
         </section>
         <label v-if="!isClientRole && editingId" class="field">
           <span>{{ $t('appointments.fields.status') }}</span>
-          <select v-model="form.status" required>
-            <option value="SCHEDULED">{{ $t('appointments.statuses.SCHEDULED') }}</option>
-            <option value="IN_PROGRESS">{{ $t('appointments.statuses.IN_PROGRESS') }}</option>
-            <option value="COMPLETED">{{ $t('appointments.statuses.COMPLETED') }}</option>
-            <option value="CANCELED">{{ $t('appointments.statuses.CANCELED') }}</option>
-          </select>
+          <AppSelect v-model="form.status" :options="appointmentStatusOptions" />
         </label>
         <label v-if="!isClientRole" class="field">
           <span>{{ $t('appointments.fields.notes') }}</span>
@@ -379,6 +370,7 @@ import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Dialog from 'primevue/dialog';
 import MultiSelect from 'primevue/multiselect';
+import AppSelect from '../components/AppSelect.vue';
 import { useConfirm } from 'primevue/useconfirm';
 import { apiDelete, apiGet, apiPost, apiPut } from '../services/api';
 import { useAuthStore } from '../stores/auth';
@@ -395,7 +387,7 @@ import type { Service } from '../types/service';
 import type { User } from '../types/user';
 import ErrorCard from '../components/ErrorCard.vue';
 
-@Component({ components: { DataTable, Column, Dialog, MultiSelect, ErrorCard } })
+@Component({ components: { DataTable, Column, Dialog, MultiSelect, ErrorCard, AppSelect } })
 class AppointmentsView extends Vue {
   authStore = useAuthStore();
   confirm = useConfirm();
@@ -451,6 +443,27 @@ class AppointmentsView extends Vue {
 
   get dialogTitle() {
     return this.editingId ? this.$t('appointments.edit') : this.$t('appointments.new');
+  }
+
+  get clientOptions() {
+    return this.clients.map((client) => ({
+      label: client.fullName,
+      value: client.id
+    }));
+  }
+
+  get professionalOptions() {
+    return this.professionals.map((professional) => ({
+      label: professional.name,
+      value: professional.id
+    }));
+  }
+
+  get appointmentStatusOptions() {
+    return ['SCHEDULED', 'IN_PROGRESS', 'COMPLETED', 'CANCELED'].map((status) => ({
+      label: String(this.$t(`appointments.statuses.${status}`)),
+      value: status
+    }));
   }
 
   get availabilityMonthLabel() {
@@ -1055,7 +1068,6 @@ export default toNative(AppointmentsView);
 }
 
 .field input,
-.field select,
 .field textarea {
   padding: 0.7rem 0.9rem;
   border-radius: 12px;

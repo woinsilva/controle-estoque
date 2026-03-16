@@ -29,11 +29,7 @@
     <main class="public-content">
       <div class="language">
         <span>{{ $t('common.language') }}</span>
-        <select v-model="localeValue">
-          <option value="pt">PT</option>
-          <option value="en">EN</option>
-          <option value="es">ES</option>
-        </select>
+        <AppSelect v-model="localeValue" :options="localeOptions" />
       </div>
       <slot />
     </main>
@@ -43,9 +39,18 @@
 <script lang="ts">
 import { Component, Vue, toNative } from 'vue-facing-decorator';
 import { i18n } from '../i18n';
+import AppSelect from '../components/AppSelect.vue';
 
-@Component({})
+@Component({ components: { AppSelect } })
 class PublicLayout extends Vue {
+  get localeOptions() {
+    return [
+      { label: 'PT', value: 'pt' },
+      { label: 'EN', value: 'en' },
+      { label: 'ES', value: 'es' }
+    ];
+  }
+
   get localeValue() {
     return i18n.global.locale.value;
   }
@@ -225,12 +230,8 @@ export default toNative(PublicLayout);
   box-shadow: var(--shadow-soft);
 }
 
-.language select {
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: var(--panel-strong);
-  padding: 0.38rem 0.6rem;
-  color: var(--ink);
+:deep(.language .app-select) {
+  min-width: 86px;
 }
 
 @media (max-width: 900px) {

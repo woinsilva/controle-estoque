@@ -10,12 +10,12 @@
     <section class="toolbar">
       <label class="field professional-field">
         <span>Profissional</span>
-        <select v-model="selectedProfessionalId" @change="onProfessionalChange">
-          <option value="">Selecione</option>
-          <option v-for="professional in professionals" :key="professional.id" :value="professional.id">
-            {{ professional.name }}
-          </option>
-        </select>
+        <AppSelect
+          v-model="selectedProfessionalId"
+          :options="professionalOptions"
+          placeholder="Selecione"
+          @change="onProfessionalChange"
+        />
       </label>
 
       <div class="calendar-actions">
@@ -198,6 +198,7 @@ import { Component, Vue, toNative } from 'vue-facing-decorator';
 import { useToast } from 'primevue/usetoast';
 import { apiGet, apiPut } from '../services/api';
 import { useAuthStore } from '../stores/auth';
+import AppSelect from '../components/AppSelect.vue';
 import type { ClientListResponse } from '../types/client';
 import type {
   DailyAvailabilitySlot,
@@ -224,7 +225,7 @@ type CalendarDay = {
   subtitle: string;
 };
 
-@Component({})
+@Component({ components: { AppSelect } })
 class SchedulesView extends Vue {
   authStore = useAuthStore();
   toast = useToast();
@@ -262,6 +263,13 @@ class SchedulesView extends Vue {
 
   get todayKey() {
     return this.toDateKey(new Date());
+  }
+
+  get professionalOptions() {
+    return this.professionals.map((professional) => ({
+      label: professional.name,
+      value: professional.id
+    }));
   }
 
   get currentRangeLabel() {
@@ -734,7 +742,6 @@ export default toNative(SchedulesView);
   font-weight: 500;
 }
 
-.field select,
 .slot-row input {
   padding: 0.7rem 0.9rem;
   border-radius: 12px;

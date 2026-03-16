@@ -105,10 +105,12 @@
         </label>
         <label class="field">
           <span>{{ $t('sales.fields.client') }}</span>
-          <select v-model="filters.sales.clientId">
-            <option value="">{{ $t('reports.all') }}</option>
-            <option v-for="client in clients" :key="client.id" :value="client.id">{{ client.fullName }}</option>
-          </select>
+          <AppSelect
+            v-model="filters.sales.clientId"
+            :options="reportClientOptions"
+            :placeholder="$t('reports.all')"
+            :showClear="true"
+          />
         </label>
       </div>
       <div class="stats">
@@ -171,11 +173,12 @@
       <div class="filters">
         <label class="field">
           <span>{{ $t('clients.fields.active') }}</span>
-          <select v-model="filters.clients.active">
-            <option value="">{{ $t('reports.all') }}</option>
-            <option value="true">{{ $t('common.yes') }}</option>
-            <option value="false">{{ $t('common.no') }}</option>
-          </select>
+          <AppSelect
+            v-model="filters.clients.active"
+            :options="activeOptions"
+            :placeholder="$t('reports.all')"
+            :showClear="true"
+          />
         </label>
         <label class="field">
           <span>{{ $t('clients.fields.fullName') }}</span>
@@ -248,20 +251,21 @@
         </label>
         <label class="field">
           <span>{{ $t('appointments.fields.status') }}</span>
-          <select v-model="filters.appointments.status">
-            <option value="">{{ $t('reports.all') }}</option>
-            <option value="SCHEDULED">{{ $t('appointments.statuses.SCHEDULED') }}</option>
-            <option value="IN_PROGRESS">{{ $t('appointments.statuses.IN_PROGRESS') }}</option>
-            <option value="COMPLETED">{{ $t('appointments.statuses.COMPLETED') }}</option>
-            <option value="CANCELED">{{ $t('appointments.statuses.CANCELED') }}</option>
-          </select>
+          <AppSelect
+            v-model="filters.appointments.status"
+            :options="appointmentStatusOptions"
+            :placeholder="$t('reports.all')"
+            :showClear="true"
+          />
         </label>
         <label class="field">
           <span>{{ $t('appointments.fields.client') }}</span>
-          <select v-model="filters.appointments.clientId">
-            <option value="">{{ $t('reports.all') }}</option>
-            <option v-for="client in clients" :key="client.id" :value="client.id">{{ client.fullName }}</option>
-          </select>
+          <AppSelect
+            v-model="filters.appointments.clientId"
+            :options="reportClientOptions"
+            :placeholder="$t('reports.all')"
+            :showClear="true"
+          />
         </label>
       </div>
       <div class="stats">
@@ -325,6 +329,7 @@ import { useAuthStore } from '../stores/auth';
 import type { ReportsSummary } from '../types/reports';
 import type { ClientListResponse } from '../types/client';
 import { i18n } from '../i18n';
+import AppSelect from '../components/AppSelect.vue';
 
 const EMPTY_SUMMARY: ReportsSummary = {
   products: { total: 0, active: 0, inactive: 0, lowStock: 0, inventoryValue: 0, lowStockItems: [] },
@@ -333,7 +338,7 @@ const EMPTY_SUMMARY: ReportsSummary = {
   appointments: { total: 0, upcoming: 0, totalValue: 0, byStatus: [], recent: [] }
 };
 
-@Component({})
+@Component({ components: { AppSelect } })
 class ReportsView extends Vue {
   authStore = useAuthStore();
   loading = false;
@@ -374,6 +379,27 @@ class ReportsView extends Vue {
     this.setCurrentMonthRanges();
     void this.loadClients();
     void this.loadReports();
+  }
+
+  get reportClientOptions() {
+    return this.clients.map((client) => ({
+      label: client.fullName,
+      value: client.id
+    }));
+  }
+
+  get activeOptions() {
+    return [
+      { label: String(this.$t('common.yes')), value: 'true' },
+      { label: String(this.$t('common.no')), value: 'false' }
+    ];
+  }
+
+  get appointmentStatusOptions() {
+    return ['SCHEDULED', 'IN_PROGRESS', 'COMPLETED', 'CANCELED'].map((status) => ({
+      label: String(this.$t(`appointments.statuses.${status}`)),
+      value: status
+    }));
   }
 
   setCurrentMonthRanges() {
@@ -543,8 +569,7 @@ export default toNative(ReportsView);
   font-weight: 500;
 }
 
-.field input,
-.field select {
+.field input {
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 0.55rem 0.7rem;
