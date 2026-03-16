@@ -198,9 +198,9 @@ class AuthLayout extends Vue {
       },
       {
         to: '/app/users',
-        label: String(this.$t('common.users')),
+        label: this.authStore.role === 'ADMIN' ? String(this.$t('common.users')) : String(this.$t('common.profile')),
         icon: 'pi pi-id-card',
-        visible: this.authStore.role === 'ADMIN'
+        visible: Boolean(this.authStore.role)
       }
     ];
 

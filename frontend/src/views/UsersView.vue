@@ -2,10 +2,10 @@
   <section class="users">
     <header class="users-header">
       <div>
-        <h2>{{ $t('users.title') }}</h2>
-        <p>{{ $t('users.subtitle') }}</p>
+        <h2>{{ isAdmin ? $t('users.title') : $t('users.profileTitle') }}</h2>
+        <p>{{ isAdmin ? $t('users.subtitle') : $t('users.profileSubtitle') }}</p>
       </div>
-      <div class="actions">
+      <div v-if="isAdmin" class="actions">
         <InputText v-model="filters.global.value" :placeholder="$t('users.search')" />
         <button type="button" class="primary" @click="openNew">
           {{ $t('users.new') }}
@@ -13,31 +13,68 @@
       </div>
     </header>
 
-    <section class="preferences">
+    <section v-if="!isAdmin && currentUser" class="profile-card">
+      <h3>{{ $t('users.currentUser') }}</h3>
+      <form class="user-form" @submit.prevent="saveOwnProfile">
+        <div class="grid profile-form-grid">
+          <label class="field" :class="{ invalid: Boolean(formErrors.name) }">
+            <span>{{ $t('users.fields.name') }}</span>
+            <input v-model="form.name" type="text" @blur="validateField('name')" />
+            <small v-if="formErrors.name" class="field-error">{{ formErrors.name }}</small>
+          </label>
+          <label class="field" :class="{ invalid: Boolean(formErrors.email) }">
+            <span>{{ $t('users.fields.email') }}</span>
+            <input v-model="form.email" type="email" @blur="validateField('email')" />
+            <small v-if="formErrors.email" class="field-error">{{ formErrors.email }}</small>
+          </label>
+          <label class="field" :class="{ invalid: Boolean(formErrors.password) }">
+            <span>{{ $t('users.fields.password') }}</span>
+            <input v-model="form.password" type="password" :placeholder="$t('users.passwordOptional')" @blur="validateField('password')" />
+            <small v-if="formErrors.password" class="field-error">{{ formErrors.password }}</small>
+          </label>
+          <label class="field" :class="{ invalid: Boolean(formErrors.confirmPassword) }">
+            <span>{{ $t('users.fields.confirmPassword') }}</span>
+            <input v-model="confirmPassword" type="password" :placeholder="$t('users.passwordOptional')" @blur="validateField('confirmPassword')" />
+            <small v-if="formErrors.confirmPassword" class="field-error">{{ formErrors.confirmPassword }}</small>
+          </label>
+          <label class="field">
+            <span>{{ $t('common.language') }}</span>
+            <AppSelect v-model="selectedLocale" :options="localeOptions" />
+            <small class="field-error"></small>
+          </label>
+          <label class="field">
+            <span>{{ $t('users.theme') }}</span>
+            <AppSelect v-model="selectedTheme" :options="themeOptions" />
+            <small class="field-error"></small>
+          </label>
+        </div>
+        <div class="dialog-actions">
+          <button type="submit" class="primary" :disabled="loading">
+            {{ $t('users.saveProfile') }}
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <section v-if="isAdmin" class="preferences">
       <h3>{{ $t('users.preferences') }}</h3>
       <div class="prefs-grid">
         <label class="field">
           <span>{{ $t('common.language') }}</span>
-          <select v-model="selectedLocale">
-            <option value="pt">PT</option>
-            <option value="en">EN</option>
-            <option value="es">ES</option>
-          </select>
+          <AppSelect v-model="selectedLocale" :options="localeOptions" />
         </label>
         <label class="field">
           <span>{{ $t('users.theme') }}</span>
-          <select v-model="selectedTheme">
-            <option value="light">{{ $t('users.themeLight') }}</option>
-            <option value="dark">{{ $t('users.themeDark') }}</option>
-          </select>
+          <AppSelect v-model="selectedTheme" :options="themeOptions" />
         </label>
-        <button type="button" class="primary" @click="savePreferences" :disabled="loading">
+        <button v-if="isAdmin" type="button" class="primary" @click="savePreferences" :disabled="loading">
           {{ $t('users.savePreferences') }}
         </button>
       </div>
     </section>
 
     <DataTable
+      v-if="isAdmin"
       :value="users"
       dataKey="id"
       :paginator="true"
@@ -83,7 +120,7 @@
       </Column>
     </DataTable>
 
-    <section class="mobile-list">
+    <section v-if="isAdmin" class="mobile-list">
       <article v-for="user in users" :key="user.id" class="mobile-card">
         <div class="mobile-card-head">
           <div>
@@ -121,7 +158,7 @@
       </article>
     </section>
 
-    <Dialog v-model:visible="dialogOpen" modal :header="dialogTitle" class="dialog">
+    <Dialog v-if="isAdmin" v-model:visible="dialogOpen" modal :header="dialogTitle" class="dialog">
       <form class="user-form" @submit.prevent="submitUser">
         <div class="grid">
           <label class="field" :class="{ invalid: Boolean(formErrors.name) }">
@@ -141,28 +178,16 @@
           </label>
           <label class="field" :class="{ invalid: Boolean(formErrors.role) }">
             <span>{{ $t('users.fields.role') }}</span>
-            <select v-model="form.role" @change="validateField('role')">
-              <option value="OPERATOR">{{ $t('roles.operator') }}</option>
-              <option value="MANAGER">{{ $t('roles.manager') }}</option>
-              <option value="ADMIN">{{ $t('roles.admin') }}</option>
-              <option value="CLIENT">Cliente</option>
-            </select>
+            <AppSelect v-model="form.role" :options="roleOptions" @change="validateField('role')" />
             <small v-if="formErrors.role" class="field-error">{{ formErrors.role }}</small>
           </label>
           <label class="field">
             <span>{{ $t('common.language') }}</span>
-            <select v-model="form.locale">
-              <option value="pt">PT</option>
-              <option value="en">EN</option>
-              <option value="es">ES</option>
-            </select>
+            <AppSelect v-model="form.locale" :options="localeOptions" />
           </label>
           <label class="field">
             <span>{{ $t('users.theme') }}</span>
-            <select v-model="form.theme">
-              <option value="light">{{ $t('users.themeLight') }}</option>
-              <option value="dark">{{ $t('users.themeDark') }}</option>
-            </select>
+            <AppSelect v-model="form.theme" :options="themeOptions" />
           </label>
           <label class="field checkbox">
             <input v-model="form.active" type="checkbox" />
@@ -199,15 +224,17 @@ import { notify } from '../services/notifications';
 import { useAuthStore } from '../stores/auth';
 import type { User, UserInput, UserRole } from '../types/user';
 import { applyPreferences } from '../services/preferences';
+import AppSelect from '../components/AppSelect.vue';
 
-type UserFormField = 'name' | 'email' | 'password' | 'role';
+type UserFormField = 'name' | 'email' | 'password' | 'confirmPassword' | 'role';
 
-@Component({ components: { DataTable, Column, Dialog, InputText } })
+@Component({ components: { DataTable, Column, Dialog, InputText, AppSelect } })
 class UsersView extends Vue {
   authStore = useAuthStore();
   confirm = useConfirm();
   loading = false;
   users: User[] = [];
+  currentUser: User | null = null;
   dialogOpen = false;
   editingId: string | null = null;
   filters = {
@@ -216,6 +243,7 @@ class UsersView extends Vue {
   selectedLocale: 'pt' | 'en' | 'es' = 'pt';
   selectedTheme: 'light' | 'dark' = 'light';
   formErrors: Partial<Record<UserFormField, string>> = {};
+  confirmPassword = '';
   form: UserInput = {
     name: '',
     email: '',
@@ -233,6 +261,10 @@ class UsersView extends Vue {
     this.selectedTheme = this.authStore.theme;
   }
 
+  get isAdmin() {
+    return this.authStore.role === 'ADMIN';
+  }
+
   get passwordPlaceholder() {
     return this.editingId ? this.$t('users.passwordOptional') : '';
   }
@@ -241,10 +273,52 @@ class UsersView extends Vue {
     return this.editingId ? this.$t('users.edit') : this.$t('users.new');
   }
 
+  get localeOptions() {
+    return [
+      { label: 'PT', value: 'pt' },
+      { label: 'EN', value: 'en' },
+      { label: 'ES', value: 'es' }
+    ];
+  }
+
+  get themeOptions() {
+    return [
+      { label: String(this.$t('users.themeLight')), value: 'light' },
+      { label: String(this.$t('users.themeDark')), value: 'dark' }
+    ];
+  }
+
+  get roleOptions() {
+    return [
+      { label: String(this.$t('roles.operator')), value: 'OPERATOR' },
+      { label: String(this.$t('roles.manager')), value: 'MANAGER' },
+      { label: String(this.$t('roles.admin')), value: 'ADMIN' },
+      { label: 'Cliente', value: 'CLIENT' }
+    ];
+  }
+
   async loadUsers() {
     this.loading = true;
     try {
-      this.users = await apiGet<User[]>('/users', this.authStore.token);
+      if (this.isAdmin) {
+        this.users = await apiGet<User[]>('/users', this.authStore.token);
+        this.currentUser = null;
+      } else {
+        this.currentUser = await apiGet<User>('/users/me', this.authStore.token);
+        this.users = [];
+        this.form = {
+          name: this.currentUser.name,
+          email: this.currentUser.email,
+          password: '',
+          role: this.currentUser.role,
+          active: this.currentUser.active,
+          isProfessional: Boolean(this.currentUser.isProfessional),
+          locale: this.currentUser.locale || this.selectedLocale,
+          theme: this.currentUser.theme || this.selectedTheme
+        };
+        this.confirmPassword = '';
+        this.formErrors = {};
+      }
     } catch (err) {
       this.showError(this.extractErrorMessage(err) || this.$t('users.error'));
     } finally {
@@ -266,6 +340,46 @@ class UsersView extends Vue {
     }
   }
 
+  async saveOwnProfile() {
+    this.formErrors = this.validateOwnProfileForm();
+    if (Object.keys(this.formErrors).length > 0) {
+      this.showError(String(this.$t('users.validation.fixFields')));
+      return;
+    }
+
+    this.loading = true;
+    try {
+      const payload = {
+        name: this.form.name.trim(),
+        email: this.form.email.trim(),
+        password: this.form.password?.trim() || undefined,
+        locale: this.selectedLocale,
+        theme: this.selectedTheme
+      };
+      const updatedUser = await apiPatch<User>('/users/me', payload, this.authStore.token);
+      this.currentUser = updatedUser;
+      this.form = {
+        name: updatedUser.name,
+        email: updatedUser.email,
+        password: '',
+        role: updatedUser.role,
+        active: updatedUser.active,
+        isProfessional: Boolean(updatedUser.isProfessional),
+        locale: updatedUser.locale || this.selectedLocale,
+        theme: updatedUser.theme || this.selectedTheme
+      };
+      this.confirmPassword = '';
+      this.authStore.setPreferences(this.selectedLocale, this.selectedTheme);
+      applyPreferences(this.selectedLocale, this.selectedTheme);
+    } catch (err) {
+      const message = this.extractErrorMessage(err) || this.$t('users.error');
+      this.applyApiFieldErrors(message);
+      this.showError(message);
+    } finally {
+      this.loading = false;
+    }
+  }
+
   openNew() {
     this.editingId = null;
     this.form = {
@@ -278,6 +392,7 @@ class UsersView extends Vue {
       locale: 'pt',
       theme: 'light'
     };
+    this.confirmPassword = '';
     this.formErrors = {};
     this.dialogOpen = true;
   }
@@ -294,12 +409,14 @@ class UsersView extends Vue {
       locale: user.locale || 'pt',
       theme: user.theme || 'light'
     };
+    this.confirmPassword = '';
     this.formErrors = {};
     this.dialogOpen = true;
   }
 
   closeDialog() {
     this.dialogOpen = false;
+    this.confirmPassword = '';
     this.formErrors = {};
   }
 
@@ -390,6 +507,17 @@ class UsersView extends Vue {
     }, {});
   }
 
+  validateOwnProfileForm() {
+    const fields: UserFormField[] = ['name', 'email', 'password', 'confirmPassword'];
+    return fields.reduce<Partial<Record<UserFormField, string>>>((errors, field) => {
+      const message = this.getFieldValidationMessage(field);
+      if (message) {
+        errors[field] = message;
+      }
+      return errors;
+    }, {});
+  }
+
   getFieldValidationMessage(field: UserFormField) {
     switch (field) {
       case 'name':
@@ -411,6 +539,14 @@ class UsersView extends Vue {
         }
         if (this.form.password?.trim() && this.form.password.trim().length < 6) {
           return String(this.$t('users.validation.passwordMin'));
+        }
+        return '';
+      case 'confirmPassword':
+        if (this.form.password?.trim() && !this.confirmPassword.trim()) {
+          return String(this.$t('users.validation.confirmPasswordRequired'));
+        }
+        if (this.form.password?.trim() && this.form.password.trim() !== this.confirmPassword.trim()) {
+          return String(this.$t('users.validation.passwordMismatch'));
         }
         return '';
       case 'role':
@@ -514,6 +650,50 @@ export default toNative(UsersView);
   padding: 1.2rem 1.5rem;
 }
 
+.profile-card {
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  padding: 1.2rem 1.5rem;
+  display: grid;
+  gap: 1rem;
+}
+
+.profile-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.profile-card-head h3,
+.profile-card-head p {
+  margin: 0;
+}
+
+.profile-card-head p {
+  color: var(--muted);
+  margin-top: 0.3rem;
+}
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin: 0;
+}
+
+.profile-grid dt {
+  color: var(--muted);
+  font-size: 0.82rem;
+  margin-bottom: 0.25rem;
+}
+
+.profile-grid dd {
+  margin: 0;
+  font-weight: 700;
+}
+
 .preferences h3 {
   margin: 0 0 1rem;
   font-size: 1.1rem;
@@ -605,6 +785,10 @@ export default toNative(UsersView);
   align-items: start;
 }
 
+.profile-form-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
 .field {
   display: grid;
   gap: 0.45rem;
@@ -676,6 +860,10 @@ export default toNative(UsersView);
   }
 
   .prefs-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-form-grid {
     grid-template-columns: 1fr;
   }
 

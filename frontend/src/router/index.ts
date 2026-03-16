@@ -87,7 +87,7 @@ const router = createRouter({
       path: '/app/users',
       name: 'users',
       component: UsersView,
-      meta: { layout: 'auth', requiresAuth: true, roles: ['ADMIN'] }
+      meta: { layout: 'auth', requiresAuth: true, roles: ['OPERATOR', 'MANAGER', 'ADMIN', 'CLIENT'] }
     }
   ]
 });

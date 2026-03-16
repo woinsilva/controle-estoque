@@ -32,3 +32,11 @@ export const preferencesSchema = z.object({
   locale: z.enum(['pt', 'en', 'es']),
   theme: z.enum(['light', 'dark'])
 });
+
+export const profileSchema = z.object({
+  name: z.string().min(1),
+  email: z.string().email(),
+  password: z.string().min(6).optional(),
+  locale: z.enum(['pt', 'en', 'es']).optional(),
+  theme: z.enum(['light', 'dark']).optional()
+});

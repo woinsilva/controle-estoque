@@ -15,6 +15,7 @@ const messages = {
       appointments: 'Atendimentos',
       questionnaires: 'Questionarios',
       users: 'Usuarios',
+      profile: 'Perfil',
       language: 'Idioma',
       select: 'Selecione',
       yes: 'Sim',
@@ -121,6 +122,8 @@ const messages = {
     users: {
       title: 'Usuarios',
       subtitle: 'Controle de acessos e perfis.',
+      profileTitle: 'Perfil',
+      profileSubtitle: 'Edicao de perfil.',
       currentUser: 'Usuario atual',
       loading: 'Carregando usuario...',
       error: 'Nao foi possivel carregar o usuario.',
@@ -142,6 +145,7 @@ const messages = {
       theme: 'Tema',
       themeLight: 'Claro',
       themeDark: 'Escuro',
+      saveProfile: 'Salvar dados',
       savePreferences: 'Salvar preferencias',
       validation: {
         fixFields: 'Corrija os campos destacados antes de continuar.',
@@ -151,6 +155,8 @@ const messages = {
         emailInUse: 'Este email ja esta em uso.',
         passwordRequired: 'A senha e obrigatoria.',
         passwordMin: 'A senha deve ter ao menos 6 caracteres.',
+        confirmPasswordRequired: 'Confirme a nova senha.',
+        passwordMismatch: 'As senhas informadas nao coincidem.',
         roleRequired: 'O perfil e obrigatorio.'
       },
       fields: {
@@ -158,6 +164,7 @@ const messages = {
         name: 'Nome',
         email: 'Email',
         password: 'Senha',
+        confirmPassword: 'Confirmacao de senha',
         role: 'Perfil',
         active: 'Ativo'
       }
@@ -353,6 +360,7 @@ const messages = {
       appointments: 'Appointments',
       questionnaires: 'Questionnaires',
       users: 'Users',
+      profile: 'Profile',
       language: 'Language',
       select: 'Select',
       yes: 'Yes',
@@ -459,6 +467,8 @@ const messages = {
     users: {
       title: 'Users',
       subtitle: 'Access and role management.',
+      profileTitle: 'Profile',
+      profileSubtitle: 'Profile editing.',
       currentUser: 'Current user',
       loading: 'Loading user...',
       error: 'Could not load user.',
@@ -480,6 +490,7 @@ const messages = {
       theme: 'Theme',
       themeLight: 'Light',
       themeDark: 'Dark',
+      saveProfile: 'Save profile',
       savePreferences: 'Save preferences',
       validation: {
         fixFields: 'Fix the highlighted fields before continuing.',
@@ -489,6 +500,8 @@ const messages = {
         emailInUse: 'This email is already in use.',
         passwordRequired: 'Password is required.',
         passwordMin: 'Password must be at least 6 characters long.',
+        confirmPasswordRequired: 'Confirm the new password.',
+        passwordMismatch: 'The passwords do not match.',
         roleRequired: 'Role is required.'
       },
       fields: {
@@ -496,6 +509,7 @@ const messages = {
         name: 'Name',
         email: 'Email',
         password: 'Password',
+        confirmPassword: 'Confirm password',
         role: 'Role',
         active: 'Active'
       }
@@ -691,6 +705,7 @@ const messages = {
       appointments: 'Atenciones',
       questionnaires: 'Cuestionarios',
       users: 'Usuarios',
+      profile: 'Perfil',
       language: 'Idioma',
       select: 'Selecciona',
       yes: 'Si',
@@ -797,6 +812,8 @@ const messages = {
     users: {
       title: 'Usuarios',
       subtitle: 'Control de accesos y perfiles.',
+      profileTitle: 'Perfil',
+      profileSubtitle: 'Edicion de perfil.',
       currentUser: 'Usuario actual',
       loading: 'Cargando usuario...',
       error: 'No se pudo cargar el usuario.',
@@ -818,6 +835,7 @@ const messages = {
       theme: 'Tema',
       themeLight: 'Claro',
       themeDark: 'Oscuro',
+      saveProfile: 'Guardar datos',
       savePreferences: 'Guardar preferencias',
       validation: {
         fixFields: 'Corrige los campos resaltados antes de continuar.',
@@ -827,6 +845,8 @@ const messages = {
         emailInUse: 'Este correo ya esta en uso.',
         passwordRequired: 'La contrasena es obligatoria.',
         passwordMin: 'La contrasena debe tener al menos 6 caracteres.',
+        confirmPasswordRequired: 'Confirma la nueva contrasena.',
+        passwordMismatch: 'Las contrasenas informadas no coinciden.',
         roleRequired: 'El perfil es obligatorio.'
       },
       fields: {
@@ -834,6 +854,7 @@ const messages = {
         name: 'Nombre',
         email: 'Correo',
         password: 'Contrasena',
+        confirmPassword: 'Confirmacion de contrasena',
         role: 'Perfil',
         active: 'Activo'
       }

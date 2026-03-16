@@ -5,6 +5,7 @@ import {
   getUserService,
   listProfessionalsService,
   listUsersService,
+  updateOwnProfileService,
   updateUserPreferencesService,
   updateUserService
 } from './service.js';
@@ -58,6 +59,27 @@ export async function listUsersController(_req: Request, res: Response) {
       theme: user.theme
     }))
   );
+}
+
+export async function getCurrentUserController(req: Request, res: Response) {
+  const user = await getUserService(req.user!.id);
+  if (!user) {
+    return res.status(404).json({ error: 'User not found.' });
+  }
+
+  return res.status(200).json({
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    active: user.active,
+    clientId: user.clientId,
+    isProfessional: user.isProfessional,
+    emailConfirmed: user.emailConfirmed,
+    passwordResetRequired: user.passwordResetRequired,
+    locale: user.locale,
+    theme: user.theme
+  });
 }
 
 export async function listProfessionalsController(_req: Request, res: Response) {
@@ -204,6 +226,45 @@ export async function updatePreferencesController(req: Request, res: Response) {
     locale: user.locale,
     theme: user.theme
   });
+}
+
+export async function updateOwnProfileController(req: Request, res: Response) {
+  const input = normalizeUserInput(req.body as Record<string, unknown>);
+  const error = validateUserInput({ ...input, role: req.user?.role || '' });
+  if (error) {
+    return res.status(400).json({ error });
+  }
+
+  try {
+    const user = await updateOwnProfileService(req.user!.id, {
+      name: input.name,
+      email: input.email,
+      password: input.password || undefined,
+      locale: input.locale,
+      theme: input.theme
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+
+    return res.status(200).json({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      active: user.active,
+      clientId: user.clientId,
+      isProfessional: user.isProfessional,
+      emailConfirmed: user.emailConfirmed,
+      passwordResetRequired: user.passwordResetRequired,
+      locale: user.locale,
+      theme: user.theme
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Could not update profile.';
+    return res.status(400).json({ error: message });
+  }
 }
 
 export async function deleteUserController(req: Request, res: Response) {

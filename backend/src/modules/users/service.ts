@@ -65,6 +65,18 @@ export async function updateUserService(
     theme?: 'light' | 'dark';
   }
 ) {
+  const current = await getUserById(id);
+  if (!current) {
+    return null;
+  }
+
+  if (input.email && input.email !== current.email) {
+    const existing = await findUserByEmail(input.email);
+    if (existing && existing.id !== id) {
+      throw new Error('Email already in use.');
+    }
+  }
+
   const data: Partial<{
     name: string;
     email: string;
@@ -104,6 +116,19 @@ export async function updateUserPreferencesService(
   return updateUser(id, {
     locale: preferences.locale,
     theme: preferences.theme
+  });
+}
+
+export async function updateOwnProfileService(
+  id: string,
+  input: { name: string; email: string; password?: string; locale?: string; theme?: 'light' | 'dark' }
+) {
+  return updateUserService(id, {
+    name: input.name,
+    email: input.email,
+    password: input.password,
+    locale: input.locale,
+    theme: input.theme
   });
 }
 
