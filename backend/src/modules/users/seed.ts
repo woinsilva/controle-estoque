@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { connectDb } from '../../config/db.js';
 import { env } from '../../config/env.js';
+import { logger } from '../../config/logger.js';
 import { User } from './model.js';
 
 const email = process.env.ADMIN_EMAIL || 'admin@empresa.com';
@@ -25,10 +26,10 @@ async function seedAdmin(): Promise<void> {
   );
 
   await User.db.close();
-  console.log('Admin seed completed.');
+  logger.info({ email }, 'Admin seed completed.');
 }
 
 seedAdmin().catch((error) => {
-  console.error('Admin seed failed:', error);
+  logger.fatal({ err: error }, 'Admin seed failed.');
   process.exit(1);
 });

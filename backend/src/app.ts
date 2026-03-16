@@ -4,7 +4,7 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import mongoSanitize from 'express-mongo-sanitize';
 import pinoHttp from 'pino-http';
-import { connectDb } from './config/db.js';
+import type { NextFunction, Request, Response } from 'express';
 import { env } from './config/env.js';
 import authRoutes from './modules/auth/routes.js';
 import { authMiddleware } from './middlewares/auth.js';
@@ -25,13 +25,37 @@ export const app = express();
 
 const localOriginPattern =
   /^https?:\/\/(localhost|127\.0\.0\.1|10(?:\.\d{1,3}){3}|172\.(1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2}|192\.168(?:\.\d{1,3}){2})(:\d+)?$/;
+const allowedOrigins = new Set(env.corsOrigins);
 
-app.use((pinoHttp as unknown as (options: { logger: typeof logger }) => express.RequestHandler)({ logger }));
+app.set('trust proxy', 1);
+app.use(
+  (pinoHttp as unknown as (options: {
+    logger: typeof logger;
+    customLogLevel: (_req: Request, res: Response, err?: Error) => 'info' | 'warn' | 'error' | 'silent';
+    autoLogging: { ignore: (req: Request) => boolean };
+  }) => express.RequestHandler)({
+    logger,
+    customLogLevel(_req, res, err) {
+      if (err || res.statusCode >= 500) {
+        return 'error';
+      }
+      if (res.statusCode >= 400) {
+        return 'warn';
+      }
+      return 'info';
+    },
+    autoLogging: {
+      ignore(req) {
+        return req.url === '/health';
+      }
+    }
+  })
+);
 app.use(helmet());
 app.use(
   cors({
     origin(origin, callback) {
-      if (!origin || localOriginPattern.test(origin)) {
+      if (!origin || allowedOrigins.has(origin) || (env.nodeEnv !== 'production' && localOriginPattern.test(origin))) {
         callback(null, true);
         return;
       }
@@ -83,5 +107,11 @@ app.get('/admin/health', authMiddleware, requireRole(['ADMIN']), (_req, res) => 
   res.status(200).json({ status: 'ok', scope: 'admin' });
 });
 
-// Initialize db connection on app import for simple startup flows.
-void connectDb(env.mongodbUri);
+app.use((req, res) => {
+  res.status(404).json({ error: `Route not found: ${req.method} ${req.originalUrl}` });
+});
+
+app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
+  req.log?.error({ err }, 'Unhandled request error.');
+  res.status(500).json({ error: 'Internal server error.' });
+});

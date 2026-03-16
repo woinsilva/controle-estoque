@@ -42,6 +42,21 @@ npm run dev
 
 Veja `backend/.env.example` para todos os campos.
 
+## Deploy
+
+Arquivos preparados para deploy:
+
+- `render.yaml`
+- `backend/.env.production.example`
+- `frontend/.env.production.example`
+
+Fluxo sugerido:
+
+1. Configurar banco no MongoDB Atlas
+2. Criar servicos no Render usando `render.yaml`
+3. Preencher as variaveis sensiveis no painel do Render
+4. Ajustar `VITE_API_BASE_URL`, `FRONTEND_APP_URL` e `CORS_ORIGIN` com os dominios finais
+
 ## Scripts principais
 
 Backend:
