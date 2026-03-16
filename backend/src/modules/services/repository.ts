@@ -30,6 +30,7 @@ export async function createService(data: {
   durationMinutes: number;
   price: number;
   active: boolean;
+  requiresQuestionnaire: boolean;
 }) {
   return BusinessService.create(data);
 }
@@ -42,6 +43,7 @@ export async function updateService(
     durationMinutes: number;
     price: number;
     active: boolean;
+    requiresQuestionnaire: boolean;
   }>
 ) {
   return BusinessService.findByIdAndUpdate(id, data, { new: true }).exec();

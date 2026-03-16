@@ -12,6 +12,7 @@ type ServiceInput = {
   durationMinutes: number;
   price: number;
   active: boolean;
+  requiresQuestionnaire: boolean;
 };
 
 export async function listServicesService(input: { q?: string; active?: boolean }) {
@@ -28,7 +29,8 @@ export async function createServiceService(input: ServiceInput) {
     description: input.description?.trim() || undefined,
     durationMinutes: input.durationMinutes,
     price: input.price,
-    active: input.active
+    active: input.active,
+    requiresQuestionnaire: input.requiresQuestionnaire
   });
 }
 
@@ -38,7 +40,8 @@ export async function updateServiceService(id: string, input: Partial<ServiceInp
     description: input.description?.trim() || undefined,
     durationMinutes: input.durationMinutes,
     price: input.price,
-    active: input.active
+    active: input.active,
+    requiresQuestionnaire: input.requiresQuestionnaire
   });
 }
 

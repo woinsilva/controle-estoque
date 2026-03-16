@@ -80,11 +80,11 @@
           {{ $t(`appointments.statuses.${data.status}`) }}
         </template>
       </Column>
-      <Column field="notes" :header="$t('appointments.fields.notes')" />
+      <Column v-if="!isClientRole" field="notes" :header="$t('appointments.fields.notes')" />
       <Column :header="$t('appointments.fields.questionnaire')">
         <template #body="{ data }">
-          <span :class="questionnaireClass(data.id)">
-            {{ questionnaireLabel(data.id) }}
+          <span :class="questionnaireClass(data)">
+            {{ questionnaireLabel(data) }}
           </span>
         </template>
       </Column>
@@ -145,9 +145,9 @@
           </div>
           <div>
             <dt>{{ $t('appointments.fields.questionnaire') }}</dt>
-            <dd>{{ questionnaireLabel(appointment.id) }}</dd>
+            <dd>{{ questionnaireLabel(appointment) }}</dd>
           </div>
-          <div>
+          <div v-if="!isClientRole">
             <dt>{{ $t('appointments.fields.notes') }}</dt>
             <dd>{{ appointment.notes || '-' }}</dd>
           </div>
@@ -295,7 +295,7 @@
           </div>
           <p v-else class="availability-hint">Selecione profissional e pelo menos um servico para consultar as datas disponiveis.</p>
         </section>
-        <label class="field">
+        <label v-if="!isClientRole && editingId" class="field">
           <span>{{ $t('appointments.fields.status') }}</span>
           <select v-model="form.status" required>
             <option value="SCHEDULED">{{ $t('appointments.statuses.SCHEDULED') }}</option>
@@ -304,7 +304,7 @@
             <option value="CANCELED">{{ $t('appointments.statuses.CANCELED') }}</option>
           </select>
         </label>
-        <label class="field">
+        <label v-if="!isClientRole" class="field">
           <span>{{ $t('appointments.fields.notes') }}</span>
           <textarea v-model="form.notes" rows="4"></textarea>
         </label>
@@ -443,6 +443,10 @@ class AppointmentsView extends Vue {
 
   get canDelete() {
     return ['MANAGER', 'ADMIN'].includes(this.authStore.role || '');
+  }
+
+  get isClientRole() {
+    return this.authStore.role === 'CLIENT';
   }
 
   get dialogTitle() {
@@ -719,7 +723,7 @@ class AppointmentsView extends Vue {
       professionalId: this.form.professionalId,
       serviceIds: this.form.serviceIds,
       scheduledAt: this.form.scheduledAt,
-      status: this.form.status,
+      status: this.editingId ? this.form.status : 'SCHEDULED',
       notes: this.form.notes?.trim() || undefined
     };
     try {
@@ -795,14 +799,28 @@ class AppointmentsView extends Vue {
     this.responseByAppointment = responseMap;
   }
 
-  questionnaireLabel(appointmentId: string) {
-    return this.questionnaireByAppointment[appointmentId]
+  appointmentRequiresQuestionnaire(appointment: Appointment) {
+    return appointment.serviceIds.some(
+      (serviceId) => this.services.find((service) => service.id === serviceId)?.requiresQuestionnaire
+    );
+  }
+
+  questionnaireLabel(appointment: Appointment) {
+    if (!this.appointmentRequiresQuestionnaire(appointment)) {
+      return this.$t('appointments.questionnaireNotRequired');
+    }
+
+    return this.questionnaireByAppointment[appointment.id]
       ? this.$t('appointments.questionnaireDone')
       : this.$t('appointments.questionnairePending');
   }
 
-  questionnaireClass(appointmentId: string) {
-    return this.questionnaireByAppointment[appointmentId] ? 'badge done' : 'badge pending';
+  questionnaireClass(appointment: Appointment) {
+    if (!this.appointmentRequiresQuestionnaire(appointment)) {
+      return 'badge na';
+    }
+
+    return this.questionnaireByAppointment[appointment.id] ? 'badge done' : 'badge pending';
   }
 
   get answerEntries() {
@@ -1357,6 +1375,12 @@ export default toNative(AppointmentsView);
   color: #7c2d12;
   background: #ffedd5;
   border: 1px solid #fed7aa;
+}
+
+.badge.na {
+  color: var(--muted);
+  background: var(--panel-strong);
+  border: 1px solid var(--border);
 }
 
 .response-view {

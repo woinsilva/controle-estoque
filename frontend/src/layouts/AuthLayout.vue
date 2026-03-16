@@ -70,12 +70,35 @@
         </section>
       </main>
     </div>
+
+    <Dialog v-model:visible="statusPromptOpen" modal :header="$t('appointments.statusPromptTitle')" class="status-prompt-dialog">
+      <section v-if="statusPromptAppointment" class="status-prompt">
+        <p>{{ $t('appointments.statusPromptMessage') }}</p>
+        <div class="status-prompt-meta">
+          <p><strong>{{ $t('appointments.fields.scheduledAt') }}:</strong> {{ formatDateTime(statusPromptAppointment.scheduledAt) }}</p>
+        </div>
+        <div class="dialog-actions">
+          <button type="button" class="primary-button" @click="updatePromptStatus('IN_PROGRESS')">
+            {{ $t('appointments.statusPromptStart') }}
+          </button>
+          <button type="button" class="danger-button" @click="updatePromptStatus('CANCELED')">
+            {{ $t('appointments.statusPromptCancel') }}
+          </button>
+          <button type="button" class="ghost-button" @click="dismissStatusPrompt">
+            {{ $t('appointments.statusPromptLater') }}
+          </button>
+        </div>
+      </section>
+    </Dialog>
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Vue, toNative } from 'vue-facing-decorator';
+import Dialog from 'primevue/dialog';
+import { apiGet, apiPatch } from '../services/api';
 import { useAuthStore } from '../stores/auth';
+import type { Appointment, AppointmentListResponse, AppointmentStatus } from '../types/appointment';
 
 type MenuItem = {
   to: string;
@@ -84,20 +107,37 @@ type MenuItem = {
   visible: boolean;
 };
 
-@Component({})
+@Component({ components: { Dialog } })
 class AuthLayout extends Vue {
+  private static readonly STATUS_PROMPT_STORAGE_KEY = 'appointmentStatusPrompted';
+
   authStore = useAuthStore();
   sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
   mobileSidebarOpen = false;
   isMobile = false;
+  statusPromptOpen = false;
+  statusPromptAppointment: Appointment | null = null;
+  promptedAppointmentIds: string[] = [];
+  promptIntervalId: number | null = null;
 
   mounted() {
     this.handleResize();
+    this.restorePromptedAppointments();
     window.addEventListener('resize', this.handleResize);
+    if (this.canReceiveStatusPrompts) {
+      void this.checkStatusPromptCandidates();
+      this.promptIntervalId = window.setInterval(() => {
+        void this.checkStatusPromptCandidates();
+      }, 60_000);
+    }
   }
 
   beforeUnmount() {
     window.removeEventListener('resize', this.handleResize);
+    if (this.promptIntervalId) {
+      window.clearInterval(this.promptIntervalId);
+      this.promptIntervalId = null;
+    }
   }
 
   get menuItems() {
@@ -167,6 +207,10 @@ class AuthLayout extends Vue {
     return items.filter((item) => item.visible);
   }
 
+  get canReceiveStatusPrompts() {
+    return Boolean(this.authStore.token && this.authStore.userId && this.authStore.isProfessional);
+  }
+
   handleResize = () => {
     this.isMobile = window.innerWidth <= 960;
     if (this.isMobile) {
@@ -191,6 +235,81 @@ class AuthLayout extends Vue {
     if (this.isMobile) {
       this.mobileSidebarOpen = false;
     }
+  }
+
+  restorePromptedAppointments() {
+    try {
+      const raw = sessionStorage.getItem(AuthLayout.STATUS_PROMPT_STORAGE_KEY);
+      this.promptedAppointmentIds = raw ? JSON.parse(raw) : [];
+    } catch {
+      this.promptedAppointmentIds = [];
+    }
+  }
+
+  persistPromptedAppointments() {
+    sessionStorage.setItem(AuthLayout.STATUS_PROMPT_STORAGE_KEY, JSON.stringify(this.promptedAppointmentIds));
+  }
+
+  markAppointmentPrompted(appointmentId: string) {
+    if (this.promptedAppointmentIds.includes(appointmentId)) {
+      return;
+    }
+    this.promptedAppointmentIds = [...this.promptedAppointmentIds, appointmentId];
+    this.persistPromptedAppointments();
+  }
+
+  async checkStatusPromptCandidates() {
+    if (!this.canReceiveStatusPrompts || this.statusPromptOpen || !this.authStore.userId) {
+      return;
+    }
+
+    const now = new Date().toISOString();
+    const query = new URLSearchParams({
+      professionalId: this.authStore.userId,
+      status: 'SCHEDULED',
+      dateTo: now,
+      page: '1',
+      limit: '10',
+      sortBy: 'scheduledAt',
+      sortOrder: 'asc'
+    });
+
+    try {
+      const result = await apiGet<AppointmentListResponse>(`/appointments?${query.toString()}`, this.authStore.token);
+      const candidate = result.items.find((appointment) => !this.promptedAppointmentIds.includes(appointment.id));
+      if (!candidate) {
+        return;
+      }
+
+      this.statusPromptAppointment = candidate;
+      this.statusPromptOpen = true;
+      this.markAppointmentPrompted(candidate.id);
+    } catch {
+      // Ignore background polling errors here to avoid noisy global failures.
+    }
+  }
+
+  dismissStatusPrompt() {
+    this.statusPromptOpen = false;
+    this.statusPromptAppointment = null;
+  }
+
+  async updatePromptStatus(status: Extract<AppointmentStatus, 'IN_PROGRESS' | 'CANCELED'>) {
+    if (!this.statusPromptAppointment) {
+      return;
+    }
+
+    try {
+      await apiPatch(`/appointments/${this.statusPromptAppointment.id}/status`, { status }, this.authStore.token);
+      this.dismissStatusPrompt();
+      await this.checkStatusPromptCandidates();
+    } catch {
+      this.dismissStatusPrompt();
+    }
+  }
+
+  formatDateTime(value: string) {
+    return new Date(value).toLocaleString();
   }
 
   async logout() {
@@ -405,6 +524,60 @@ export default toNative(AuthLayout);
   z-index: 24;
 }
 
+.status-prompt-dialog {
+  width: min(560px, 92vw);
+}
+
+.status-prompt {
+  display: grid;
+  gap: 1rem;
+}
+
+.status-prompt p {
+  margin: 0;
+}
+
+.status-prompt-meta {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--panel-strong);
+}
+
+.dialog-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.primary-button,
+.ghost-button,
+.danger-button {
+  padding: 0.6rem 1.1rem;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.primary-button {
+  border: none;
+  background: var(--primary);
+  color: var(--primary-ink);
+}
+
+.ghost-button {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+}
+
+.danger-button {
+  border: 1px solid rgba(180, 35, 24, 0.25);
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
 @media (max-width: 960px) {
   .auth-layout,
   .auth-layout.collapsed {
@@ -453,6 +626,10 @@ export default toNative(AuthLayout);
   .content-shell {
     padding-left: 0.75rem;
     padding-right: 0.75rem;
+  }
+
+  .dialog-actions {
+    flex-direction: column;
   }
 }
 </style>

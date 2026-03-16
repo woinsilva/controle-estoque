@@ -5,6 +5,7 @@ export type Service = {
   durationMinutes: number;
   price: number;
   active: boolean;
+  requiresQuestionnaire: boolean;
   createdAt: string;
   updatedAt: string;
 };
@@ -15,4 +16,5 @@ export type ServiceInput = {
   durationMinutes: number;
   price: number;
   active: boolean;
+  requiresQuestionnaire: boolean;
 };

@@ -6,6 +6,7 @@ export type ServiceDocument = {
   durationMinutes: number;
   price: number;
   active: boolean;
+  requiresQuestionnaire: boolean;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -16,7 +17,8 @@ const serviceSchema = new Schema<ServiceDocument>(
     description: { type: String, trim: true },
     durationMinutes: { type: Number, required: true, min: 5 },
     price: { type: Number, required: true, min: 0 },
-    active: { type: Boolean, default: true, index: true }
+    active: { type: Boolean, default: true, index: true },
+    requiresQuestionnaire: { type: Boolean, default: false, index: true }
   },
   { timestamps: true }
 );

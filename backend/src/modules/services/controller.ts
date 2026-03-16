@@ -15,6 +15,7 @@ function mapService(service: {
   durationMinutes: number;
   price: number;
   active: boolean;
+  requiresQuestionnaire: boolean;
   createdAt: Date;
   updatedAt: Date;
 }) {
@@ -25,6 +26,7 @@ function mapService(service: {
     durationMinutes: service.durationMinutes,
     price: service.price,
     active: service.active,
+    requiresQuestionnaire: service.requiresQuestionnaire,
     createdAt: service.createdAt,
     updatedAt: service.updatedAt
   };

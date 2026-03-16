@@ -7,7 +7,8 @@ export const serviceSchema = z.object({
   description: z.string().trim().max(2000).optional(),
   durationMinutes: z.coerce.number().int().min(5).max(1440),
   price: z.coerce.number().min(0),
-  active: z.boolean().optional().default(true)
+  active: z.boolean().optional().default(true),
+  requiresQuestionnaire: z.boolean().optional().default(false)
 });
 
 export const updateServiceSchema = serviceSchema.partial();

@@ -21,6 +21,11 @@
           {{ data.active ? $t('common.yes') : $t('common.no') }}
         </template>
       </Column>
+      <Column field="requiresQuestionnaire" header="Exige questionario">
+        <template #body="{ data }">
+          {{ data.requiresQuestionnaire ? $t('common.yes') : $t('common.no') }}
+        </template>
+      </Column>
       <Column header="Acoes">
         <template #body="{ data }">
           <button type="button" class="icon-button" @click="openEdit(data)">
@@ -52,6 +57,10 @@
           <div>
             <dt>Valor</dt>
             <dd>{{ formatCurrency(service.price) }}</dd>
+          </div>
+          <div>
+            <dt>Questionario</dt>
+            <dd>{{ service.requiresQuestionnaire ? $t('common.yes') : $t('common.no') }}</dd>
           </div>
         </dl>
         <div class="mobile-actions">
@@ -87,6 +96,10 @@
           <input v-model="form.active" type="checkbox" />
           <span>Ativo</span>
         </label>
+        <label class="field checkbox">
+          <input v-model="form.requiresQuestionnaire" type="checkbox" />
+          <span>Exige questionario</span>
+        </label>
         <div class="dialog-actions">
           <button type="submit" class="primary">Salvar</button>
           <button type="button" class="ghost" @click="dialogOpen = false">{{ $t('common.cancel') }}</button>
@@ -120,7 +133,8 @@ class ServicesView extends Vue {
     description: '',
     durationMinutes: 60,
     price: 0,
-    active: true
+    active: true,
+    requiresQuestionnaire: false
   };
 
   mounted() {
@@ -137,7 +151,14 @@ class ServicesView extends Vue {
 
   openNew() {
     this.editingId = '';
-    this.form = { name: '', description: '', durationMinutes: 60, price: 0, active: true };
+    this.form = {
+      name: '',
+      description: '',
+      durationMinutes: 60,
+      price: 0,
+      active: true,
+      requiresQuestionnaire: false
+    };
     this.dialogOpen = true;
   }
 
@@ -148,7 +169,8 @@ class ServicesView extends Vue {
       description: service.description || '',
       durationMinutes: service.durationMinutes,
       price: service.price,
-      active: service.active
+      active: service.active,
+      requiresQuestionnaire: Boolean(service.requiresQuestionnaire)
     };
     this.dialogOpen = true;
   }
