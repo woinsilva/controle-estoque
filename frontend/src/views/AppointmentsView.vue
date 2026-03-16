@@ -13,6 +13,16 @@
     </header>
 
     <section class="filters">
+      <label v-if="canFilterByProfessional" class="field">
+        <span>Profissional</span>
+        <AppSelect
+          v-model="filterProfessionalId"
+          :options="professionalOptions"
+          :placeholder="$t('common.select')"
+          :showClear="true"
+          @change="loadAppointments(1)"
+        />
+      </label>
       <label v-if="authStore.role !== 'CLIENT'" class="field">
         <span>{{ $t('appointments.fields.client') }}</span>
         <AppSelect
@@ -405,6 +415,7 @@ class AppointmentsView extends Vue {
   questionnaireByAppointment: Record<string, boolean> = {};
   responseByAppointment: Record<string, QuestionnaireResponse | null> = {};
   filterClientId = '';
+  filterProfessionalId = '';
   filterStatus: '' | AppointmentStatus = '';
   dateFrom = '';
   dateTo = '';
@@ -443,6 +454,10 @@ class AppointmentsView extends Vue {
 
   get isOperatorRole() {
     return this.authStore.role === 'OPERATOR';
+  }
+
+  get canFilterByProfessional() {
+    return ['MANAGER', 'ADMIN'].includes(this.authStore.role || '');
   }
 
   get dialogTitle() {
@@ -597,6 +612,7 @@ class AppointmentsView extends Vue {
         sortOrder: 'desc'
       });
       if (this.filterClientId) query.set('clientId', this.filterClientId);
+      if (this.filterProfessionalId) query.set('professionalId', this.filterProfessionalId);
       if (this.filterStatus) query.set('status', this.filterStatus);
       if (this.dateFrom) query.set('dateFrom', new Date(`${this.dateFrom}T00:00:00`).toISOString());
       if (this.dateTo) query.set('dateTo', new Date(`${this.dateTo}T23:59:59`).toISOString());
