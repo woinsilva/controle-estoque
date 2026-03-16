@@ -2,6 +2,7 @@ import { Product } from '../products/model.js';
 import { Sale } from '../sales/model.js';
 import { Client } from '../clients/model.js';
 import { Appointment } from '../appointments/model.js';
+import { BusinessService } from '../services/model.js';
 
 function escapeRegex(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -81,6 +82,7 @@ export type ReportsSummary = {
   appointments: {
     total: number;
     upcoming: number;
+    totalValue: number;
     byStatus: Array<{ status: string; count: number }>;
     recent: Array<{
       id: string;
@@ -89,6 +91,7 @@ export type ReportsSummary = {
       clientId: string;
       clientName: string;
       createdAt: string;
+      totalValue: number;
     }>;
   };
 };
@@ -162,7 +165,8 @@ export async function getReportsSummaryService(filters: ReportsFilters): Promise
     totalAppointments,
     upcomingAppointments,
     appointmentsByStatusRaw,
-    recentAppointmentsRaw
+    recentAppointmentsRaw,
+    appointmentServiceReferences
   ] = await Promise.all([
     Product.countDocuments(productsQuery).exec(),
     Product.countDocuments({ ...productsQuery, active: true }).exec(),
@@ -192,7 +196,8 @@ export async function getReportsSummaryService(filters: ReportsFilters): Promise
       status: { $in: ['SCHEDULED', 'IN_PROGRESS'] }
     }).exec(),
     Appointment.aggregate([{ $match: appointmentsQuery }, { $group: { _id: '$status', count: { $sum: 1 } } }]).exec(),
-    Appointment.find(appointmentsQuery).sort({ scheduledAt: -1 }).limit(50).lean().exec()
+    Appointment.find(appointmentsQuery).sort({ scheduledAt: -1 }).limit(50).lean().exec(),
+    Appointment.find(appointmentsQuery).select('serviceIds').lean().exec()
   ]);
 
   const clientIds = Array.from(new Set(recentAppointmentsRaw.map((item) => item.clientId))).filter(Boolean);
@@ -200,6 +205,26 @@ export async function getReportsSummaryService(filters: ReportsFilters): Promise
     ? await Client.find({ _id: { $in: clientIds } }).select('_id fullName').lean().exec()
     : [];
   const clientNameById = new Map(clientsForAppointments.map((client) => [String(client._id), client.fullName]));
+
+  const serviceIds = Array.from(
+    new Set(
+      appointmentServiceReferences.flatMap((item) =>
+        Array.isArray(item.serviceIds) ? item.serviceIds.map((serviceId) => String(serviceId)) : []
+      )
+    )
+  ).filter(Boolean);
+  const services = serviceIds.length
+    ? await BusinessService.find({ _id: { $in: serviceIds } }).select('_id price').lean().exec()
+    : [];
+  const servicePriceById = new Map(services.map((service) => [String(service._id), Number(service.price || 0)]));
+
+  const getAppointmentTotalValue = (serviceIdsList?: string[]) =>
+    (serviceIdsList || []).reduce((sum, serviceId) => sum + (servicePriceById.get(String(serviceId)) || 0), 0);
+
+  const totalAppointmentsValue = appointmentServiceReferences.reduce(
+    (sum, item) => sum + getAppointmentTotalValue(item.serviceIds),
+    0
+  );
 
   return {
     products: {
@@ -246,6 +271,7 @@ export async function getReportsSummaryService(filters: ReportsFilters): Promise
     appointments: {
       total: totalAppointments,
       upcoming: upcomingAppointments,
+      totalValue: totalAppointmentsValue,
       byStatus: appointmentsByStatusRaw.map((item) => ({ status: String(item._id), count: Number(item.count) })),
       recent: recentAppointmentsRaw.map((item) => ({
         id: String(item._id),
@@ -253,7 +279,8 @@ export async function getReportsSummaryService(filters: ReportsFilters): Promise
         status: item.status,
         clientId: item.clientId,
         clientName: clientNameById.get(item.clientId) || item.clientId,
-        createdAt: item.createdAt.toISOString()
+        createdAt: item.createdAt.toISOString(),
+        totalValue: getAppointmentTotalValue(item.serviceIds)
       }))
     }
   };

@@ -266,10 +266,16 @@
       </div>
       <div class="stats">
         <article class="stat"><span>{{ $t('reports.total') }}</span><strong>{{ summary.appointments.total }}</strong></article>
+        <article class="stat">
+          <span>{{ $t('reports.totalValue') }}</span>
+          <strong>{{ formatCurrency(summary.appointments.totalValue) }}</strong>
+        </article>
         <article class="stat"><span>{{ $t('reports.upcoming') }}</span><strong>{{ summary.appointments.upcoming }}</strong></article>
       </div>
       <div class="chips">
-        <span v-for="status in summary.appointments.byStatus" :key="status.status" class="chip">{{ status.status }}: {{ status.count }}</span>
+        <span v-for="status in summary.appointments.byStatus" :key="status.status" class="chip">
+          {{ formatAppointmentStatus(status.status) }}: {{ status.count }}
+        </span>
         <span v-if="!summary.appointments.byStatus.length" class="chip">-</span>
       </div>
       <div class="table-wrap">
@@ -279,6 +285,7 @@
               <th>{{ $t('appointments.fields.client') }}</th>
               <th>{{ $t('appointments.fields.scheduledAt') }}</th>
               <th>{{ $t('appointments.fields.status') }}</th>
+              <th>{{ $t('reports.totalValue') }}</th>
               <th>{{ $t('questionnaires.fields.createdAt') }}</th>
             </tr>
           </thead>
@@ -286,10 +293,11 @@
             <tr v-for="item in summary.appointments.recent" :key="item.id">
               <td>{{ item.clientName }}</td>
               <td>{{ formatDate(item.scheduledAt) }}</td>
-              <td>{{ item.status }}</td>
+              <td>{{ formatAppointmentStatus(item.status) }}</td>
+              <td>{{ formatCurrency(item.totalValue) }}</td>
               <td>{{ formatDate(item.createdAt) }}</td>
             </tr>
-            <tr v-if="!summary.appointments.recent.length"><td colspan="4">-</td></tr>
+            <tr v-if="!summary.appointments.recent.length"><td colspan="5">-</td></tr>
           </tbody>
         </table>
       </div>
@@ -298,8 +306,8 @@
           <strong>{{ item.clientName }}</strong>
           <small>{{ formatDate(item.scheduledAt) }}</small>
           <div class="report-card-row">
-            <span>{{ item.status }}</span>
-            <span>{{ formatDate(item.createdAt) }}</span>
+            <span>{{ formatAppointmentStatus(item.status) }}</span>
+            <span>{{ formatCurrency(item.totalValue) }}</span>
           </div>
         </article>
       </div>
@@ -322,7 +330,7 @@ const EMPTY_SUMMARY: ReportsSummary = {
   products: { total: 0, active: 0, inactive: 0, lowStock: 0, inventoryValue: 0, lowStockItems: [] },
   sales: { total: 0, totalRevenue: 0, averageTicket: 0, byStatus: [], recent: [] },
   clients: { total: 0, active: 0, inactive: 0, createdInPeriod: 0, recent: [] },
-  appointments: { total: 0, upcoming: 0, byStatus: [], recent: [] }
+  appointments: { total: 0, upcoming: 0, totalValue: 0, byStatus: [], recent: [] }
 };
 
 @Component({})
@@ -478,6 +486,11 @@ class ReportsView extends Vue {
   formatPhoneValue(value?: string) {
     if (!value) return '-';
     return formatPhone(value);
+  }
+
+  formatAppointmentStatus(status: string) {
+    const translated = this.$t(`appointments.statuses.${status}`);
+    return translated === `appointments.statuses.${status}` ? status : translated;
   }
 }
 export default toNative(ReportsView);

@@ -24,7 +24,16 @@ export type ReportsSummary = {
   appointments: {
     total: number;
     upcoming: number;
+    totalValue: number;
     byStatus: Array<{ status: string; count: number }>;
-    recent: Array<{ id: string; scheduledAt: string; status: string; clientId: string; clientName: string; createdAt: string }>;
+    recent: Array<{
+      id: string;
+      scheduledAt: string;
+      status: string;
+      clientId: string;
+      clientName: string;
+      createdAt: string;
+      totalValue: number;
+    }>;
   };
 };
