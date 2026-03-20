@@ -157,8 +157,8 @@ export default toNative(DashboardView);
 
 .hero {
   background:
-    radial-gradient(circle at top right, rgba(223, 190, 124, 0.24), transparent 28%),
-    linear-gradient(135deg, rgba(255, 255, 255, 0.84), rgba(246, 252, 249, 0.72));
+    radial-gradient(circle at top right, rgba(var(--primary-rgb), 0.18), transparent 28%),
+    linear-gradient(135deg, var(--panel-strong), var(--panel));
   border: 1px solid var(--border);
   border-radius: 30px;
   padding: 2.2rem;
@@ -192,7 +192,7 @@ export default toNative(DashboardView);
 .profile-pill {
   padding: 0.75rem 1.15rem;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.76);
+  background: var(--surface-control);
   border: 1px solid var(--border);
   font-weight: 800;
   box-shadow: var(--shadow-soft);
@@ -208,7 +208,7 @@ export default toNative(DashboardView);
   padding: 1.6rem;
   border-radius: 24px;
   border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.76);
+  background: var(--panel);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -231,12 +231,12 @@ export default toNative(DashboardView);
 }
 
 .stat.danger {
-  background: linear-gradient(135deg, rgba(255, 241, 238, 0.94), rgba(255, 255, 255, 0.76));
-  border-color: rgba(185, 56, 47, 0.16);
+  background: linear-gradient(135deg, var(--danger-soft), var(--panel));
+  border-color: rgba(185, 56, 47, 0.22);
 }
 
 .stat.muted {
-  background: linear-gradient(135deg, rgba(247, 250, 246, 0.94), rgba(255, 255, 255, 0.76));
+  background: linear-gradient(135deg, var(--primary-soft), var(--panel));
 }
 
 .panels {
@@ -248,7 +248,7 @@ export default toNative(DashboardView);
 .panel {
   border-radius: 24px;
   border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.78);
+  background: var(--panel);
   padding: 1.5rem;
   box-shadow: var(--shadow);
 }
@@ -281,7 +281,7 @@ export default toNative(DashboardView);
   align-items: center;
   gap: 1rem;
   padding: 0.8rem 0.2rem;
-  border-bottom: 1px solid rgba(24, 54, 39, 0.08);
+  border-bottom: 1px solid var(--border);
 }
 
 .row:last-child {

@@ -10,7 +10,8 @@
     "test": "node scripts/run-tests.mjs",
     "lint": "eslint .",
     "format": "prettier --write \"src/**/*.ts\"",
-    "seed:admin": "tsx src/modules/users/seed.ts"
+    "seed:admin": "tsx src/modules/users/seed.ts",
+    "seed:anamnese-nano-fios": "tsx src/modules/questionnaires/seeds/anamnese-nano-fios.seed.ts"
   },
   "dependencies": {
     "@types/cors": "^2.8.19",

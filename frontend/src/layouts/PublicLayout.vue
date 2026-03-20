@@ -3,7 +3,7 @@
     <aside class="public-hero">
       <div class="hero-stack">
         <div class="brand">
-          <span class="brand-mark">CE</span>
+          <span class="brand-mark">BT</span>
           <div>
             <h1>{{ $t('common.appName') }}</h1>
             <p>{{ $t('public.headline') }}</p>
@@ -93,7 +93,7 @@ export default toNative(PublicLayout);
   height: 280px;
   top: -70px;
   left: -90px;
-  background: rgba(86, 196, 184, 0.18);
+  background: rgba(213, 177, 181, 0.28);
 }
 
 .public-hero::after {
@@ -101,7 +101,7 @@ export default toNative(PublicLayout);
   height: 220px;
   right: -60px;
   bottom: 24px;
-  background: rgba(223, 190, 124, 0.16);
+  background: rgba(242, 226, 228, 0.4);
 }
 
 .hero-stack {
@@ -123,7 +123,7 @@ export default toNative(PublicLayout);
   width: 54px;
   height: 54px;
   border-radius: 18px;
-  background: linear-gradient(135deg, var(--primary), #7cd7cd);
+  background: linear-gradient(135deg, var(--primary), #d5b1b5);
   color: var(--primary-ink);
   font-weight: 800;
   letter-spacing: 0.05em;

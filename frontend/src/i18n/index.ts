@@ -5,7 +5,7 @@ export type SupportedLocale = 'pt' | 'en' | 'es';
 const messages = {
   pt: {
     common: {
-      appName: 'Controle de Estoque',
+      appName: 'By Talissa',
       login: 'Entrar',
       dashboard: 'Dashboard',
       products: 'Produtos',
@@ -243,11 +243,13 @@ const messages = {
       responsesTitle: 'Respostas',
       newTemplate: 'Novo template',
       editTemplate: 'Editar template',
+      deleteTemplate: 'Excluir template',
       newResponse: 'Nova resposta',
       create: 'Salvar',
       publish: 'Publicar',
       actions: 'Acoes',
       error: 'Nao foi possivel carregar os questionarios.',
+      confirmDeleteTemplate: 'Confirma a exclusao deste template?',
       selectClient: 'Selecione o cliente',
       selectTemplate: 'Selecione o template',
       selectAppointment: 'Selecione o atendimento',
@@ -350,7 +352,7 @@ const messages = {
   },
   en: {
     common: {
-      appName: 'Inventory Control',
+      appName: 'By Talissa',
       login: 'Sign in',
       dashboard: 'Dashboard',
       products: 'Products',
@@ -588,11 +590,13 @@ const messages = {
       responsesTitle: 'Responses',
       newTemplate: 'New template',
       editTemplate: 'Edit template',
+      deleteTemplate: 'Delete template',
       newResponse: 'New response',
       create: 'Save',
       publish: 'Publish',
       actions: 'Actions',
       error: 'Could not load questionnaires.',
+      confirmDeleteTemplate: 'Confirm deleting this template?',
       selectClient: 'Select client',
       selectTemplate: 'Select template',
       selectAppointment: 'Select appointment',
@@ -695,7 +699,7 @@ const messages = {
   },
   es: {
     common: {
-      appName: 'Control de Inventario',
+      appName: 'By Talissa',
       login: 'Iniciar sesion',
       dashboard: 'Panel',
       products: 'Productos',
@@ -933,11 +937,13 @@ const messages = {
       responsesTitle: 'Respuestas',
       newTemplate: 'Nueva plantilla',
       editTemplate: 'Editar plantilla',
+      deleteTemplate: 'Eliminar plantilla',
       newResponse: 'Nueva respuesta',
       create: 'Guardar',
       publish: 'Publicar',
       actions: 'Acciones',
       error: 'No se pudieron cargar los cuestionarios.',
+      confirmDeleteTemplate: 'Confirmas eliminar esta plantilla?',
       selectClient: 'Selecciona el cliente',
       selectTemplate: 'Selecciona la plantilla',
       selectAppointment: 'Selecciona la atencion',
@@ -1057,4 +1063,3 @@ export const i18n = createI18n({
   globalInjection: true,
   messages
 });
-

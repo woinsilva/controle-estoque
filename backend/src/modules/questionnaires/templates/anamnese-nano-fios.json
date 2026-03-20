@@ -1,0 +1,164 @@
+{
+  "code": "ANAMNESE-NANO-FIOS",
+  "name": "Ficha de Anamnese para Nano Fios",
+  "version": 2,
+  "sections": [
+    {
+      "id": "dados-pessoais",
+      "title": "Dados Pessoais",
+      "fields": [
+        { "key": "nomeCompleto", "label": "Nome Completo:", "type": "text", "required": true },
+        { "key": "cpf", "label": "CPF:", "type": "text", "required": true },
+        { "key": "dataDeNascimento", "label": "Data de Nascimento:", "type": "date", "required": true },
+        { "key": "endereco", "label": "Endereco:", "type": "text", "required": false },
+        { "key": "telefone", "label": "Telefone:", "type": "tel", "required": true },
+        { "key": "comoNosConheceu", "label": "Como nos conheceu:", "type": "text", "required": false }
+      ]
+    },
+    {
+      "id": "informacoes-preventivas",
+      "title": "INFORMACOES PREVENTIVAS (ASSINALE O QUE FOR SEU CASO)",
+      "type": "checkboxes",
+      "columns": 2,
+      "options": [
+        { "key": "usaAcidosCosmeticos", "label": "Usa acidos cosmeticos (cite quais abaixo)" },
+        { "key": "usoMedicamentos", "label": "Uso de medicamentos (cite quais abaixo)" },
+        { "key": "periodoMenstrual", "label": "Esta no periodo menstrual" },
+        { "key": "hemofiliaOuCoagulo", "label": "Tem hemofilia ou coagulo" },
+        {
+          "key": "tratamentoEsteticoRecente",
+          "label": "Fez tratamento estetico facial recente em menos de 30 dias (cite qual abaixo)"
+        },
+        { "key": "dormeLadoEsquerdo", "label": "Dorme do lado esquerdo" },
+        { "key": "dormeLadoDireito", "label": "Dorme do lado direito" },
+        { "key": "fazExerciciosFisicos", "label": "Faz academia ou exercicios fisicos" },
+        { "key": "tomaBanhosQuentes", "label": "Toma banhos quentes" },
+        { "key": "gestanteOuLactante", "label": "Gestante ou lactante" },
+        { "key": "fazNatacaoSaunaPraia", "label": "Faz natacao, sauna ou ira a praia" },
+        { "key": "cicatrizNaSobrancelha", "label": "Tem cicatriz(es) na sobrancelha (cite quais abaixo)" },
+        { "key": "fumante", "label": "E fumante" },
+        { "key": "historicoAlergico", "label": "Tem historico alergico (cite qual abaixo)" },
+        { "key": "cicatrizacaoLenta", "label": "Tem cicatrizacao demorada/lenta" },
+        {
+          "key": "doencaDePele",
+          "label": "Tem alguma doenca de pele, como: Vitiligo, Rosacea, Alopecia, Psoriase, Dermatite (cite qual abaixo)"
+        },
+        {
+          "key": "outraDoenca",
+          "label": "Tem alguma outra doenca, como Cancer, HIV, Diabetes, Hepatite, Lupus, Hipertensao, Trombose, Epilepsia, Tumores, Herpes ou outras doencas"
+        },
+        {
+          "key": "disfuncaoTireoideMetabolismo",
+          "label": "Disfuncao na tireoide e/ou metabolismo lento"
+        }
+      ]
+    },
+    {
+      "id": "explicacao-informacoes",
+      "title": "Area destinada a explicacao das informacoes acima",
+      "fields": [
+        { "key": "explicacaoInformacoes", "label": "Explicacao", "type": "textarea", "rows": 4, "required": false }
+      ]
+    },
+    {
+      "id": "tipo-pele",
+      "title": "Qual e o seu tipo de pele?",
+      "fields": [
+        {
+          "key": "tipoPele",
+          "type": "radio",
+          "options": [
+            { "value": "seca", "label": "Seca" },
+            { "value": "normal", "label": "Normal" },
+            { "value": "mista", "label": "Mista" },
+            { "value": "oleosa", "label": "Oleosa" }
+          ],
+          "required": false
+        },
+        { "key": "observacaoTipoPele", "label": "Obs:", "type": "text", "required": false }
+      ]
+    },
+    {
+      "id": "micropigmentacao-anterior",
+      "title": "Ja fez micropigmentacao ou nanopigmentacao antes?",
+      "fields": [
+        {
+          "key": "jaFezMicropigmentacao",
+          "type": "radio",
+          "options": [
+            { "value": "sim", "label": "Sim" },
+            { "value": "nao", "label": "Nao" }
+          ],
+          "required": false
+        },
+        {
+          "key": "detalhesMicropigmentacao",
+          "label": "Se sim, ha quanto tempo? Fez remocao?",
+          "type": "text",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "outras-informacoes",
+      "title": "Outras informacoes antes do procedimento",
+      "fields": [
+        { "key": "outrasInformacoes", "label": "Outras informacoes", "type": "textarea", "rows": 3, "required": false }
+      ]
+    },
+    {
+      "id": "anotacoes-profissionais",
+      "title": "ANOTACOES PROFISSIONAIS (NAO PREENCHA)",
+      "fields": [
+        { "key": "marcaPigmento", "label": "Marca do pigmento:", "type": "text", "required": false },
+        { "key": "corPigmento", "label": "Cor (ou cores):", "type": "text", "required": false },
+        { "key": "marcaLamina", "label": "Marca da lamina:", "type": "text", "required": false },
+        { "key": "espessuraPontas", "label": "Espessura e pontas:", "type": "text", "required": false },
+        { "key": "tipoPelePosAvaliacao", "label": "Tipo de pele (pos avaliacao):", "type": "text", "required": false },
+        {
+          "key": "preferenciasIntercorrencias",
+          "label": "Preferencias, intercorrencias e obs:",
+          "type": "textarea",
+          "rows": 3,
+          "required": false
+        },
+        { "key": "valorAtual", "label": "Valor atual:", "type": "text", "required": false },
+        { "key": "formaPagamento", "label": "Forma de pagamento:", "type": "text", "required": false },
+        { "key": "dataRetoque", "label": "Data do retoque:", "type": "date", "required": false },
+        { "key": "alteracoes", "label": "Alteracoes:", "type": "text", "required": false },
+        {
+          "key": "observacoesProfissionais",
+          "label": "OBS:",
+          "type": "textarea",
+          "rows": 3,
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "termo-consentimento",
+      "title": "TERMO DE CONSENTIMENTO",
+      "fields": [
+        {
+          "key": "autorizacaoImagem",
+          "label": "Autorizacao de imagem",
+          "type": "radio",
+          "options": [
+            { "value": "SIM", "label": "SIM" },
+            { "value": "NAO", "label": "NAO" },
+            { "value": "SOMENTE_REGIAO", "label": "SOMENTE DA REGIAO" }
+          ],
+          "required": false
+        },
+        { "key": "dataTermo", "label": "Data do termo", "type": "date", "required": true },
+        { "key": "assinaturaCliente", "label": "Assinatura da Cliente", "type": "signature", "required": true },
+        {
+          "key": "assinaturaProfissional",
+          "label": "Assinatura da Profissional",
+          "type": "signature",
+          "required": false
+        }
+      ]
+    }
+  ]
+}

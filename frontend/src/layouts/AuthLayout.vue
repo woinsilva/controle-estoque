@@ -13,10 +13,9 @@
           <i class="pi pi-times" aria-hidden="true"></i>
         </button>
         <div class="brand" :class="{ compact: sidebarCollapsed && !isMobile }">
-          <span class="brand-mark">CE</span>
+          <span class="brand-mark">BT</span>
           <div v-if="!sidebarCollapsed || isMobile" class="brand-copy">
             <strong>{{ $t('common.appName') }}</strong>
-            <small>Operacao centralizada</small>
           </div>
         </div>
         <button
@@ -58,7 +57,7 @@
           <i class="pi pi-bars" aria-hidden="true"></i>
         </button>
         <div class="mobile-brand">
-          <span class="brand-mark small">CE</span>
+          <span class="brand-mark small">BT</span>
           <strong>{{ $t('common.appName') }}</strong>
         </div>
       </header>
@@ -350,7 +349,7 @@ export default toNative(AuthLayout);
   display: grid;
   grid-template-rows: auto 1fr auto;
   gap: 1rem;
-  background: rgba(247, 250, 246, 0.7);
+  background: var(--panel);
   backdrop-filter: blur(18px);
   border-right: 1px solid var(--border);
   z-index: 25;
@@ -381,7 +380,7 @@ export default toNative(AuthLayout);
   width: 46px;
   height: 46px;
   border-radius: 16px;
-  background: linear-gradient(135deg, var(--primary), #7cd7cd);
+  background: linear-gradient(135deg, var(--primary), var(--brand-gradient-end));
   color: var(--primary-ink);
   font-weight: 800;
   box-shadow: var(--shadow-soft);
@@ -449,18 +448,18 @@ export default toNative(AuthLayout);
 }
 
 .collapsed .nav-item.router-link-active {
-  box-shadow: 0 10px 22px rgba(15, 118, 110, 0.16);
+  box-shadow: 0 10px 22px rgba(var(--primary-rgb), 0.16);
 }
 
 .nav-item:hover {
-  background: rgba(255, 255, 255, 0.72);
+  background: var(--surface-hover);
   color: var(--ink);
 }
 
 .nav-item.router-link-active {
-  background: linear-gradient(135deg, var(--primary), #14a39a);
+  background: linear-gradient(135deg, var(--primary), var(--brand-gradient-strong-end));
   color: var(--primary-ink);
-  box-shadow: 0 18px 36px rgba(15, 118, 110, 0.18);
+  box-shadow: 0 18px 36px rgba(var(--primary-rgb), 0.18);
 }
 
 .nav-item i {
@@ -476,7 +475,7 @@ export default toNative(AuthLayout);
 .ghost-icon {
   border-radius: 14px;
   border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.82);
+  background: var(--surface-control);
   color: var(--ink);
 }
 
@@ -534,7 +533,7 @@ export default toNative(AuthLayout);
 .mobile-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(11, 18, 15, 0.38);
+  background: rgba(18, 12, 15, 0.44);
   backdrop-filter: blur(3px);
   z-index: 24;
 }

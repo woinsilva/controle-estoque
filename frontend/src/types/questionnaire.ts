@@ -8,6 +8,7 @@ export type QuestionnaireTemplate = {
   status: QuestionnaireTemplateStatus;
   hasResponses?: boolean;
   canEdit?: boolean;
+  canDelete?: boolean;
   schema: Record<string, unknown>;
   createdBy?: string;
   publishedAt?: string;

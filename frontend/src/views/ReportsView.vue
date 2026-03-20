@@ -570,10 +570,15 @@ export default toNative(ReportsView);
 }
 
 .field input {
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-strong);
   border-radius: 10px;
   padding: 0.55rem 0.7rem;
-  background: #fffdf9;
+  background: var(--surface-control);
+  color: var(--ink);
+}
+
+.field input[type='date']::-webkit-calendar-picker-indicator {
+  opacity: 0.78;
 }
 
 .hint {
@@ -632,7 +637,7 @@ export default toNative(ReportsView);
 .report-card {
   border: 1px solid var(--border);
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.82);
+  background: var(--panel-strong);
   padding: 0.95rem;
   display: grid;
   gap: 0.35rem;
@@ -680,9 +685,9 @@ thead th {
 
 .error {
   margin: 0;
-  color: #b42318;
-  background: #fff1ef;
-  border: 1px solid #ffd4ce;
+  color: var(--danger);
+  background: var(--danger-soft);
+  border: 1px solid rgba(185, 56, 47, 0.28);
   border-radius: 10px;
   padding: 0.75rem;
 }

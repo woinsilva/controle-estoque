@@ -62,6 +62,10 @@ export async function updateTemplateById(
   ).exec();
 }
 
+export async function deleteTemplateById(id: string) {
+  return QuestionnaireTemplate.findByIdAndDelete(id).exec();
+}
+
 export async function countResponsesByTemplateId(templateId: string) {
   return QuestionnaireResponse.countDocuments({ templateId }).exec();
 }

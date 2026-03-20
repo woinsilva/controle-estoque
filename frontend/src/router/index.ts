@@ -12,6 +12,7 @@ import ReportsView from '../views/ReportsView.vue';
 import ServicesView from '../views/ServicesView.vue';
 import SchedulesView from '../views/SchedulesView.vue';
 import ActivateAccountView from '../views/ActivateAccountView.vue';
+import QuestionnaireAnamneseNanoFiosPrintView from '../views/QuestionnaireAnamneseNanoFiosPrintView.vue';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -58,6 +59,12 @@ const router = createRouter({
       name: 'questionnaires',
       component: QuestionnairesView,
       meta: { layout: 'auth', requiresAuth: true, roles: ['MANAGER', 'ADMIN'] }
+    },
+    {
+      path: '/app/questionnaires/responses/:id/print',
+      name: 'questionnaire-anamnese-print',
+      component: QuestionnaireAnamneseNanoFiosPrintView,
+      meta: { layout: 'blank', requiresAuth: true, roles: ['MANAGER', 'ADMIN'] }
     },
     {
       path: '/app/appointments',

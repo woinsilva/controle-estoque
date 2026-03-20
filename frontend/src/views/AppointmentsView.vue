@@ -56,6 +56,7 @@
     <DataTable
       :value="appointments"
       dataKey="id"
+      :rowClass="appointmentRowClass"
       :paginator="true"
       :rows="rows"
       :first="first"
@@ -108,6 +109,7 @@
             type="button"
             class="icon-button"
             :title="$t('appointments.goQuestionnaire')"
+            :disabled="questionnaireByAppointment[data.id]"
             @click="goToQuestionnaire(data)"
           >
             <i class="pi pi-file-edit" aria-hidden="true"></i>
@@ -135,7 +137,12 @@
     </DataTable>
 
     <section class="mobile-list">
-      <article v-for="appointment in appointments" :key="appointment.id" class="mobile-card">
+      <article
+        v-for="appointment in appointments"
+        :key="appointment.id"
+        class="mobile-card"
+        :class="{ 'appointment-focus-card': appointment.id === focusedAppointmentId }"
+      >
         <div class="mobile-card-head">
           <div>
             <strong>{{ clientName(appointment.clientId) }}</strong>
@@ -171,6 +178,7 @@
             type="button"
             class="icon-button"
             :title="$t('appointments.goQuestionnaire')"
+            :disabled="questionnaireByAppointment[appointment.id]"
             @click="goToQuestionnaire(appointment)"
           >
             <i class="pi pi-file-edit" aria-hidden="true"></i>
@@ -320,41 +328,68 @@
       </form>
     </Dialog>
 
-    <Dialog v-model:visible="responseDialogOpen" modal :header="$t('appointments.responseTitle')" class="dialog">
+    <Dialog
+      v-model:visible="responseDialogOpen"
+      modal
+      :header="responseDialogHeader"
+      class="dialog"
+      :style="responseDialogStyle"
+    >
       <section v-if="selectedResponse && selectedAppointment" class="response-view">
-        <div class="response-meta">
-          <p><strong>{{ $t('appointments.fields.client') }}:</strong> {{ clientName(selectedAppointment.clientId) }}</p>
-          <p>
-            <strong>{{ $t('appointments.fields.scheduledAt') }}:</strong>
-            {{ formatDateTime(selectedAppointment.scheduledAt) }}
-          </p>
-          <p><strong>{{ $t('questionnaires.fields.template') }}:</strong> {{ selectedResponse.templateCode }}</p>
-          <p><strong>{{ $t('questionnaires.fields.version') }}:</strong> {{ selectedResponse.templateVersion }}</p>
-          <p><strong>{{ $t('questionnaires.fields.createdAt') }}:</strong> {{ formatDateTime(selectedResponse.createdAt) }}</p>
-        </div>
-
-        <div class="answers">
-          <h4>{{ $t('questionnaires.fields.answers') }}</h4>
-          <div v-if="answerEntries.length" class="answers-grid">
-            <div v-for="entry in answerEntries" :key="entry.key" class="answer-item">
-              <strong>{{ entry.label }}</strong>
-              <span>{{ formatAnswer(entry.value) }}</span>
-            </div>
+        <template v-if="isSelectedAnamneseResponse">
+          <div class="response-meta response-meta--compact">
+            <p><strong>{{ $t('appointments.fields.client') }}:</strong> {{ clientName(selectedAppointment.clientId) }}</p>
+            <p>
+              <strong>{{ $t('appointments.fields.scheduledAt') }}:</strong>
+              {{ formatDateTime(selectedAppointment.scheduledAt) }}
+            </p>
+            <p><strong>{{ $t('questionnaires.fields.createdAt') }}:</strong> {{ formatDateTime(selectedResponse.createdAt) }}</p>
           </div>
-          <p v-else>-</p>
-        </div>
 
-        <div v-if="selectedResponse.signature" class="signature-view">
-          <h4>{{ $t('questionnaires.signature.title') }}</h4>
-          <p><strong>{{ $t('questionnaires.signature.mode') }}:</strong> {{ signatureModeLabel(selectedResponse.signature.mode) }}</p>
-          <img
-            v-if="selectedResponse.signature.mode === 'DRAW'"
-            :src="selectedResponse.signature.value"
-            alt="Signature"
-            class="signature-image"
+          <QuestionnaireAnamneseNanoFios
+            v-if="selectedAnamneseAnswers"
+            :prefilled-data="selectedAnamneseAnswers"
+            :allow-professional-notes="true"
+            :read-only="true"
+            :show-actions="false"
           />
-          <p v-else><strong>{{ $t('questionnaires.signature.typedValue') }}:</strong> {{ selectedResponse.signature.value || '-' }}</p>
-        </div>
+        </template>
+
+        <template v-else>
+          <div class="response-meta">
+            <p><strong>{{ $t('appointments.fields.client') }}:</strong> {{ clientName(selectedAppointment.clientId) }}</p>
+            <p>
+              <strong>{{ $t('appointments.fields.scheduledAt') }}:</strong>
+              {{ formatDateTime(selectedAppointment.scheduledAt) }}
+            </p>
+            <p><strong>{{ $t('questionnaires.fields.template') }}:</strong> {{ selectedResponse.templateCode }}</p>
+            <p><strong>{{ $t('questionnaires.fields.version') }}:</strong> {{ selectedResponse.templateVersion }}</p>
+            <p><strong>{{ $t('questionnaires.fields.createdAt') }}:</strong> {{ formatDateTime(selectedResponse.createdAt) }}</p>
+          </div>
+
+          <div class="answers">
+            <h4>{{ $t('questionnaires.fields.answers') }}</h4>
+            <div v-if="answerEntries.length" class="answers-grid">
+              <div v-for="entry in answerEntries" :key="entry.key" class="answer-item">
+                <strong>{{ entry.label }}</strong>
+                <span>{{ formatAnswer(entry.value) }}</span>
+              </div>
+            </div>
+            <p v-else>-</p>
+          </div>
+
+          <div v-if="selectedResponse.signature" class="signature-view">
+            <h4>{{ $t('questionnaires.signature.title') }}</h4>
+            <p><strong>{{ $t('questionnaires.signature.mode') }}:</strong> {{ signatureModeLabel(selectedResponse.signature.mode) }}</p>
+            <img
+              v-if="selectedResponse.signature.mode === 'DRAW'"
+              :src="selectedResponse.signature.value"
+              alt="Signature"
+              class="signature-image"
+            />
+            <p v-else><strong>{{ $t('questionnaires.signature.typedValue') }}:</strong> {{ selectedResponse.signature.value || '-' }}</p>
+          </div>
+        </template>
 
         <div class="dialog-actions">
           <button type="button" class="primary" @click="generatePdfFromResponse">
@@ -396,8 +431,11 @@ import type { QuestionnaireResponse } from '../types/questionnaire';
 import type { Service } from '../types/service';
 import type { User } from '../types/user';
 import ErrorCard from '../components/ErrorCard.vue';
+import QuestionnaireAnamneseNanoFios from '../components/QuestionnaireAnamneseNanoFios.vue';
 
-@Component({ components: { DataTable, Column, Dialog, MultiSelect, ErrorCard, AppSelect } })
+@Component({
+  components: { DataTable, Column, Dialog, MultiSelect, ErrorCard, AppSelect, QuestionnaireAnamneseNanoFios }
+})
 class AppointmentsView extends Vue {
   authStore = useAuthStore();
   confirm = useConfirm();
@@ -419,6 +457,7 @@ class AppointmentsView extends Vue {
   filterStatus: '' | AppointmentStatus = '';
   dateFrom = '';
   dateTo = '';
+  focusedAppointmentId = '';
   form: AppointmentInput = {
     clientId: '',
     professionalId: '',
@@ -445,7 +484,7 @@ class AppointmentsView extends Vue {
   }
 
   get canDelete() {
-    return ['MANAGER', 'ADMIN'].includes(this.authStore.role || '');
+    return this.authStore.role === 'ADMIN';
   }
 
   get isClientRole() {
@@ -591,6 +630,7 @@ class AppointmentsView extends Vue {
         this.professionals = professionals;
         this.services = services;
       }
+      this.applyRouteFilters();
       await this.loadAppointments();
     } catch (err) {
       this.error = this.extractErrorMessage(err) || this.$t('appointments.error');
@@ -635,6 +675,27 @@ class AppointmentsView extends Vue {
   onPage(event: { page: number; rows: number }) {
     this.rows = event.rows;
     this.loadAppointments(event.page + 1);
+  }
+
+  applyRouteFilters() {
+    const query = this.$route.query;
+    this.focusedAppointmentId = String(query.appointmentId || '').trim();
+    this.filterClientId = this.authStore.role === 'CLIENT' ? this.authStore.clientId || '' : String(query.clientId || '').trim();
+    this.filterProfessionalId = this.isOperatorRole ? this.authStore.userId || '' : String(query.professionalId || '').trim();
+
+    const routeStatus = String(query.status || '').trim();
+    this.filterStatus = ['SCHEDULED', 'IN_PROGRESS', 'COMPLETED', 'CANCELED'].includes(routeStatus)
+      ? (routeStatus as AppointmentStatus)
+      : '';
+
+    this.dateFrom = this.normalizeInputDate(String(query.dateFrom || '').trim());
+    this.dateTo = this.normalizeInputDate(String(query.dateTo || '').trim());
+    this.page = 1;
+  }
+
+  normalizeInputDate(value: string) {
+    if (!value) return '';
+    return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : '';
   }
 
   openNew() {
@@ -800,9 +861,14 @@ class AppointmentsView extends Vue {
   }
 
   goToQuestionnaire(appointment: Appointment) {
+    if (this.questionnaireByAppointment[appointment.id]) {
+      return;
+    }
+
     void this.$router.push({
       path: '/app/questionnaires',
       query: {
+        mode: 'anamnese',
         clientId: appointment.clientId,
         appointmentId: appointment.id
       }
@@ -858,6 +924,10 @@ class AppointmentsView extends Vue {
     return this.questionnaireByAppointment[appointment.id] ? 'badge done' : 'badge pending';
   }
 
+  appointmentRowClass(appointment: Appointment) {
+    return appointment.id === this.focusedAppointmentId ? 'appointment-row-focus' : '';
+  }
+
   get answerEntries() {
     if (!this.selectedResponse) return [];
     return Object.entries(this.selectedResponse.answers || {}).map(([key, value]) => ({
@@ -865,6 +935,23 @@ class AppointmentsView extends Vue {
       label: this.answerLabel(key),
       value
     }));
+  }
+
+  get isSelectedAnamneseResponse() {
+    return this.selectedResponse?.templateCode === 'ANAMNESE-NANO-FIOS';
+  }
+
+  get selectedAnamneseAnswers() {
+    if (!this.isSelectedAnamneseResponse) return null;
+    return (this.selectedResponse?.answers || {}) as Record<string, unknown>;
+  }
+
+  get responseDialogHeader() {
+    return this.isSelectedAnamneseResponse ? 'Visualizar Anamnese Nano Fios' : this.$t('appointments.responseTitle');
+  }
+
+  get responseDialogStyle() {
+    return this.isSelectedAnamneseResponse ? { width: 'min(96vw, 1120px)' } : undefined;
   }
 
   openResponseDialog(appointment: Appointment) {
@@ -929,6 +1016,16 @@ class AppointmentsView extends Vue {
 
   generatePdfFromResponse() {
     if (!this.selectedResponse || !this.selectedAppointment) return;
+    if (this.selectedResponse.templateCode === 'ANAMNESE-NANO-FIOS') {
+      const route = this.$router.resolve({
+        name: 'questionnaire-anamnese-print',
+        params: { id: this.selectedResponse._id },
+        query: { autoPrint: '1' }
+      });
+      window.open(route.href, '_blank', 'noopener,noreferrer');
+      return;
+    }
+
     const client = this.clientName(this.selectedAppointment.clientId);
     const answersRows = this.answerEntries
       .map(
@@ -1117,6 +1214,10 @@ export default toNative(AppointmentsView);
   background: var(--panel);
 }
 
+.table :deep(.appointment-row-focus > td) {
+  background: rgba(var(--primary-rgb), 0.08) !important;
+}
+
 .mobile-list {
   display: none;
 }
@@ -1128,6 +1229,11 @@ export default toNative(AppointmentsView);
   padding: 1rem;
   display: grid;
   gap: 0.9rem;
+}
+
+.appointment-focus-card {
+  border-color: rgba(var(--primary-rgb), 0.55);
+  box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.12);
 }
 
 .mobile-card-head,
@@ -1425,6 +1531,11 @@ export default toNative(AppointmentsView);
 .response-meta {
   display: grid;
   gap: 0.25rem;
+}
+
+.response-meta--compact {
+  width: min(100%, 210mm);
+  margin: 0 auto;
 }
 
 .answers-grid {
