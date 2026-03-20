@@ -13,10 +13,9 @@
           <i class="pi pi-times" aria-hidden="true"></i>
         </button>
         <div class="brand" :class="{ compact: sidebarCollapsed && !isMobile }">
-          <span class="brand-mark">CE</span>
+          <span class="brand-mark">BT</span>
           <div v-if="!sidebarCollapsed || isMobile" class="brand-copy">
             <strong>{{ $t('common.appName') }}</strong>
-            <small>Operacao centralizada</small>
           </div>
         </div>
         <button
@@ -58,7 +57,7 @@
           <i class="pi pi-bars" aria-hidden="true"></i>
         </button>
         <div class="mobile-brand">
-          <span class="brand-mark small">CE</span>
+          <span class="brand-mark small">BT</span>
           <strong>{{ $t('common.appName') }}</strong>
         </div>
       </header>

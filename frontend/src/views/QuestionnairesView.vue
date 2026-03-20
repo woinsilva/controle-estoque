@@ -7,7 +7,7 @@
       </div>
     </header>
 
-    <section class="panel">
+    <section v-if="showTemplateManagement" class="panel">
       <div class="panel-head">
         <h3>{{ $t('questionnaires.templatesTitle') }}</h3>
         <button v-if="canManageTemplates" type="button" class="primary" @click="openTemplateDialog()">
@@ -62,9 +62,14 @@
     <section class="panel">
       <div class="panel-head">
         <h3>{{ $t('questionnaires.responsesTitle') }}</h3>
-        <button type="button" class="primary" @click="openResponseDialog">
-          {{ $t('questionnaires.newResponse') }}
-        </button>
+        <div class="panel-actions">
+          <button v-if="showGenericResponseFlow" type="button" class="primary" @click="openResponseDialog">
+            {{ $t('questionnaires.newResponse') }}
+          </button>
+          <button type="button" class="primary" @click="openAnamneseDialog()">
+            Nova Anamnese Nano Fios
+          </button>
+        </div>
       </div>
 
       <div class="filters">
@@ -78,15 +83,50 @@
             @change="loadResponses"
           />
         </label>
+        <label class="field">
+          <span>{{ $t('appointments.fields.dateFrom') }}</span>
+          <input v-model="responseDateFrom" type="date" />
+        </label>
+        <label class="field">
+          <span>{{ $t('appointments.fields.dateTo') }}</span>
+          <input v-model="responseDateTo" type="date" />
+        </label>
       </div>
 
-      <DataTable :value="responses" dataKey="_id" responsiveLayout="scroll" class="table">
+      <DataTable :value="filteredResponses" dataKey="_id" responsiveLayout="scroll" class="table">
         <Column field="templateCode" :header="$t('questionnaires.fields.template')" />
         <Column field="templateVersion" :header="$t('questionnaires.fields.version')" />
-        <Column field="appointmentId" :header="$t('questionnaires.fields.appointment')" />
+        <Column :header="$t('questionnaires.fields.appointment')">
+          <template #body="{ data }">
+            <div class="appointment-cell">
+              <strong>{{ responseAppointmentLabel(data) }}</strong>
+              <button
+                v-if="responseAppointment(data)"
+                type="button"
+                class="appointment-link"
+                @click="goToAppointment(data)"
+              >
+                Abrir em atendimentos
+              </button>
+            </div>
+          </template>
+        </Column>
         <Column field="createdAt" :header="$t('questionnaires.fields.createdAt')">
           <template #body="{ data }">
             {{ formatDate(data.createdAt) }}
+          </template>
+        </Column>
+        <Column :header="$t('appointments.generatePdf')">
+          <template #body="{ data }">
+            <button
+              type="button"
+              class="icon-button"
+              :title="$t('appointments.generatePdf')"
+              :disabled="!canOpenResponsePdf(data)"
+              @click="openResponsePdf(data)"
+            >
+              <i class="pi pi-file-pdf" aria-hidden="true"></i>
+            </button>
           </template>
         </Column>
       </DataTable>
@@ -305,6 +345,77 @@
       </form>
     </Dialog>
 
+    <Dialog
+      v-model:visible="anamneseDialogOpen"
+      modal
+      header="Nova Anamnese Nano Fios"
+      class="dialog"
+      :style="{ width: 'min(96vw, 1080px)' }"
+      @hide="closeAnamneseDialog"
+    >
+      <section class="form">
+        <div v-if="!anamneseRoutePrefill" class="dynamic-grid">
+          <label class="field">
+            <span>{{ $t('questionnaires.fields.client') }}</span>
+            <AppSelect
+              v-model="anamneseForm.clientId"
+              :options="clientOptions"
+              :placeholder="$t('questionnaires.selectClient')"
+              :disabled="Boolean(prefilledClientId)"
+              @change="onAnamneseClientChange"
+            />
+          </label>
+          <label class="field">
+            <span>{{ $t('questionnaires.fields.appointment') }}</span>
+            <AppSelect
+              v-model="anamneseForm.appointmentId"
+              :options="anamneseAppointmentOptions"
+              :placeholder="$t('questionnaires.selectAppointment')"
+              :optionDisabled="'disabled'"
+              :disabled="Boolean(prefilledAppointmentId)"
+            />
+          </label>
+        </div>
+        <div v-else class="prefill-summary">
+          <article class="prefill-card">
+            <span>{{ $t('questionnaires.fields.client') }}</span>
+            <strong>{{ selectedAnamneseClient?.fullName || '-' }}</strong>
+          </article>
+          <article class="prefill-card">
+            <span>{{ $t('questionnaires.fields.appointment') }}</span>
+            <strong>{{ selectedAnamneseAppointment ? formatDate(selectedAnamneseAppointment.scheduledAt) : '-' }}</strong>
+          </article>
+        </div>
+
+        <small v-if="!publishedAnamneseTemplate" class="field-hint">
+          O template publicado da anamnese nano fios nao foi encontrado.
+        </small>
+        <small
+          v-else-if="anamneseForm.clientId && !anamneseAppointments.length"
+          class="field-hint"
+        >
+          Nenhum atendimento disponivel foi encontrado para esse cliente.
+        </small>
+        <small
+          v-else-if="!anamneseForm.clientId || !anamneseForm.appointmentId"
+          class="field-hint"
+        >
+          Selecione cliente e atendimento para preencher a anamnese.
+        </small>
+
+        <QuestionnaireAnamneseNanoFios
+          v-if="publishedAnamneseTemplate && anamneseForm.clientId && anamneseForm.appointmentId"
+          :key="`${anamneseForm.clientId}-${anamneseForm.appointmentId}`"
+          :client-id="anamneseForm.clientId"
+          :appointment-id="anamneseForm.appointmentId"
+          :template-id="publishedAnamneseTemplate._id"
+          :prefilled-data="anamnesePrefilledData"
+          @submit="submitAnamnese"
+          @close="closeAnamneseDialog"
+        />
+      </section>
+    </Dialog>
+
     <ErrorCard :message="error" />
   </section>
 </template>
@@ -323,6 +434,7 @@ import type { ClientListResponse } from '../types/client';
 import type { QuestionnaireResponse, QuestionnaireTemplate } from '../types/questionnaire';
 import ErrorCard from '../components/ErrorCard.vue';
 import SignaturePad from '../components/SignaturePad.vue';
+import QuestionnaireAnamneseNanoFios from '../components/QuestionnaireAnamneseNanoFios.vue';
 
 type DynamicFieldType = 'text' | 'textarea' | 'number' | 'date' | 'boolean' | 'select';
 
@@ -334,24 +446,54 @@ type DynamicField = {
   options?: string[];
 };
 
-@Component({ components: { DataTable, Column, Dialog, ErrorCard, SignaturePad, AppSelect } })
+type AnamneseSignatureField = {
+  mode: 'DRAW' | 'TYPE';
+  typedValue?: string;
+  drawnValue?: string;
+};
+
+type AnamneseAnswers = Record<string, unknown> & {
+  nomeCompleto?: string;
+  telefone?: string;
+  dataDeNascimento?: string;
+  assinaturaCliente?: AnamneseSignatureField;
+};
+
+function toInputDate(value = new Date()) {
+  const year = value.getFullYear();
+  const month = String(value.getMonth() + 1).padStart(2, '0');
+  const day = String(value.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+@Component({
+  components: { DataTable, Column, Dialog, ErrorCard, SignaturePad, AppSelect, QuestionnaireAnamneseNanoFios }
+})
 class QuestionnairesView extends Vue {
   authStore = useAuthStore();
   confirm = useConfirm();
+  showTemplateManagement = false;
+  showGenericResponseFlow = false;
   templates: QuestionnaireTemplate[] = [];
   responses: QuestionnaireResponse[] = [];
   clientResponsesMap: Record<string, QuestionnaireResponse[]> = {};
+  appointmentsById: Record<string, Appointment> = {};
   responseAppointments: Appointment[] = [];
   clients: ClientListResponse['items'] = [];
   selectedClientId = '';
+  responseDateFrom = toInputDate();
+  responseDateTo = toInputDate();
   loading = false;
   error = '';
   templateDialogOpen = false;
   responseDialogOpen = false;
+  anamneseDialogOpen = false;
+  anamneseRoutePrefill = false;
   prefilledClientId = '';
   prefilledAppointmentId = '';
   dynamicFields: DynamicField[] = [];
   dynamicAnswers: Record<string, unknown> = {};
+  anamneseAppointments: Appointment[] = [];
   signatureMode: 'DRAW' | 'TYPE' = 'DRAW';
   signatureDrawData = '';
   signatureText = '';
@@ -380,6 +522,10 @@ class QuestionnairesView extends Vue {
     appointmentId: '',
     answersText: '{\n  "observacoes": ""\n}'
   };
+  anamneseForm = {
+    clientId: '',
+    appointmentId: ''
+  };
 
   mounted() {
     void this.loadInitialData();
@@ -391,6 +537,22 @@ class QuestionnairesView extends Vue {
 
   get publishedTemplates() {
     return this.templates.filter((item) => item.status === 'PUBLISHED');
+  }
+
+  get publishedAnamneseTemplate() {
+    return this.templates.find((item) => item.code === 'ANAMNESE-NANO-FIOS' && item.status === 'PUBLISHED');
+  }
+
+  get filteredResponses() {
+    const from = this.responseDateFrom ? new Date(`${this.responseDateFrom}T00:00:00`) : null;
+    const to = this.responseDateTo ? new Date(`${this.responseDateTo}T23:59:59.999`) : null;
+
+    return this.responses.filter((response) => {
+      const createdAt = new Date(response.createdAt);
+      if (from && createdAt < from) return false;
+      if (to && createdAt > to) return false;
+      return true;
+    });
   }
 
   get selectedTemplate() {
@@ -425,6 +587,35 @@ class QuestionnairesView extends Vue {
       value: appointment.id,
       disabled: this.isAppointmentAnswered(appointment.id)
     }));
+  }
+
+  get anamneseAppointmentOptions() {
+    return this.anamneseAppointments.map((appointment) => ({
+      label: this.formatAppointmentOption(appointment, this.anamneseForm.clientId),
+      value: appointment.id,
+      disabled: this.isAppointmentAnsweredForClient(appointment.id, this.anamneseForm.clientId)
+    }));
+  }
+
+  get anamnesePrefilledData(): Partial<AnamneseAnswers> {
+    const client = this.clients.find((item) => item.id === this.anamneseForm.clientId);
+    if (!client) {
+      return {};
+    }
+
+    return {
+      nomeCompleto: client.fullName,
+      telefone: client.phone,
+      dataDeNascimento: client.birthDate ? client.birthDate.slice(0, 10) : ''
+    };
+  }
+
+  get selectedAnamneseClient() {
+    return this.clients.find((item) => item.id === this.anamneseForm.clientId);
+  }
+
+  get selectedAnamneseAppointment() {
+    return this.anamneseAppointments.find((item) => item.id === this.anamneseForm.appointmentId);
   }
 
   get signatureModeOptions() {
@@ -469,6 +660,9 @@ class QuestionnairesView extends Vue {
       );
       this.responses = list;
       this.clientResponsesMap[this.selectedClientId] = list;
+      const appointments = await this.fetchAppointmentsForClient(this.selectedClientId);
+      this.storeAppointments(appointments);
+      await this.loadMissingAppointments(list);
     } catch (err) {
       this.error = this.extractErrorMessage(err) || this.$t('questionnaires.error');
     } finally {
@@ -666,12 +860,76 @@ class QuestionnairesView extends Vue {
     this.responseDialogOpen = true;
   }
 
+  async openAnamneseDialog(fromRoute = false) {
+    if (!this.publishedAnamneseTemplate) {
+      this.error = 'Template publicado da anamnese nano fios nao encontrado.';
+      return;
+    }
+
+    this.error = '';
+    this.anamneseRoutePrefill = fromRoute && Boolean(this.prefilledClientId && this.prefilledAppointmentId);
+    this.anamneseForm = {
+      clientId: this.prefilledClientId || this.selectedClientId || '',
+      appointmentId: this.prefilledAppointmentId || ''
+    };
+    this.anamneseAppointments = [];
+
+    if (this.anamneseForm.clientId) {
+      await this.loadAnamneseAppointments(this.anamneseForm.clientId);
+    }
+
+    this.anamneseDialogOpen = true;
+  }
+
+  closeAnamneseDialog() {
+    this.anamneseDialogOpen = false;
+    this.anamneseAppointments = [];
+    const shouldClearRoutePrefill = this.anamneseRoutePrefill;
+    this.anamneseRoutePrefill = false;
+    this.anamneseForm = {
+      clientId: '',
+      appointmentId: ''
+    };
+    if (shouldClearRoutePrefill) {
+      void this.clearQuestionnaireRoutePrefill();
+    }
+  }
+
+  async onAnamneseClientChange() {
+    if (this.prefilledAppointmentId) {
+      return;
+    }
+
+    this.anamneseForm.appointmentId = '';
+    await this.loadAnamneseAppointments(this.anamneseForm.clientId);
+  }
+
   async onResponseClientChange() {
     if (this.prefilledAppointmentId) {
       return;
     }
     this.responseForm.appointmentId = '';
     await this.loadResponseAppointments(this.responseForm.clientId);
+  }
+
+  async fetchAppointmentsForClient(clientId: string) {
+    const normalized = clientId.trim();
+    if (!normalized) {
+      return [];
+    }
+
+    const query = `/appointments?page=1&limit=100&sortBy=scheduledAt&sortOrder=desc&clientId=${encodeURIComponent(normalized)}`;
+    const result = await apiGet<AppointmentListResponse>(query, this.authStore.token);
+
+    if (!this.clientResponsesMap[normalized]) {
+      const responses = await apiGet<QuestionnaireResponse[]>(
+        `/questionnaires/responses/client/${normalized}`,
+        this.authStore.token
+      );
+      this.clientResponsesMap[normalized] = responses;
+    }
+
+    return result.items;
   }
 
   async loadResponseAppointments(clientId: string) {
@@ -681,18 +939,26 @@ class QuestionnairesView extends Vue {
       return;
     }
     try {
-      const query = `/appointments?page=1&limit=100&sortBy=scheduledAt&sortOrder=desc&clientId=${encodeURIComponent(normalized)}`;
-      const result = await apiGet<AppointmentListResponse>(query, this.authStore.token);
-      this.responseAppointments = result.items;
-      if (!this.clientResponsesMap[normalized]) {
-        const responses = await apiGet<QuestionnaireResponse[]>(
-          `/questionnaires/responses/client/${normalized}`,
-          this.authStore.token
-        );
-        this.clientResponsesMap[normalized] = responses;
-      }
+      this.responseAppointments = await this.fetchAppointmentsForClient(normalized);
+      this.storeAppointments(this.responseAppointments);
     } catch (err) {
       this.responseAppointments = [];
+      this.error = this.extractErrorMessage(err) || this.$t('questionnaires.error');
+    }
+  }
+
+  async loadAnamneseAppointments(clientId: string) {
+    const normalized = clientId.trim();
+    if (!normalized) {
+      this.anamneseAppointments = [];
+      return;
+    }
+
+    try {
+      this.anamneseAppointments = await this.fetchAppointmentsForClient(normalized);
+      this.storeAppointments(this.anamneseAppointments);
+    } catch (err) {
+      this.anamneseAppointments = [];
       this.error = this.extractErrorMessage(err) || this.$t('questionnaires.error');
     }
   }
@@ -700,6 +966,7 @@ class QuestionnairesView extends Vue {
   async applyRoutePrefill() {
     const routeClientId = String(this.$route.query.clientId || '').trim();
     const routeAppointmentId = String(this.$route.query.appointmentId || '').trim();
+    const routeMode = String(this.$route.query.mode || '').trim();
     this.prefilledClientId = routeClientId;
     this.prefilledAppointmentId = routeAppointmentId;
 
@@ -712,7 +979,27 @@ class QuestionnairesView extends Vue {
       await this.loadResponses();
     }
 
-    await this.openResponseDialog();
+    if (routeMode === 'anamnese') {
+      await this.openAnamneseDialog(true);
+      return;
+    }
+
+    if (this.showGenericResponseFlow) {
+      await this.openResponseDialog();
+    }
+  }
+
+  async clearQuestionnaireRoutePrefill() {
+    const query = { ...this.$route.query };
+    delete query.clientId;
+    delete query.appointmentId;
+    delete query.mode;
+    this.prefilledClientId = '';
+    this.prefilledAppointmentId = '';
+    await this.$router.replace({
+      path: this.$route.path,
+      query
+    });
   }
 
   onTemplateChange() {
@@ -946,26 +1233,165 @@ class QuestionnairesView extends Vue {
     }
   }
 
+  async submitAnamnese(answers: AnamneseAnswers) {
+    const template = this.publishedAnamneseTemplate;
+    if (!template) {
+      this.error = 'Template publicado da anamnese nano fios nao encontrado.';
+      return;
+    }
+
+    if (!this.anamneseForm.clientId || !this.anamneseForm.appointmentId) {
+      this.error = 'Selecione cliente e atendimento para salvar a anamnese.';
+      return;
+    }
+
+    this.loading = true;
+    this.error = '';
+    try {
+      const selectedClient = this.clients.find((item) => item.id === this.anamneseForm.clientId);
+      const signatureField = answers.assinaturaCliente;
+      const signatureValue =
+        signatureField?.mode === 'DRAW'
+          ? String(signatureField.drawnValue || '').trim()
+          : String(signatureField?.typedValue || '').trim();
+
+      const signature =
+        signatureField && signatureValue
+          ? {
+              mode: signatureField.mode,
+              value: signatureValue,
+              signedAt: new Date().toISOString(),
+              signedBy: String(answers.nomeCompleto || selectedClient?.fullName || 'Cliente')
+            }
+          : undefined;
+
+      await apiPost(
+        '/questionnaires/responses',
+        {
+          clientId: this.anamneseForm.clientId,
+          appointmentId: this.anamneseForm.appointmentId.trim(),
+          templateId: template._id,
+          answers,
+          signature
+        },
+        this.authStore.token
+      );
+
+      const savedClientId = this.anamneseForm.clientId;
+      this.selectedClientId = savedClientId;
+      this.closeAnamneseDialog();
+      await this.loadResponses();
+    } catch (err) {
+      this.error = this.extractErrorMessage(err) || this.$t('questionnaires.error');
+    } finally {
+      this.loading = false;
+    }
+  }
+
   formatTemplateOption(template: QuestionnaireTemplate) {
     const base = `${template.code} v${template.version} - ${template.name}`;
     if (template.status === 'PUBLISHED') return base;
     return `${base} (${this.$t('questionnaires.statusDraft')})`;
   }
 
-  formatAppointmentOption(appointment: Appointment) {
+  formatAppointmentOption(appointment: Appointment, clientId = this.responseForm.clientId) {
     const date = this.formatDate(appointment.scheduledAt);
     const status = this.$t(`appointments.statuses.${appointment.status}`);
-    if (this.isAppointmentAnswered(appointment.id)) {
+    if (this.isAppointmentAnsweredForClient(appointment.id, clientId)) {
       return `${date} - ${status} (${this.$t('questionnaires.appointmentAlreadyAnswered')})`;
     }
     return `${date} - ${status}`;
   }
 
-  isAppointmentAnswered(appointmentId: string) {
-    const clientId = this.responseForm.clientId;
+  isAppointmentAnsweredForClient(appointmentId: string, clientId: string) {
     if (!clientId) return false;
     const responses = this.clientResponsesMap[clientId] || [];
     return responses.some((item) => item.appointmentId === appointmentId);
+  }
+
+  isAppointmentAnswered(appointmentId: string) {
+    return this.isAppointmentAnsweredForClient(appointmentId, this.responseForm.clientId);
+  }
+
+  storeAppointments(appointments: Appointment[]) {
+    for (const appointment of appointments) {
+      this.appointmentsById[appointment.id] = appointment;
+    }
+  }
+
+  async loadMissingAppointments(responses: QuestionnaireResponse[]) {
+    const missingIds = Array.from(
+      new Set(
+        responses
+          .map((response) => response.appointmentId.trim())
+          .filter((appointmentId) => appointmentId && !this.appointmentsById[appointmentId])
+      )
+    );
+
+    if (!missingIds.length) {
+      return;
+    }
+
+    const appointments = await Promise.all(
+      missingIds.map(async (appointmentId) => {
+        try {
+          return await apiGet<Appointment>(`/appointments/${appointmentId}`, this.authStore.token);
+        } catch {
+          return null;
+        }
+      })
+    );
+
+    this.storeAppointments(appointments.filter((appointment): appointment is Appointment => Boolean(appointment)));
+  }
+
+  responseAppointment(response: QuestionnaireResponse) {
+    return this.appointmentsById[response.appointmentId] || null;
+  }
+
+  responseAppointmentLabel(response: QuestionnaireResponse) {
+    const appointment = this.responseAppointment(response);
+    if (!appointment) {
+      return response.appointmentId || '-';
+    }
+
+    return this.formatDate(appointment.scheduledAt);
+  }
+
+  goToAppointment(response: QuestionnaireResponse) {
+    const appointment = this.responseAppointment(response);
+    if (!appointment) {
+      return;
+    }
+
+    const appointmentDate = appointment.scheduledAt.slice(0, 10);
+    void this.$router.push({
+      path: '/app/appointments',
+      query: {
+        appointmentId: appointment.id,
+        clientId: appointment.clientId,
+        professionalId: appointment.professionalId,
+        dateFrom: appointmentDate,
+        dateTo: appointmentDate
+      }
+    });
+  }
+
+  canOpenResponsePdf(response: QuestionnaireResponse) {
+    return response.templateCode === 'ANAMNESE-NANO-FIOS';
+  }
+
+  openResponsePdf(response: QuestionnaireResponse) {
+    if (!this.canOpenResponsePdf(response)) {
+      return;
+    }
+
+    const route = this.$router.resolve({
+      name: 'questionnaire-anamnese-print',
+      params: { id: response._id },
+      query: { autoPrint: '1' }
+    });
+    window.open(route.href, '_blank', 'noopener,noreferrer');
   }
 
   formatDate(value?: string) {
@@ -1022,7 +1448,7 @@ export default toNative(QuestionnairesView);
 .filters {
   display: grid;
   gap: 1rem;
-  grid-template-columns: minmax(220px, 360px);
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
 .table {
@@ -1155,6 +1581,49 @@ export default toNative(QuestionnairesView);
   background: #fffdf9;
 }
 
+.prefill-summary {
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.prefill-card {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #fffdf9;
+}
+
+.prefill-card span {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.appointment-cell {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.appointment-link {
+  width: fit-content;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--primary);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.prefill-card strong {
+  font-size: 0.95rem;
+}
+
 .signature {
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -1221,10 +1690,3 @@ export default toNative(QuestionnairesView);
   }
 }
 </style>
-
-
-
-
-
-
-

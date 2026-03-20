@@ -5,7 +5,7 @@ export type SupportedLocale = 'pt' | 'en' | 'es';
 const messages = {
   pt: {
     common: {
-      appName: 'Controle de Estoque',
+      appName: 'By Talissa',
       login: 'Entrar',
       dashboard: 'Dashboard',
       products: 'Produtos',
@@ -352,7 +352,7 @@ const messages = {
   },
   en: {
     common: {
-      appName: 'Inventory Control',
+      appName: 'By Talissa',
       login: 'Sign in',
       dashboard: 'Dashboard',
       products: 'Products',
@@ -699,7 +699,7 @@ const messages = {
   },
   es: {
     common: {
-      appName: 'Control de Inventario',
+      appName: 'By Talissa',
       login: 'Iniciar sesion',
       dashboard: 'Panel',
       products: 'Productos',
@@ -1063,4 +1063,3 @@ export const i18n = createI18n({
   globalInjection: true,
   messages
 });
-

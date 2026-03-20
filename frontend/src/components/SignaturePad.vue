@@ -8,7 +8,6 @@
       @mousedown="startDraw"
       @mousemove="draw"
       @mouseup="endDraw"
-      @mouseleave="endDraw"
       @touchstart.prevent="startDraw"
       @touchmove.prevent="draw"
       @touchend.prevent="endDraw"
@@ -29,6 +28,9 @@ class SignaturePad extends Vue {
 
   private drawing = false;
   private ctx: CanvasRenderingContext2D | null = null;
+  private readonly handleGlobalDrawEnd = () => {
+    this.endDraw();
+  };
 
   mounted() {
     const canvas = this.getCanvas();
@@ -37,10 +39,20 @@ class SignaturePad extends Vue {
     if (!this.ctx) return;
     this.ctx.lineWidth = 2.2;
     this.ctx.lineCap = 'round';
-    this.ctx.strokeStyle = '#0f766e';
+    this.ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#b58a90';
     if (this.modelValue) {
       this.loadFromDataUrl(this.modelValue);
     }
+
+    window.addEventListener('mouseup', this.handleGlobalDrawEnd);
+    window.addEventListener('touchend', this.handleGlobalDrawEnd);
+    window.addEventListener('touchcancel', this.handleGlobalDrawEnd);
+  }
+
+  beforeUnmount() {
+    window.removeEventListener('mouseup', this.handleGlobalDrawEnd);
+    window.removeEventListener('touchend', this.handleGlobalDrawEnd);
+    window.removeEventListener('touchcancel', this.handleGlobalDrawEnd);
   }
 
   getCanvas() {
@@ -49,12 +61,26 @@ class SignaturePad extends Vue {
 
   getPoint(event: MouseEvent | TouchEvent, canvas: HTMLCanvasElement) {
     const rect = canvas.getBoundingClientRect();
+    const scaleX = rect.width > 0 ? canvas.width / rect.width : 1;
+    const scaleY = rect.height > 0 ? canvas.height / rect.height : 1;
+
+    let clientX = 0;
+    let clientY = 0;
+
     if ('touches' in event && event.touches.length > 0) {
       const touch = event.touches[0]!;
-      return { x: touch.clientX - rect.left, y: touch.clientY - rect.top };
+      clientX = touch.clientX;
+      clientY = touch.clientY;
+    } else {
+      const mouse = event as MouseEvent;
+      clientX = mouse.clientX;
+      clientY = mouse.clientY;
     }
-    const mouse = event as MouseEvent;
-    return { x: mouse.clientX - rect.left, y: mouse.clientY - rect.top };
+
+    return {
+      x: (clientX - rect.left) * scaleX,
+      y: (clientY - rect.top) * scaleY
+    };
   }
 
   startDraw(event: MouseEvent | TouchEvent) {
@@ -111,7 +137,9 @@ export default toNative(SignaturePad);
 }
 
 .canvas {
+  display: block;
   width: 100%;
+  box-sizing: border-box;
   border-radius: 12px;
   border: 1px dashed var(--border);
   background: #fff;

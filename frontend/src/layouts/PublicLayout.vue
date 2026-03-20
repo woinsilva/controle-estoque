@@ -3,7 +3,7 @@
     <aside class="public-hero">
       <div class="hero-stack">
         <div class="brand">
-          <span class="brand-mark">CE</span>
+          <span class="brand-mark">BT</span>
           <div>
             <h1>{{ $t('common.appName') }}</h1>
             <p>{{ $t('public.headline') }}</p>
