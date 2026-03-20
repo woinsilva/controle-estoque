@@ -4,6 +4,7 @@ import {
   countResponsesByTemplateId,
   createResponse,
   createTemplate,
+  deleteTemplateById,
   getLatestTemplateVersion,
   getResponseById,
   getTemplateById,
@@ -29,6 +30,30 @@ export async function listTemplatesService(code?: string) {
     })
   );
   return withUsage;
+}
+
+export async function deleteTemplateService(
+  id: string,
+  input: {
+    requesterId?: string;
+    requesterRole?: string;
+  }
+) {
+  const template = await getTemplateById(id);
+  if (!template) {
+    throw new Error('Template not found.');
+  }
+
+  if (input.requesterRole !== 'ADMIN' && template.createdBy !== input.requesterId) {
+    throw new Error('You do not have permission to delete this template.');
+  }
+
+  const responseCount = await countResponsesByTemplateId(id);
+  if (responseCount > 0) {
+    throw new Error('Template cannot be deleted after usage in responses.');
+  }
+
+  return deleteTemplateById(id);
 }
 
 async function generateNextTemplateCode() {

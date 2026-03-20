@@ -2,6 +2,7 @@ import type { Request, Response } from 'express';
 import {
   createResponseService,
   createTemplateService,
+  deleteTemplateService,
   getResponseService,
   listResponsesByAppointmentService,
   listResponsesByClientService,
@@ -31,6 +32,25 @@ export async function publishTemplateController(req: Request, res: Response) {
     return res.status(404).json({ error: 'Template not found.' });
   }
   return res.status(200).json(template);
+}
+
+export async function deleteTemplateController(req: Request, res: Response) {
+  try {
+    const template = await deleteTemplateService(req.params.id, {
+      requesterId: req.user?.id,
+      requesterRole: req.user?.role
+    });
+    return res.status(200).json(template);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Could not delete template.';
+    if (message === 'Template not found.') {
+      return res.status(404).json({ error: message });
+    }
+    if (message === 'You do not have permission to delete this template.') {
+      return res.status(403).json({ error: message });
+    }
+    return res.status(400).json({ error: message });
+  }
 }
 
 export async function updateTemplateController(req: Request, res: Response) {

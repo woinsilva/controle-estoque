@@ -37,6 +37,15 @@
               <i class="pi pi-pencil" aria-hidden="true"></i>
             </button>
             <button
+              v-if="canDeleteTemplate(data)"
+              type="button"
+              class="icon-button danger"
+              :title="$t('questionnaires.deleteTemplate')"
+              @click="confirmDeleteTemplate(data)"
+            >
+              <i class="pi pi-trash" aria-hidden="true"></i>
+            </button>
+            <button
               v-if="data.status !== 'PUBLISHED'"
               type="button"
               class="icon-button"
@@ -305,8 +314,9 @@ import { Component, Vue, toNative } from 'vue-facing-decorator';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Dialog from 'primevue/dialog';
+import { useConfirm } from 'primevue/useconfirm';
 import AppSelect from '../components/AppSelect.vue';
-import { apiGet, apiPost, apiPut } from '../services/api';
+import { apiDelete, apiGet, apiPost, apiPut } from '../services/api';
 import { useAuthStore } from '../stores/auth';
 import type { Appointment, AppointmentListResponse } from '../types/appointment';
 import type { ClientListResponse } from '../types/client';
@@ -327,6 +337,7 @@ type DynamicField = {
 @Component({ components: { DataTable, Column, Dialog, ErrorCard, SignaturePad, AppSelect } })
 class QuestionnairesView extends Vue {
   authStore = useAuthStore();
+  confirm = useConfirm();
   templates: QuestionnaireTemplate[] = [];
   responses: QuestionnaireResponse[] = [];
   clientResponsesMap: Record<string, QuestionnaireResponse[]> = {};
@@ -471,6 +482,16 @@ class QuestionnairesView extends Vue {
     }
     const hasResponses = Boolean(template.hasResponses);
     return !hasResponses;
+  }
+
+  canDeleteTemplate(template: QuestionnaireTemplate) {
+    if (this.authStore.role !== 'ADMIN') {
+      return false;
+    }
+    if (typeof template.canDelete === 'boolean') {
+      return template.canDelete;
+    }
+    return !Boolean(template.hasResponses);
   }
 
   openTemplateDialog(template?: QuestionnaireTemplate) {
@@ -860,6 +881,29 @@ class QuestionnairesView extends Vue {
     }
   }
 
+  confirmDeleteTemplate(template: QuestionnaireTemplate) {
+    this.confirm.require({
+      message: this.$t('questionnaires.confirmDeleteTemplate'),
+      header: this.$t('questionnaires.deleteTemplate'),
+      acceptLabel: this.$t('common.confirm'),
+      rejectLabel: this.$t('common.cancel'),
+      accept: () => this.deleteTemplate(template)
+    });
+  }
+
+  async deleteTemplate(template: QuestionnaireTemplate) {
+    this.loading = true;
+    this.error = '';
+    try {
+      await apiDelete(`/questionnaires/templates/${template._id}`, this.authStore.token);
+      await this.loadInitialData();
+    } catch (err) {
+      this.error = this.extractErrorMessage(err) || this.$t('questionnaires.error');
+    } finally {
+      this.loading = false;
+    }
+  }
+
   async submitResponse() {
     this.loading = true;
     this.error = '';
@@ -1159,6 +1203,11 @@ export default toNative(QuestionnairesView);
   align-items: center;
   justify-content: center;
   font-size: 0.9rem;
+}
+
+.icon-button.danger {
+  color: #b42318;
+  border-color: rgba(180, 35, 24, 0.4);
 }
 
 @media (max-width: 900px) {

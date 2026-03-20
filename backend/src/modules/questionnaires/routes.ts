@@ -5,6 +5,7 @@ import { validateBody, validateParams } from '../../middlewares/validate.js';
 import {
   createResponseController,
   createTemplateController,
+  deleteTemplateController,
   getResponseController,
   listResponsesByAppointmentController,
   listResponsesByClientController,
@@ -35,6 +36,7 @@ router.put(
   validateBody(questionnaireTemplateSchema),
   updateTemplateController
 );
+router.delete('/templates/:id', requireRole(['MANAGER', 'ADMIN']), deleteTemplateController);
 router.post('/templates/:id/publish', requireRole(['MANAGER', 'ADMIN']), publishTemplateController);
 
 router.get(
