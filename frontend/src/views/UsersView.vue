@@ -29,12 +29,28 @@
           </label>
           <label class="field" :class="{ invalid: Boolean(formErrors.password) }">
             <span>{{ $t('users.fields.password') }}</span>
-            <input v-model="form.password" type="password" :placeholder="$t('users.passwordOptional')" @blur="validateField('password')" />
+            <input
+              v-model="form.password"
+              type="password"
+              name="profile-new-password"
+              autocomplete="new-password"
+              :placeholder="$t('users.passwordOptional')"
+              @input="onPasswordInput"
+              @blur="validateField('password')"
+            />
             <small v-if="formErrors.password" class="field-error">{{ formErrors.password }}</small>
           </label>
           <label class="field" :class="{ invalid: Boolean(formErrors.confirmPassword) }">
             <span>{{ $t('users.fields.confirmPassword') }}</span>
-            <input v-model="confirmPassword" type="password" :placeholder="$t('users.passwordOptional')" @blur="validateField('confirmPassword')" />
+            <input
+              v-model="confirmPassword"
+              type="password"
+              name="profile-confirm-password"
+              autocomplete="new-password"
+              :placeholder="$t('users.passwordOptional')"
+              @input="onConfirmPasswordInput"
+              @blur="validateField('confirmPassword')"
+            />
             <small v-if="formErrors.confirmPassword" class="field-error">{{ formErrors.confirmPassword }}</small>
           </label>
           <label class="field">
@@ -173,7 +189,15 @@
           </label>
           <label class="field" :class="{ invalid: Boolean(formErrors.password) }">
             <span>{{ $t('users.fields.password') }}</span>
-            <input v-model="form.password" type="password" :placeholder="passwordPlaceholder" @blur="validateField('password')" />
+            <input
+              v-model="form.password"
+              type="password"
+              name="user-new-password"
+              autocomplete="new-password"
+              :placeholder="passwordPlaceholder"
+              @input="onPasswordInput"
+              @blur="validateField('password')"
+            />
             <small v-if="formErrors.password" class="field-error">{{ formErrors.password }}</small>
           </label>
           <label class="field" :class="{ invalid: Boolean(formErrors.role) }">
@@ -244,6 +268,8 @@ class UsersView extends Vue {
   selectedTheme: 'light' | 'dark' = 'light';
   formErrors: Partial<Record<UserFormField, string>> = {};
   confirmPassword = '';
+  passwordDirty = false;
+  confirmPasswordDirty = false;
   form: UserInput = {
     name: '',
     email: '',
@@ -267,6 +293,22 @@ class UsersView extends Vue {
 
   get passwordPlaceholder() {
     return this.editingId ? this.$t('users.passwordOptional') : '';
+  }
+
+  get isCreatingAdminUser() {
+    return this.isAdmin && !this.editingId;
+  }
+
+  get hasPasswordInteraction() {
+    return this.passwordDirty || this.confirmPasswordDirty;
+  }
+
+  get trimmedPassword() {
+    return this.form.password?.trim() || '';
+  }
+
+  get trimmedConfirmPassword() {
+    return this.confirmPassword.trim();
   }
 
   get dialogTitle() {
@@ -316,8 +358,9 @@ class UsersView extends Vue {
           locale: this.currentUser.locale || this.selectedLocale,
           theme: this.currentUser.theme || this.selectedTheme
         };
-        this.confirmPassword = '';
+        this.resetPasswordState();
         this.formErrors = {};
+        this.queueOptionalPasswordReset();
       }
     } catch (err) {
       this.showError(this.extractErrorMessage(err) || this.$t('users.error'));
@@ -352,7 +395,7 @@ class UsersView extends Vue {
       const payload = {
         name: this.form.name.trim(),
         email: this.form.email.trim(),
-        password: this.form.password?.trim() || undefined,
+        password: this.hasPasswordInteraction && this.trimmedPassword ? this.trimmedPassword : undefined,
         locale: this.selectedLocale,
         theme: this.selectedTheme
       };
@@ -365,10 +408,10 @@ class UsersView extends Vue {
         role: updatedUser.role,
         active: updatedUser.active,
         isProfessional: Boolean(updatedUser.isProfessional),
-        locale: updatedUser.locale || this.selectedLocale,
-        theme: updatedUser.theme || this.selectedTheme
-      };
-      this.confirmPassword = '';
+          locale: updatedUser.locale || this.selectedLocale,
+          theme: updatedUser.theme || this.selectedTheme
+        };
+      this.resetPasswordState();
       this.authStore.setPreferences(this.selectedLocale, this.selectedTheme);
       applyPreferences(this.selectedLocale, this.selectedTheme);
     } catch (err) {
@@ -392,9 +435,10 @@ class UsersView extends Vue {
       locale: 'pt',
       theme: 'light'
     };
-    this.confirmPassword = '';
+    this.resetPasswordState();
     this.formErrors = {};
     this.dialogOpen = true;
+    this.queueOptionalPasswordReset();
   }
 
   openEdit(user: User) {
@@ -409,14 +453,15 @@ class UsersView extends Vue {
       locale: user.locale || 'pt',
       theme: user.theme || 'light'
     };
-    this.confirmPassword = '';
+    this.resetPasswordState();
     this.formErrors = {};
     this.dialogOpen = true;
+    this.queueOptionalPasswordReset();
   }
 
   closeDialog() {
     this.dialogOpen = false;
-    this.confirmPassword = '';
+    this.resetPasswordState();
     this.formErrors = {};
   }
 
@@ -429,10 +474,18 @@ class UsersView extends Vue {
 
     this.loading = true;
     try {
+      const payload = {
+        ...this.form,
+        password: this.isCreatingAdminUser
+          ? this.trimmedPassword
+          : this.hasPasswordInteraction && this.trimmedPassword
+            ? this.trimmedPassword
+            : undefined
+      };
       if (this.editingId) {
-        await apiPut(`/users/${this.editingId}`, this.form, this.authStore.token);
+        await apiPut(`/users/${this.editingId}`, payload, this.authStore.token);
       } else {
-        await apiPost('/users', this.form, this.authStore.token);
+        await apiPost('/users', payload, this.authStore.token);
       }
       await this.loadUsers();
       this.dialogOpen = false;
@@ -534,18 +587,36 @@ class UsersView extends Vue {
         }
         return '';
       case 'password':
-        if (!this.editingId && !this.form.password?.trim()) {
+        if (this.isCreatingAdminUser && !this.trimmedPassword) {
           return String(this.$t('users.validation.passwordRequired'));
         }
-        if (this.form.password?.trim() && this.form.password.trim().length < 6) {
+
+        if (!this.isCreatingAdminUser && !this.hasPasswordInteraction) {
+          return '';
+        }
+
+        if (!this.isCreatingAdminUser && this.trimmedConfirmPassword && !this.trimmedPassword) {
+          return String(this.$t('users.validation.passwordRequired'));
+        }
+
+        if (this.trimmedPassword && this.trimmedPassword.length < 6) {
           return String(this.$t('users.validation.passwordMin'));
         }
         return '';
       case 'confirmPassword':
-        if (this.form.password?.trim() && !this.confirmPassword.trim()) {
+        if (this.isAdmin || !this.hasPasswordInteraction) {
+          return '';
+        }
+
+        if (!this.trimmedPassword && !this.trimmedConfirmPassword) {
+          return '';
+        }
+
+        if (this.trimmedPassword && !this.trimmedConfirmPassword) {
           return String(this.$t('users.validation.confirmPasswordRequired'));
         }
-        if (this.form.password?.trim() && this.form.password.trim() !== this.confirmPassword.trim()) {
+
+        if (this.trimmedPassword && this.trimmedPassword !== this.trimmedConfirmPassword) {
           return String(this.$t('users.validation.passwordMismatch'));
         }
         return '';
@@ -557,6 +628,41 @@ class UsersView extends Vue {
       default:
         return '';
     }
+  }
+
+  onPasswordInput() {
+    this.passwordDirty = true;
+    this.validateField('password');
+    if (!this.isAdmin) {
+      this.validateField('confirmPassword');
+    }
+  }
+
+  onConfirmPasswordInput() {
+    this.confirmPasswordDirty = true;
+    this.validateField('password');
+    this.validateField('confirmPassword');
+  }
+
+  resetPasswordState() {
+    this.form.password = '';
+    this.confirmPassword = '';
+    this.passwordDirty = false;
+    this.confirmPasswordDirty = false;
+  }
+
+  queueOptionalPasswordReset() {
+    window.setTimeout(() => {
+      if (this.isCreatingAdminUser || this.hasPasswordInteraction) {
+        return;
+      }
+
+      this.resetPasswordState();
+      const nextErrors = { ...this.formErrors };
+      delete nextErrors.password;
+      delete nextErrors.confirmPassword;
+      this.formErrors = nextErrors;
+    }, 0);
   }
 
   extractErrorMessage(error: unknown) {
@@ -719,7 +825,7 @@ export default toNative(UsersView);
 .mobile-card {
   border: 1px solid var(--border);
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.78);
+  background: var(--panel);
   padding: 1rem;
   display: grid;
   gap: 0.9rem;
@@ -800,8 +906,9 @@ export default toNative(UsersView);
 .field select {
   padding: 0.7rem 0.9rem;
   border-radius: 12px;
-  border: 1px solid var(--border);
-  background: #fffdf9;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-control);
+  color: var(--ink);
 }
 
 .field.invalid input,

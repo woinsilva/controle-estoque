@@ -754,8 +754,9 @@ export default toNative(SchedulesView);
 .slot-row input {
   padding: 0.7rem 0.9rem;
   border-radius: 12px;
-  border: 1px solid var(--border);
-  background: #fffdf9;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-control);
+  color: var(--ink);
 }
 
 .calendar-actions {
@@ -816,7 +817,8 @@ export default toNative(SchedulesView);
   padding: 0.75rem;
   border-radius: 16px;
   border: 1px solid var(--border);
-  background: #fffdf9;
+  background: var(--panel-strong);
+  color: var(--ink);
   text-align: left;
   display: grid;
   gap: 0.6rem;
@@ -824,18 +826,19 @@ export default toNative(SchedulesView);
 }
 
 .day-cell.outside {
-  opacity: 0.55;
+  background: var(--panel-soft);
+  opacity: 0.68;
 }
 
 .day-cell.selected,
 .range-column.selected {
   border-color: var(--primary);
-  box-shadow: 0 0 0 1px rgba(8, 116, 172, 0.22);
+  box-shadow: 0 0 0 1px rgba(var(--primary-rgb), 0.26);
 }
 
 .day-cell.today,
 .range-column.today {
-  background: rgba(8, 116, 172, 0.06);
+  background: var(--primary-soft);
 }
 
 .day-head {
@@ -859,7 +862,7 @@ export default toNative(SchedulesView);
 .appointment-item {
   border-radius: 12px;
   border: 1px solid var(--border);
-  background: rgba(8, 116, 172, 0.06);
+  background: var(--primary-soft);
   padding: 0.45rem 0.6rem;
   display: grid;
   gap: 0.15rem;
@@ -882,7 +885,8 @@ export default toNative(SchedulesView);
 .range-column {
   border: 1px solid var(--border);
   border-radius: 16px;
-  background: #fffdf9;
+  background: var(--panel-strong);
+  color: var(--ink);
   padding: 0.85rem;
   display: grid;
   gap: 0.85rem;
@@ -957,7 +961,7 @@ export default toNative(SchedulesView);
 .ghost,
 .view-button {
   border: 1px solid var(--border);
-  background: transparent;
+  background: var(--surface-control);
   color: var(--muted);
 }
 
@@ -982,7 +986,7 @@ export default toNative(SchedulesView);
 }
 
 .icon-button.danger {
-  color: #b42318;
+  color: var(--danger);
   border-color: rgba(180, 35, 24, 0.4);
 }
 

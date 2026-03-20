@@ -5,26 +5,37 @@
   font-family: 'Manrope', 'Segoe UI', sans-serif;
   line-height: 1.5;
   font-weight: 500;
-  --bg: #f4f6f3;
-  --bg-accent: #eef2ec;
-  --bg-elevated: #fbfcfa;
-  --ink: #17211b;
-  --muted: #66756c;
-  --panel: rgba(255, 255, 255, 0.78);
-  --panel-strong: #ffffff;
-  --panel-soft: #f7faf6;
-  --border: rgba(24, 54, 39, 0.1);
-  --border-strong: rgba(24, 54, 39, 0.16);
-  --primary: #0f766e;
-  --primary-strong: #0a5c56;
-  --primary-soft: rgba(15, 118, 110, 0.12);
-  --primary-ink: #effdfa;
-  --accent: #d7efe7;
+  --bg: #f7eeed;
+  --bg-accent: #ecd9d8;
+  --bg-elevated: #fff8f7;
+  --ink: #4f3a3d;
+  --muted: #8b7075;
+  --panel: rgba(255, 255, 255, 0.8);
+  --panel-strong: #fffdfd;
+  --panel-soft: #f9efef;
+  --border: rgba(104, 73, 79, 0.12);
+  --border-strong: rgba(104, 73, 79, 0.18);
+  --primary: #b58a90;
+  --primary-rgb: 181, 138, 144;
+  --primary-strong: #986e74;
+  --primary-soft: rgba(181, 138, 144, 0.14);
+  --primary-ink: #fff7f7;
+  --accent: #e6ccd0;
   --danger: #b9382f;
   --danger-soft: #fff1ee;
-  --warning: #b46912;
-  --shadow: 0 24px 60px rgba(19, 37, 27, 0.08);
-  --shadow-soft: 0 10px 24px rgba(19, 37, 27, 0.06);
+  --warning: #b07a56;
+  --shadow: 0 24px 60px rgba(86, 60, 66, 0.1);
+  --shadow-soft: 0 10px 24px rgba(86, 60, 66, 0.08);
+  --bg-glow-left: rgba(214, 176, 180, 0.22);
+  --bg-glow-right: rgba(244, 230, 231, 0.8);
+  --surface-header: rgba(255, 247, 247, 0.92);
+  --surface-body: rgba(255, 255, 255, 0.8);
+  --surface-dialog-header: rgba(255, 250, 250, 0.78);
+  --surface-dialog-content: rgba(255, 255, 255, 0.74);
+  --surface-control: rgba(255, 255, 255, 0.86);
+  --surface-hover: rgba(255, 255, 255, 0.72);
+  --brand-gradient-end: #d5b1b5;
+  --brand-gradient-strong-end: #caa3a8;
   --radius-xl: 28px;
   --radius-lg: 22px;
   --radius-md: 16px;
@@ -33,26 +44,37 @@
 
 :root[data-theme='dark'] {
   color-scheme: dark;
-  --bg: #0f1512;
-  --bg-accent: #121c18;
-  --bg-elevated: #17211c;
-  --ink: #edf5f0;
-  --muted: #99a8a0;
-  --panel: rgba(22, 31, 27, 0.82);
-  --panel-strong: #18231e;
-  --panel-soft: #121b17;
-  --border: rgba(214, 239, 231, 0.08);
-  --border-strong: rgba(214, 239, 231, 0.16);
-  --primary: #56c4b8;
-  --primary-strong: #6dd9cd;
-  --primary-soft: rgba(86, 196, 184, 0.14);
-  --primary-ink: #051110;
-  --accent: rgba(86, 196, 184, 0.12);
+  --bg: #130f11;
+  --bg-accent: #1a1417;
+  --bg-elevated: #0e0a0b;
+  --ink: #f6edef;
+  --muted: #b49ca2;
+  --panel: rgba(28, 20, 23, 0.84);
+  --panel-strong: #241a1d;
+  --panel-soft: #1a1316;
+  --border: rgba(233, 213, 217, 0.1);
+  --border-strong: rgba(233, 213, 217, 0.18);
+  --primary: #d8afb6;
+  --primary-rgb: 216, 175, 182;
+  --primary-strong: #e6c7cc;
+  --primary-soft: rgba(216, 175, 182, 0.16);
+  --primary-ink: #24181b;
+  --accent: rgba(216, 175, 182, 0.16);
   --danger: #ff8d81;
   --danger-soft: rgba(185, 56, 47, 0.14);
-  --warning: #ffcc7a;
+  --warning: #f1c49c;
   --shadow: 0 30px 70px rgba(0, 0, 0, 0.38);
   --shadow-soft: 0 12px 28px rgba(0, 0, 0, 0.22);
+  --bg-glow-left: rgba(216, 175, 182, 0.12);
+  --bg-glow-right: rgba(76, 54, 60, 0.24);
+  --surface-header: rgba(39, 28, 32, 0.9);
+  --surface-body: rgba(33, 24, 27, 0.88);
+  --surface-dialog-header: rgba(34, 24, 27, 0.9);
+  --surface-dialog-content: rgba(28, 20, 23, 0.9);
+  --surface-control: rgba(18, 14, 16, 0.92);
+  --surface-hover: rgba(255, 255, 255, 0.06);
+  --brand-gradient-end: #c698a1;
+  --brand-gradient-strong-end: #b7848e;
 }
 
 *,
@@ -70,8 +92,8 @@ body {
   min-height: 100vh;
   color: var(--ink);
   background:
-    radial-gradient(circle at top left, rgba(86, 196, 184, 0.12), transparent 28%),
-    radial-gradient(circle at top right, rgba(223, 190, 124, 0.14), transparent 24%),
+    radial-gradient(circle at top left, var(--bg-glow-left), transparent 30%),
+    radial-gradient(circle at top right, var(--bg-glow-right), transparent 26%),
     linear-gradient(180deg, var(--bg-elevated) 0%, var(--bg) 48%, var(--bg-accent) 100%);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -146,8 +168,34 @@ select:focus,
 .p-inputnumber-input:focus,
 .p-calendar input:focus {
   outline: none;
-  border-color: rgba(15, 118, 110, 0.35) !important;
-  box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.12);
+  border-color: rgba(var(--primary-rgb), 0.38) !important;
+  box-shadow: 0 0 0 4px rgba(var(--primary-rgb), 0.14);
+}
+
+input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']),
+textarea,
+select {
+  border: 1px solid var(--border-strong);
+  background: var(--surface-control);
+  color: var(--ink);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+
+:root[data-theme='dark'] input[type='date'],
+:root[data-theme='dark'] input[type='time'],
+:root[data-theme='dark'] input[type='datetime-local'] {
+  color-scheme: dark;
+}
+
+:root:not([data-theme='dark']) input[type='date'],
+:root:not([data-theme='dark']) input[type='time'],
+:root:not([data-theme='dark']) input[type='datetime-local'] {
+  color-scheme: light;
 }
 
 button {
@@ -167,7 +215,7 @@ select:disabled {
 }
 
 ::selection {
-  background: rgba(15, 118, 110, 0.18);
+  background: rgba(var(--primary-rgb), 0.22);
 }
 
 ::-webkit-scrollbar {
@@ -180,7 +228,7 @@ select:disabled {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(102, 117, 108, 0.28);
+  background: rgba(var(--primary-rgb), 0.24);
   border-radius: 999px;
 }
 
@@ -207,18 +255,18 @@ select:disabled {
 
 .p-datatable .p-datatable-header,
 .p-datatable .p-datatable-thead > tr > th {
-  background: rgba(247, 250, 246, 0.9);
+  background: var(--surface-header);
   color: var(--ink);
   border-color: var(--border) !important;
   font-weight: 800;
 }
 
 .p-datatable .p-datatable-tbody > tr {
-  background: rgba(255, 255, 255, 0.8);
+  background: var(--surface-body);
 }
 
 .p-datatable .p-datatable-tbody > tr:hover {
-  background: rgba(15, 118, 110, 0.05);
+  background: rgba(var(--primary-rgb), 0.06);
 }
 
 .p-paginator {
@@ -251,8 +299,8 @@ select:disabled {
 
 .p-dialog .p-dialog-header {
   padding: 1.3rem 1.5rem 0.75rem;
-  background: rgba(255, 255, 255, 0.72);
-  border-bottom: 1px solid rgba(24, 54, 39, 0.06);
+  background: var(--surface-dialog-header);
+  border-bottom: 1px solid rgba(104, 73, 79, 0.08);
 }
 
 .p-dialog .p-dialog-title {
@@ -261,7 +309,7 @@ select:disabled {
 }
 
 .p-dialog .p-dialog-content {
-  background: rgba(255, 255, 255, 0.74);
+  background: var(--surface-dialog-content);
   padding: 1rem 1.5rem 1.5rem;
 }
 
@@ -270,7 +318,7 @@ select:disabled {
 .p-inputtext,
 .p-inputnumber-input,
 .p-calendar input {
-  background: rgba(255, 255, 255, 0.86) !important;
+  background: var(--surface-control) !important;
   border: 1px solid var(--border-strong) !important;
   color: var(--ink) !important;
 }

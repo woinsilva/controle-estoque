@@ -159,11 +159,11 @@ button {
   padding: 0.95rem 1rem;
   border-radius: 16px;
   border: none;
-  background: linear-gradient(135deg, var(--primary), #14a39a);
+  background: linear-gradient(135deg, var(--primary), #caa3a8);
   color: var(--primary-ink);
   font-weight: 800;
   cursor: pointer;
-  box-shadow: 0 16px 32px rgba(15, 118, 110, 0.2);
+  box-shadow: 0 16px 32px rgba(var(--primary-rgb), 0.2);
 }
 
 .error {
@@ -179,7 +179,7 @@ button {
 .hint-card {
   margin-top: 1.5rem;
   padding: 1rem 1.1rem;
-  background: rgba(247, 250, 246, 0.82);
+  background: rgba(255, 247, 247, 0.86);
   border: 1px solid var(--border);
   border-radius: 18px;
 }
